@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "498576797000",
+    "project_id": "thrift-app-ea31d",
+    "storage_bucket": "thrift-app-ea31d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:498576797000:android:495d71345ea71c505c177d",
+        "android_client_info": {
+          "package_name": "com.rc.thriftapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "498576797000-dsq3upr8qpfje6o5oo1volfmb27c2rc5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rc.thriftapp",
+            "certificate_hash": "e893714255c609988bd08a4af614ca8385e5812b"
+          }
+        },
+        {
+          "client_id": "498576797000-7kniis6i1d5eac6osmk8qbv7h0hqtg2l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYgtqyMRHwJSS4J4U5Um26HVNT4YN3RhU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "498576797000-7kniis6i1d5eac6osmk8qbv7h0hqtg2l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
