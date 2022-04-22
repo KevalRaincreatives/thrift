@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/model/AdvModel.dart';
@@ -1020,9 +1021,11 @@ class T2DrawerState extends State<T2Drawer> {
                   future: fetchAlbum(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
+                      var unescape = HtmlUnescape();
                       return ListView.builder(
                         // physics:
                         // NeverScrollableScrollPhysics(),
+
                         scrollDirection: Axis.vertical,
                         itemCount: categoryListModel.length,
                         shrinkWrap: true,
@@ -1040,7 +1043,7 @@ class T2DrawerState extends State<T2Drawer> {
                               child: Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                     18.0, 12, 12, 12),
-                                child: Text(categoryListModel[index].name!,
+                                child: Text(  unescape.convert(categoryListModel[index].name!),
                                     style: TextStyle(
                                         color: sh_colorPrimary2,
                                         fontSize: 20,

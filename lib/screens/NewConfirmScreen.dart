@@ -1910,7 +1910,7 @@ if(delivery_status=='yes') {
     }
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
 
       body: SafeArea(child: setUserForm()),
     );

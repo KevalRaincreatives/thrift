@@ -275,6 +275,8 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                 children: [
                   InkWell(
                     onTap: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      prefs.setInt("cart_count", 0);
 launchScreen(context, DashboardScreen.tag);
                     },
                     child: Container(
@@ -292,6 +294,8 @@ launchScreen(context, DashboardScreen.tag);
                   ),
                   InkWell(
                     onTap: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      prefs.setInt("cart_count", 0);
                       Navigator.of(context).pop(ConfirmAction.CANCEL);
                       Navigator.pushReplacement(
                         context,
