@@ -39,6 +39,8 @@ class _SplashScreenState extends State<SplashScreen> {
   CartModel? cat_model;
   FirebaseMessaging? messaging;
 
+
+
   Future<SettingModel?> fetchDetail2() async {
 
     // EasyLoading.show(status: 'loading...');
@@ -185,6 +187,8 @@ class _SplashScreenState extends State<SplashScreen> {
       // toast("eventstt");
     });
 
+    fetchDetail2();
+
 
   }
 
@@ -277,7 +281,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void navigationPage() async{
-    finish(context);
+    // finish(context);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? final_token = prefs.getString('token');
     if (final_token != null && final_token != '') {
@@ -311,32 +315,21 @@ class _SplashScreenState extends State<SplashScreen> {
         height: height,
         width: width,
         color: sh_colorPrimary2,
-        child: FutureBuilder<SettingModel?>(
-          future: fetchDetail2(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return Container(
-                height: height,
-                width: width,
-                color: sh_colorPrimary2,
-                child: Center(child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
-                    Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
-                      child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
-                    )
-                  ],
-                ),),
-              );
-            } else if (snapshot.hasError) {
-              return Text("${snapshot.error}");
-            }
-            // By default, show a loading spinner.
-            return Center(child: CircularProgressIndicator());
-          },
+        child: Container(
+          height: height,
+          width: width,
+          color: sh_colorPrimary2,
+          child: Center(child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
+              Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
+                child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
+              )
+            ],
+          ),),
         ),
       ),
     );

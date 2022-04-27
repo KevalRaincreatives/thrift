@@ -647,7 +647,7 @@ ct_changel=true;
                   ),
                   Container(
                     alignment: Alignment.topLeft,
-                    margin: EdgeInsets.fromLTRB(20, 0, 20, 26),
+                    margin: EdgeInsets.fromLTRB(20, 20, 20, 26),
                     child: InkWell(
                       onTap: () {
                         Navigator.of(context, rootNavigator: true).pop();
@@ -1645,7 +1645,7 @@ ct_changel=true;
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(0,18,0,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,

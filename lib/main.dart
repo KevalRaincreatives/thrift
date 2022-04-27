@@ -49,6 +49,7 @@ import 'package:thrift/screens/VendorOrderListScreen.dart';
 import 'package:thrift/screens/VerificationScreen.dart';
 import 'package:thrift/screens/WebPaymentScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
+import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/T3Dialog.dart';
 
 
@@ -116,6 +117,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    precacheImage(AssetImage(sh_app_logo), context);
     return MaterialApp(
       title: 'Cassie by Casuarina',
       theme: ThemeData(

@@ -61,44 +61,43 @@ class _HomeFragmentState extends State<HomeFragment> {
   AdvModel? advModel;
   int? cart_count;
 
-  Future<ProfileModel?> fetchDetails() async {
-//    Dialogs.showLoadingDialog(context, _keyLoader);
+  Future<String?> fetchDetails() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
+      // String? token = prefs.getString('token');
+      //
+      // print('Token : ${token}');
+      //
+      // Map<String, String> headers = {
+      //   'Content-Type': 'application/json',
+      //   'Accept': 'application/json',
+      //   'Authorization': 'Bearer $token',
+      // };
+      //
+      // var response = await http.get(
+      //     Uri.parse(
+      //         "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
+      //     headers: headers);
+      //
+      // final jsonResponse = json.decode(response.body);
+      // print('not json $jsonResponse');
+      //
+      // profileModel = new ProfileModel.fromJson(jsonResponse);
+      // // if (new_car == 0) {
+      //
+      // prefs.setString('profile_name',
+      //     profileModel!.data!.firstName! + " " + profileModel!.data!.lastName!);
+      // prefs.setString('new_profile_name', profileModel!.data!.userNicename!);
+      // prefs.setString('pro_first', profileModel!.data!.firstName!);
+      // prefs.setString('pro_last', profileModel!.data!.lastName!);
+      // prefs.setString('pro_email', profileModel!.data!.userEmail!);
 
-      print('Token : ${token}');
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      var response = await http.get(
-          Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
-          headers: headers);
-
-      final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
-
-      profileModel = new ProfileModel.fromJson(jsonResponse);
-      // if (new_car == 0) {
-
-      prefs.setString('profile_name',
-          profileModel!.data!.firstName! + " " + profileModel!.data!.lastName!);
-      prefs.setString('new_profile_name', profileModel!.data!.userNicename!);
-      prefs.setString('pro_first', profileModel!.data!.firstName!);
-      prefs.setString('pro_last', profileModel!.data!.lastName!);
-      prefs.setString('pro_email', profileModel!.data!.userEmail!);
-
-      profile_name = prefs.getString("profile_name");
+      profile_name = prefs.getString("OrderUserName");
 
       print('sucess');
 
-      return profileModel;
+      return "profileModel";
     } catch (e) {
       print('caught error $e');
     }
@@ -656,7 +655,7 @@ return FutureBuilder<String?>(
       AppBar appBar = AppBar(
         elevation: 0,
         backgroundColor: sh_colorPrimary2,
-        title: FutureBuilder<ProfileModel?>(
+        title: FutureBuilder<String?>(
           future: fetchDetails(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
