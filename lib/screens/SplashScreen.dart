@@ -18,6 +18,7 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart' hide finish;
 import 'package:http/http.dart' as http;
+import 'package:thrift/utils/delayed_animation.dart';
 
 const _kShouldTestAsyncErrorOnInit = false;
 
@@ -33,11 +34,63 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin{
+  final int delayedAmount=500;
+  double? _scale;
+  AnimationController? _controller;
+
   Future<SettingModel>? futuredetail;
   SettingModel? setting_model;
   CartModel? cat_model;
   FirebaseMessaging? messaging;
+
+
+  @override
+  void initState() {
+    // startTime();
+    _controller=AnimationController(
+      vsync: this,
+      duration: Duration(microseconds: 200),
+      lowerBound: 0.0,
+      upperBound: 0.1
+    )..addListener(() {setState(() {
+
+    });}
+    );
+    initializeFlutterFire();
+    messaging = FirebaseMessaging.instance;
+    messaging!.getToken().then((value){
+      print("my token : "+value!);
+
+      _addToken(value);
+    });
+
+    setupInteractedMessage();
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
+      print("message recieved");
+      // print("message recieved2"+event.data.toString());
+      print("message title5"+event.notification!.title!);
+      print("message body5"+event.notification!.body!);
+      // print("message activity5"+event.data["activity"]);
+      // print("message activity_id5"+event.data["activity_id"]);
+      // toast(event.notification!.body);
+
+    });
+    FirebaseMessaging.onMessageOpenedApp.listen((message) async{
+      print('Message clicked!');
+      // print("message title6"+message.notification!.title!);
+      // print("message body6"+message.notification!.body!);
+      // print("message activity6"+message.data["activity"]);
+      // print("message activity_id6"+message.data["activity_id"]);
+      // toast("eventstt");
+    });
+
+    fetchDetail2();
+    super.initState();
+
+
+  }
 
 
 
@@ -154,43 +207,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   }
 
-  @override
-  void initState() {
-    super.initState();
-    // startTime();
-    initializeFlutterFire();
-    messaging = FirebaseMessaging.instance;
-    messaging!.getToken().then((value){
-      print("my token : "+value!);
 
-      _addToken(value);
-    });
-
-    setupInteractedMessage();
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
-      print("message recieved");
-      // print("message recieved2"+event.data.toString());
-      print("message title5"+event.notification!.title!);
-      print("message body5"+event.notification!.body!);
-      // print("message activity5"+event.data["activity"]);
-      // print("message activity_id5"+event.data["activity_id"]);
-      // toast(event.notification!.body);
-
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((message) async{
-      print('Message clicked!');
-      // print("message title6"+message.notification!.title!);
-      // print("message body6"+message.notification!.body!);
-      // print("message activity6"+message.data["activity"]);
-      // print("message activity_id6"+message.data["activity_id"]);
-      // toast("eventstt");
-    });
-
-    fetchDetail2();
-
-
-  }
 
   Future<void> _testAsyncErrorOnInit() async {
     Future<void>.delayed(const Duration(seconds: 2), () {
@@ -309,29 +326,28 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+    _scale=1-_controller!.value;
 
     return Scaffold(
-      body: Container(
-        height: height,
-        width: width,
-        color: sh_colorPrimary2,
-        child: Container(
-          height: height,
-          width: width,
-          color: sh_colorPrimary2,
-          child: Center(child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
-              Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
-                child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
-              )
-            ],
-          ),),
-        ),
-      ),
+      backgroundColor: sh_colorPrimary2,
+      body: Center(child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
+          // Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),
+          DelayedAnimation(delay: delayedAmount+600, child: Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),),
+          DelayedAnimation(delay: delayedAmount+800, child: Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),),
+DelayedAnimation(delay: delayedAmount+1000,
+    child: Padding(
+  padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
+  child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
+))
+        //   Padding(
+        //     padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
+        //     child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
+        //   )
+        ],
+      ),),
     );
 
       ;

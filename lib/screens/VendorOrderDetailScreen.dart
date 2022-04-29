@@ -647,7 +647,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(spacing_standard_new,
                   spacing_middle, spacing_standard_new, spacing_middle),
-              child: text(sh_lbl_shipping_details,
+              child: text(sh_lbl_sales_details,
                   textColor: sh_textColorPrimary,
                   fontSize: textSizeLargeMedium,
                   fontFamily: 'Bold'),
@@ -803,7 +803,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
         elevation: 0,
         backgroundColor: sh_colorPrimary2,
         title: Text(
-          "Order Details",
+          "Sales Details",
           style:
           TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
         ),
@@ -910,7 +910,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
 
                     Padding(
                       padding: const EdgeInsets.all(6.0),
-                      child: Text("Order Details",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      child: Text("Sales Details",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
                     )
                   ],
                 ),

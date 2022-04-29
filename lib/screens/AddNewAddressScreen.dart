@@ -146,7 +146,11 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           Route route =
           MaterialPageRoute(builder: (context) => AddressListScreen());
           Navigator.pushReplacement(context, route);
-        } else {
+        }else if (prefs.getString("from") == 'default2') {
+          Route route =
+          MaterialPageRoute(builder: (context) => AddressListScreen());
+          Navigator.pushReplacement(context, route);
+        } else if (prefs.getString("from") == 'default'){
           prefs.setString('address_pos', "0");
           Route route =
           MaterialPageRoute(builder: (context) => CartScreen());

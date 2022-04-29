@@ -79,7 +79,7 @@ class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
       String? cat_id = prefs.getString('cat_id');
       String? seller_id = prefs.getString('UserId');
       // toast(cat_id);
-
+print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id");
       var response;
       response = await http.get(Uri.parse(
           "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
@@ -448,7 +448,8 @@ class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
                         'seller_pro_id',
                         productListModel!.products![index]!.data!.id
                             .toString());
-                    launchScreen(context, ProductUpdateScreen.tag);
+                    // launchScreen(context, ProductUpdateScreen.tag);
+                    Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
                   },
                   child: Container(
                     padding: EdgeInsets.all(6.0),
@@ -491,7 +492,8 @@ class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
                         'seller_pro_id',
                         productListModel!.products![index]!.data!.id
                             .toString());
-                    launchScreen(context, ProductUpdateScreen.tag);
+                    // launchScreen(context, ProductUpdateScreen.tag);
+                    Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
                   },
                   child: Container(
                     padding: EdgeInsets.all(6.0),

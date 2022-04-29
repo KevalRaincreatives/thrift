@@ -489,7 +489,8 @@ class _AddressListScreenState extends State<AddressListScreen> {
             ),
           ),
         );
-      }else{
+      }
+      else{
       if(add_from=="address") {
         return listView(_addressModel!.data);
       }else{
@@ -615,8 +616,14 @@ class _AddressListScreenState extends State<AddressListScreen> {
       color: sh_white,
       icon: Icon(Icons.add),
       onPressed: () async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString('from', "address");
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+      if (prefs.getString("from") == 'address') {
+        prefs.setString('from', "address");
+      }else{
+        prefs.setString('from', "default2");
+      }
+      // SharedPreferences prefs = await SharedPreferences.getInstance();
+      // prefs.setString('from', "address");
 
       var bool = await Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => AddNewAddressScreen())) ?? false;
       // if (bool) {

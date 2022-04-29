@@ -109,6 +109,19 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       print('not json $jsonResponse');
 
       _addressModel = new AddressListModel.fromJson(jsonResponse);
+      if(_addressModel!.data!.length == 0){
+
+      }else {
+        prefs.setString(
+            'firstname', _addressModel!.data![address_pos!]!.firstName!);
+        prefs.setString("lastname", _addressModel!.data![address_pos!]!.lastName!);
+        prefs.setString("address1", _addressModel!.data![address_pos!]!.address!);
+        prefs.setString("city", _addressModel!.data![address_pos!]!.city!);
+        prefs.setString("postcode", _addressModel!.data![address_pos!]!.postcode!);
+        prefs.setString(
+            "country_id", _addressModel!.data![address_pos!]!.country!);
+        prefs.setString("zone_id", _addressModel!.data![address_pos!]!.state!);
+      }
       print(_addressModel!.data);
 
       return _addressModel;
@@ -1809,15 +1822,15 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 toast("Please Select Payment Method");
               } else {
                 SharedPreferences prefs = await SharedPreferences.getInstance();
-                prefs.setString(
-                    'firstname', _addressModel!.data![0]!.firstName!);
-                prefs.setString("lastname", _addressModel!.data![0]!.lastName!);
-                prefs.setString("address1", _addressModel!.data![0]!.address!);
-                prefs.setString("city", _addressModel!.data![0]!.city!);
-                prefs.setString("postcode", _addressModel!.data![0]!.postcode!);
-                prefs.setString(
-                    "country_id", _addressModel!.data![0]!.country!);
-                prefs.setString("zone_id", _addressModel!.data![0]!.state!);
+                // prefs.setString(
+                //     'firstname', _addressModel!.data![0]!.firstName!);
+                // prefs.setString("lastname", _addressModel!.data![0]!.lastName!);
+                // prefs.setString("address1", _addressModel!.data![0]!.address!);
+                // prefs.setString("city", _addressModel!.data![0]!.city!);
+                // prefs.setString("postcode", _addressModel!.data![0]!.postcode!);
+                // prefs.setString(
+                //     "country_id", _addressModel!.data![0]!.country!);
+                // prefs.setString("zone_id", _addressModel!.data![0]!.state!);
 
                 prefs.setString('shipment_title', "free_shipping");
                 prefs.setString('shipment_method', "Free shipping");

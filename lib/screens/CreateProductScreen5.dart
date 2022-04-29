@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -85,7 +84,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   }
 
   Future<List<NewCategoryModel>?> fetchAlbum() async {
-    EasyLoading.show(status: 'Please wait...');
+
     try {
 //      prefs = await SharedPreferences.getInstance();
 //      String UserId = prefs.getString('UserId');
@@ -118,10 +117,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               selected: false));
         }
       }
-      fetchAttribute();
+
       return categoryListModel2;
     } catch (e) {
-      EasyLoading.dismiss();
 //      return orderListModel;
       print('caught error $e');
     }
@@ -152,14 +150,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
 
       }
-      EasyLoading.dismiss();
-      setState(() {
-
-      });
 
       return attributeModel;
     } catch (e) {
-      EasyLoading.dismiss();
 //      return orderListModel;
       print('caught error $e');
     }
@@ -333,10 +326,10 @@ int myind2=itemsModel.length-1;
 
   @override
   void initState() {
+    // TODO: implement initState
+    // multimimageModel.add(MultiImageModel("",""));
+    // _imageFileList!.add(XFile(""));
     super.initState();
-    // fetchDetail();
-    fetchAlbum();
-    // fetchAttribute();
   }
 
   @override
@@ -606,12 +599,51 @@ int myind2=itemsModel.length-1;
                         height: spacing_standard_new,
                       ),
                       text(" Select Category", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      MultiSelectChip(
-                        categoryListModel2,
-                        onSelectionChanged: (selectedList) {
-                          setState(() {
-                            selectedReportList = selectedList;
-                          });
+                      FutureBuilder<List<NewCategoryModel>?>(
+                        future: fetchAlbum(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return MultiSelectChip(
+                              categoryListModel2,
+                              onSelectionChanged: (selectedList) {
+                                setState(() {
+                                  selectedReportList = selectedList;
+                                });
+                              },
+                            );
+                            // GridView.builder(
+                            //   itemCount: categoryListModel2.length,
+                            //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            //       crossAxisCount: 4,
+                            //       childAspectRatio: 1.0,
+                            //       crossAxisSpacing: 2,
+                            //       mainAxisSpacing: 2),
+                            //   itemBuilder: (context, index) {
+                            //     return GridItem(
+                            //         item: categoryListModel2[index],
+                            //         isSelected: (bool value) {
+                            //           setState(() {
+                            //             if (value) {
+                            //               selectedList.add(new NewSelectedCategoryModel(selcatid: categoryListModel2[index].catid!));
+                            //             } else {
+                            //               selectedList.remove(new NewSelectedCategoryModel(selcatid: categoryListModel2[index].catid!));
+                            //             }
+                            //           });
+                            //           print("$index : $value");
+                            //         },
+                            //         key: Key(categoryListModel2[index].catid.toString()));
+                            //   });
+                            //   GridView.builder(
+                            //   shrinkWrap: true,
+                            //   itemBuilder: (ctx,index){
+                            //     return prepareList(index);
+                            //   },
+                            //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount
+                            //     (crossAxisCount: 3),
+                            //   itemCount: categoryListModel.length,
+                            // );
+                          }
+                          return Center(child: CircularProgressIndicator());
                         },
                       ),
                       SizedBox(
@@ -619,7 +651,46 @@ int myind2=itemsModel.length-1;
                       ),
 
                       // text(" Select Attribute", textColor: t6textColorPrimary),
-                      CheckVariant(),
+                      FutureBuilder<AttributeModel?>(
+                        future: fetchAttribute(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return CheckVariant();
+                            // GridView.builder(
+                            //   itemCount: categoryListModel2.length,
+                            //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            //       crossAxisCount: 4,
+                            //       childAspectRatio: 1.0,
+                            //       crossAxisSpacing: 2,
+                            //       mainAxisSpacing: 2),
+                            //   itemBuilder: (context, index) {
+                            //     return GridItem(
+                            //         item: categoryListModel2[index],
+                            //         isSelected: (bool value) {
+                            //           setState(() {
+                            //             if (value) {
+                            //               selectedList.add(new NewSelectedCategoryModel(selcatid: categoryListModel2[index].catid!));
+                            //             } else {
+                            //               selectedList.remove(new NewSelectedCategoryModel(selcatid: categoryListModel2[index].catid!));
+                            //             }
+                            //           });
+                            //           print("$index : $value");
+                            //         },
+                            //         key: Key(categoryListModel2[index].catid.toString()));
+                            //   });
+                            //   GridView.builder(
+                            //   shrinkWrap: true,
+                            //   itemBuilder: (ctx,index){
+                            //     return prepareList(index);
+                            //   },
+                            //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount
+                            //     (crossAxisCount: 3),
+                            //   itemCount: categoryListModel.length,
+                            // );
+                          }
+                          return Center(child: CircularProgressIndicator());
+                        },
+                      ),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
@@ -975,14 +1046,13 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
   List<int> selectedChoices = [];
 
   _buildChoiceList() {
-    var unescape = HtmlUnescape();
     List<Widget> choices = [];
 
     widget.reportList.forEach((item) {
       choices.add(Container(
         padding: const EdgeInsets.all(2.0),
         child: ChoiceChip(
-          label: Text(unescape.convert(item.name!)),
+          label: Text(item.name!),
           selected: selectedChoices.contains(item.catid),
           onSelected: (selected) {
               setState(() {

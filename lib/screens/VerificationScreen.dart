@@ -45,6 +45,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
   String? _status;
   String _verificationId='';
   int? _code;
+  bool? Isresend=false;
 
 
   @override
@@ -78,7 +79,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
     EasyLoading.show(status: 'Verifying...');
 
     try {
-      PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(verificationId: widget.verificationId!, smsCode: currentText);
+      String vari_id='';
+      if(Isresend!){
+        vari_id=_verificationId;
+      }else{
+        vari_id=widget.verificationId!;
+      }
+      PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(verificationId: vari_id, smsCode: currentText);
       FirebaseAuth auth = FirebaseAuth.instance;
       // Sign the user in (or link) with the credential
       await auth.signInWithCredential(phoneAuthCredential);
@@ -302,6 +309,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
         prefs.setString('user_selected_country', cat_model!.data!.country!);
 
 
+        prefs.setString('profile_name',cat_model!.data!.userNicename!);
         prefs.setString('OrderUserName', cat_model!.data!.displayName!);
         prefs.setString('OrderUserEmail', cat_model!.data!.userEmail!);
         prefs.commit();
@@ -567,6 +575,7 @@ SaveToken();
                   TextButton(
                       onPressed: () {
                         _submitPhoneNumber();
+                        Isresend=true;
                          snackBar("OTP resend!!");},
                       child: Text(
                         "RESEND",

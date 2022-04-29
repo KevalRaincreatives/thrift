@@ -93,7 +93,7 @@ class _HomeFragmentState extends State<HomeFragment> {
       // prefs.setString('pro_last', profileModel!.data!.lastName!);
       // prefs.setString('pro_email', profileModel!.data!.userEmail!);
 
-      profile_name = prefs.getString("OrderUserName");
+      profile_name = prefs.getString("profile_name");
 
       print('sucess');
 
@@ -313,7 +313,8 @@ class _HomeFragmentState extends State<HomeFragment> {
               return Container();
             });
       } else if (checkUserModel!.is_store_owner==1) {
-        launchScreen(context, CreateProductScreen.tag);
+        // launchScreen(context, CreateProductScreen.tag);
+        Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
       } else if (checkUserModel!.is_store_owner==2) {
         toast("Approval is pending");
       }

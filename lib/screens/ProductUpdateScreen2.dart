@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -18,7 +17,6 @@ import 'package:thrift/model/AttributeModel.dart';
 import 'package:thrift/model/CategoryModel.dart';
 import 'package:thrift/model/CreateProModel.dart';
 import 'package:thrift/model/MultiImageModel.dart';
-import 'package:thrift/model/MultiImageUploadModel.dart';
 import 'package:thrift/model/MyVariant.dart';
 import 'package:thrift/model/NewAttributeModel.dart';
 import 'package:thrift/model/NewCategoryModel.dart';
@@ -62,7 +60,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
   final List<AddProCategoryModel> addProCatModel = [];
   final List<AddProMetaModel> addProMetaModel = [];
   final List<AddProMetaModel2> addProMetaModel2 = [];
-  final List<MultiImageUploadModel> multimimageModel = [];
+  final List<MultiImageModel> multimimageModel = [];
   List<XFile>? _imageFileList = [];
   final ImagePicker _picker = ImagePicker();
   final List<UploadImageModel> uploadModel = [];
@@ -70,16 +68,6 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
   CreateProModel? createProModel;
   ProductDetailModel? pro_det_model;
   int? cart_count;
-
-
-  @override
-  void initState() {
-    super.initState();
-    fetchDetail();
-    // fetchAlbum();
-    // fetchAttribute();
-  }
-
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -151,11 +139,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         }
       }
 
-      fetchAttribute();
-
       return categoryListModel2;
     } catch (e) {
-      EasyLoading.dismiss();
 //      return orderListModel;
       print('caught error $e');
     }
@@ -184,14 +169,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         final jsonResponse = json.decode(response.body);
         attributeModel = new AttributeModel.fromJson(jsonResponse);
       }
-      EasyLoading.dismiss();
 
-      setState(() {
-
-      });
       return attributeModel;
     } catch (e) {
-      EasyLoading.dismiss();
 //      return orderListModel;
       print('caught error $e');
     }
@@ -274,9 +254,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');
       createProModel = new CreateProModel.fromJson(jsonResponse);
-      // EasyLoading.dismiss();
+      EasyLoading.dismiss();
       toast("Product Update Successfully");
-      ItemAdd(pro_id!);
+      // ItemAdd(createProModel!.id.toString());
 
       return createProModel;
     } catch (e) {
@@ -300,8 +280,6 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         'Authorization': 'Bearer $token',
       };
 
-      toast(uploadModel.length.toString());
-
       var body = json.encode({
         "product_id": prodId,
         "product_images": uploadModel,
@@ -315,11 +293,12 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: addpic${response.body}');
+      print('Response body: addcart${response.body}');
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');
       EasyLoading.dismiss();
 
+      EasyLoading.dismiss();
       toast("Image Uploaded Successfully");
 
       Navigator.pop(context);
@@ -331,77 +310,20 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
     }
   }
 
-  Future<String?> DeletePhoto(String ImageId,int index) async {
-    EasyLoading.show(status: 'Please wait...');
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
-      String? pro_id = prefs.getString('seller_pro_id');
-      print(token);
-
-      // Response response = await get(
-      //     'https://encros.rcstaging.co.in/wp-json/v3/wooapp_add_to_cart?product_id=$pro_id&quantity=1');
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-
-      var body = json.encode({
-        "product_id": pro_id,
-        "image_id": ImageId,
-      });
-
-      // final msg = jsonEncode({"username": username, "password": password});
-      print(body);
-      var response = await http.post(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/delete_product_image'),
-          body: body,
-          headers: headers);
-
-      print('Response body: delpic${response.body}');
-      final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
-      EasyLoading.dismiss();
-
-      toast("Image Deleted");
-      setState(() {
-        multimimageModel
-            .removeAt(index);
-
-        print(
-            'set new state of images');
-      });
-
-      // Navigator.pop(context);
-
-      return "cat_model";
-    } catch (e) {
-      EasyLoading.dismiss();
-      print('caught error $e');
-    }
-  }
-
   void ItemAdd(String prodId) {
     for (var i = 0; i < multimimageModel.length; i++) {
-      if(multimimageModel[i].newImage=="1") {
-        File fls = File(multimimageModel[i].path!);
-        Uint8List bytes = fls.readAsBytesSync();
-        String base64Image = base64Encode(bytes);
-        upModel =
-            UploadImageModel(
-                name: multimimageModel[i].name!, file: base64Image);
-        uploadModel.add(upModel!);
-      }
+      File fls = File(multimimageModel[i].path!);
+      Uint8List bytes = fls.readAsBytesSync();
+      String base64Image = base64Encode(bytes);
+      upModel =
+          UploadImageModel(name: multimimageModel[i].name!, file: base64Image);
+      uploadModel.add(upModel!);
     }
     AddPhoto(prodId);
     print('object');
   }
 
   Future<ProductDetailModel?> fetchDetail() async {
-    EasyLoading.show(status: 'Please wait...');
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pro_id = prefs.getString('seller_pro_id');
@@ -420,100 +342,17 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       PriceCont.text = pro_det_model!.price!;
       BrandCont.text = pro_det_model!.metaData![0]!.value[0]!.value;
       FaultsCont.text = pro_det_model!.metaData![0]!.value[1]!.value;
-      // pro_det_model!.images!.length
-
-      for (var i = 0; i < pro_det_model!.images!.length;
-      i++) {
-        multimimageModel.add(
-            new MultiImageUploadModel(
-                pro_det_model!.images![i]!.src!,
-                "","0",pro_det_model!.images![i]!.id!.toString()));
-      }
-
-      fetchAlbum();
-      // fetchAttribute();
-
 
       return pro_det_model;
     } catch (e) {
-      EasyLoading.dismiss();
       print('caught error $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // var height = MediaQuery.of(context).size.height;
-    // var width = MediaQuery.of(context).size.width;
-
-
-    void _openCustomDialog(String ImageID,int index) {
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
-          transitionBuilder: (context, a1, a2, widget) {
-            return Transform.scale(
-              scale: a1.value,
-              child: Opacity(
-                opacity: a1.value,
-                child: AlertDialog(
-                  shape: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Are you sure you want to Delete?\n This action cannot be undone',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(height: 16,),
-                      InkWell(
-                        onTap: () async {
-                          // BecameSeller();
-                          Navigator.of(context, rootNavigator: true).pop();
-                          DeletePhoto(ImageID,index);
-                          // _openCustomDialog2();
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
-                          decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
-                          child: text("Delete",
-                              fontSize: 16.0,
-                              textColor: sh_white,
-                              isCentered: true,
-                              fontFamily: 'Bold'),
-                        ),
-                      ),
-                      SizedBox(height: 10,),
-                      InkWell(
-                        onTap: () async {
-                          Navigator.of(context, rootNavigator: true).pop();
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
-                          decoration: boxDecoration(
-                              bgColor: sh_btn_color, radius: 10, showShadow: true),
-                          child: text("Cancel",
-                              fontSize: 16.0,
-                              textColor: sh_colorPrimary2,
-                              isCentered: true,
-                              fontFamily: 'Bold'),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-          transitionDuration: Duration(milliseconds: 200),
-          barrierDismissible: true,
-          barrierLabel: '',
-          context: context,
-          pageBuilder: (context, animation1, animation2) {
-            return Container();
-          });
-    }
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
 
     BadgeCount(){
       if(cart_count==0){
@@ -585,6 +424,13 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
+                      // Text(
+                      //   "Select "+attributeModel!.data!.attributes![index]!.title!,
+                      //   style: TextStyle(
+                      //       fontSize: 16,
+                      //       fontFamily: 'Bold',
+                      //       color: sh_textColorPrimary),
+                      // ),
                       text(
                           " Select " +
                               attributeModel!.data!.attributes![index]!.title!,
@@ -721,329 +567,366 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           width: width,
           color: sh_white,
           margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(spacing_standard_new),
-                child: Container(
-                  color: sh_white,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      text(" Product Name",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      editTextStyle(
-                          "Product Name",
-                          ProductNameCont,
-                          node,
-                          "Please Enter Product Name",
-                          sh_white,
-                          sh_view_color,
-                          1),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Description",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      editTextStyle(
-                          "Description",
-                          DescCont,
-                          node,
-                          "Please Enter Description",
-                          sh_white,
-                          sh_view_color,
-                          5),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Short Description",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      editTextStyle(
-                          "Short Description",
-                          ShortDescCont,
-                          node,
-                          "Please Enter Description",
-                          sh_white,
-                          sh_view_color,
-                          2),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                text(" Price",
-                                    textColor: sh_app_txt_color,
-                                    fontFamily: "Bold"),
-                                editTextStyle(
-                                    "Price",
-                                    PriceCont,
-                                    node,
-                                    "Please Enter Price",
-                                    sh_white,
-                                    sh_view_color,
-                                    1),
+          child: FutureBuilder<ProductDetailModel?>(
+            future: fetchDetail(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Padding(
+                      padding: const EdgeInsets.all(spacing_standard_new),
+                      child: Container(
+                        color: sh_white,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            text(" Product Name",
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            editTextStyle(
+                                "Product Name",
+                                ProductNameCont,
+                                node,
+                                "Please Enter Product Name",
+                                sh_white,
+                                sh_view_color,
+                                1),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            text(" Description",
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            editTextStyle(
+                                "Description",
+                                DescCont,
+                                node,
+                                "Please Enter Description",
+                                sh_white,
+                                sh_view_color,
+                                5),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            text(" Short Description",
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            editTextStyle(
+                                "Short Description",
+                                ShortDescCont,
+                                node,
+                                "Please Enter Description",
+                                sh_white,
+                                sh_view_color,
+                                2),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      text(" Price",
+                                          textColor: sh_app_txt_color,
+                                          fontFamily: "Bold"),
+                                      editTextStyle(
+                                          "Price",
+                                          PriceCont,
+                                          node,
+                                          "Please Enter Price",
+                                          sh_white,
+                                          sh_view_color,
+                                          1),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Brand Name",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      editTextStyle(
-                          "Enter Brand",
-                          BrandCont,
-                          node,
-                          "Please Enter Brand",
-                          sh_white,
-                          sh_view_color,
-                          1),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Faults",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      editTextStyle2(
-                          "Enter if any Faults",
-                          FaultsCont,
-                          node,
-                          "Please Enter Faults",
-                          sh_white,
-                          sh_view_color,
-                          1),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Select Category",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      MultiSelectChip(
-                        categoryListModel2,
-                        selectedReportList,
-                        onSelectionChanged: (selectedList) {
-                          setState(() {
-                            selectedReportList = selectedList;
-                          });
-                        },
-                      ),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      // CheckVariant(),
-                      AttrWidget(
-                          attributeModel,
-                          pro_det_model,
-                          itModel,
-                        itemsModel
-                      ),
-                      // text(" Select Attribute", textColor: t6textColorPrimary),
-                      // FutureBuilder<AttributeModel?>(
-                      //   future: fetchAttribute(),
-                      //   builder: (context, snapshot) {
-                      //     if (snapshot.hasData) {
-                      //       return CheckVariant();
-                      //     }
-                      //     return Center(
-                      //         child: CircularProgressIndicator());
-                      //   },
-                      // ),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Add Photo",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      Container(
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3),
-                          itemCount: multimimageModel.length + 1,
-                          itemBuilder: (context, index) {
-                            if (multimimageModel.length != 0) {
-                              return Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: index == multimimageModel.length
-                                    ? IconButton(
-                                    color: sh_app_txt_color,
-                                    icon: Icon(
-                                      Icons.add_box,
-                                      size: 80,
-                                    ),
-                                    onPressed: () async {
-                                      final pickedFileList =
-                                      await _picker
-                                          .pickMultiImage();
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            text(" Brand Name",
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            editTextStyle(
+                                "Enter Brand",
+                                BrandCont,
+                                node,
+                                "Please Enter Brand",
+                                sh_white,
+                                sh_view_color,
+                                1),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            text(" Faults",
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            editTextStyle2(
+                                "Enter if any Faults",
+                                FaultsCont,
+                                node,
+                                "Please Enter Faults",
+                                sh_white,
+                                sh_view_color,
+                                1),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            text(" Select Category",
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            FutureBuilder<List<NewCategoryModel>?>(
+                              future: fetchAlbum(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return MultiSelectChip(
+                                    categoryListModel2,
+                                      selectedReportList,
+                                    onSelectionChanged: (selectedList) {
                                       setState(() {
-                                        _imageFileList =
-                                            pickedFileList;
-                                        for (var i = 0;
-                                        i <
-                                            pickedFileList!
-                                                .length;
-                                        i++) {
-                                          multimimageModel.add(
-                                              new MultiImageUploadModel(
-                                                  pickedFileList[i]
-                                                      .name,
-                                                  pickedFileList[i]
-                                                      .path,"1",""));
-                                        }
+                                        selectedReportList = selectedList;
                                       });
-                                      // if (bool) {
-                                      //   fetchData();
-                                      // }
-                                    })
-                                    : Stack(
-                                  children: [
-                                    ClipRRect(
-                                        borderRadius: BorderRadius
-                                            .all(Radius.circular(
-                                            spacing_middle)),
-                                        child: multimimageModel[index].newImage=="1"?
-                                        Image.file(
-                                          File(multimimageModel[
-                                          index]
-                                              .path!),
-                                          fit: BoxFit.cover,
-                                          height: 300,
-                                          width: 300,
-                                        ):Image.network(multimimageModel[index].name!,
-                                          fit: BoxFit.cover,
-                                          height: 300,
-                                          width: 300,)),
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: GestureDetector(
-                                        onTap: () async{
-                                          if(multimimageModel[index].newImage=="1") {
-                                            toast(
-                                                'delete image from List');
+                                    },
+                                  );
+                                }
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              },
+                            ),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
 
-                                            setState(() {
-                                              multimimageModel
-                                                  .removeAt(index);
+                            // text(" Select Attribute", textColor: t6textColorPrimary),
+                            FutureBuilder<AttributeModel?>(
+                              future: fetchAttribute(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return CheckVariant();
+                                  // GridView.builder(
+                                  //   itemCount: categoryListModel2.length,
+                                  //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  //       crossAxisCount: 4,
+                                  //       childAspectRatio: 1.0,
+                                  //       crossAxisSpacing: 2,
+                                  //       mainAxisSpacing: 2),
+                                  //   itemBuilder: (context, index) {
+                                  //     return GridItem(
+                                  //         item: categoryListModel2[index],
+                                  //         isSelected: (bool value) {
+                                  //           setState(() {
+                                  //             if (value) {
+                                  //               selectedList.add(new NewSelectedCategoryModel(selcatid: categoryListModel2[index].catid!));
+                                  //             } else {
+                                  //               selectedList.remove(new NewSelectedCategoryModel(selcatid: categoryListModel2[index].catid!));
+                                  //             }
+                                  //           });
+                                  //           print("$index : $value");
+                                  //         },
+                                  //         key: Key(categoryListModel2[index].catid.toString()));
+                                  //   });
+                                  //   GridView.builder(
+                                  //   shrinkWrap: true,
+                                  //   itemBuilder: (ctx,index){
+                                  //     return prepareList(index);
+                                  //   },
+                                  //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount
+                                  //     (crossAxisCount: 3),
+                                  //   itemCount: categoryListModel.length,
+                                  // );
+                                }
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              },
+                            ),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            text(" Add Photo",
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            Container(
+                              child: GridView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 3),
+                                itemCount: multimimageModel.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (multimimageModel.length != 0) {
+                                    return Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: index == multimimageModel.length
+                                          ? IconButton(
+                                              color: sh_app_txt_color,
+                                              icon: Icon(
+                                                Icons.add_box,
+                                                size: 80,
+                                              ),
+                                              onPressed: () async {
+                                                final pickedFileList =
+                                                    await _picker
+                                                        .pickMultiImage();
+                                                setState(() {
+                                                  _imageFileList =
+                                                      pickedFileList;
+                                                  for (var i = 0;
+                                                      i <
+                                                          pickedFileList!
+                                                              .length;
+                                                      i++) {
+                                                    multimimageModel.add(
+                                                        new MultiImageModel(
+                                                            pickedFileList[i]
+                                                                .name,
+                                                            pickedFileList[i]
+                                                                .path));
+                                                  }
+                                                });
+                                                // if (bool) {
+                                                //   fetchData();
+                                                // }
+                                              })
+                                          : Stack(
+                                              children: [
+                                                ClipRRect(
+                                                    borderRadius: BorderRadius
+                                                        .all(Radius.circular(
+                                                            spacing_middle)),
+                                                    child: Image.file(
+                                                      File(multimimageModel[
+                                                              index]
+                                                          .path!),
+                                                      fit: BoxFit.cover,
+                                                      height: 300,
+                                                      width: 300,
+                                                    )),
+                                                Positioned(
+                                                  top: 0,
+                                                  right: 0,
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      toast(
+                                                          'delete image from List');
 
-                                              print(
-                                                  'set new state of images');
-                                            });
-                                          }else{
-                                            _openCustomDialog(multimimageModel[index].ImageId!,index);
-                                          }
-                                        },
-                                        child: Icon(
-                                          Icons.delete,
-                                          color: sh_red,
+                                                      setState(() {
+                                                        multimimageModel
+                                                            .removeAt(index);
+
+                                                        print(
+                                                            'set new state of images');
+                                                      });
+                                                    },
+                                                    child: Icon(
+                                                      Icons.delete,
+                                                      color: sh_red,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                    );
+                                  } else {
+                                    return IconButton(
+                                        color: sh_app_txt_color,
+                                        icon: Icon(
+                                          Icons.add_box,
+                                          size: 80,
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            } else {
-                              return IconButton(
-                                  color: sh_app_txt_color,
-                                  icon: Icon(
-                                    Icons.add_box,
-                                    size: 80,
-                                  ),
-                                  onPressed: () async {
-                                    final pickedFileList =
-                                    await _picker.pickMultiImage();
-                                    setState(() {
-                                      _imageFileList = pickedFileList;
-                                      for (var i = 0;
-                                      i < pickedFileList!.length;
-                                      i++) {
-                                        multimimageModel.add(
-                                            new MultiImageUploadModel(
-                                                pickedFileList[i].name,
-                                                pickedFileList[i].path,"1",""));
-                                      }
-                                    });
-                                    // if (bool) {
-                                    //   fetchData();
-                                    // }
-                                  });
-                            }
-                          },
+                                        onPressed: () async {
+                                          final pickedFileList =
+                                              await _picker.pickMultiImage();
+                                          setState(() {
+                                            _imageFileList = pickedFileList;
+                                            for (var i = 0;
+                                                i < pickedFileList!.length;
+                                                i++) {
+                                              multimimageModel.add(
+                                                  new MultiImageModel(
+                                                      pickedFileList[i].name,
+                                                      pickedFileList[i].path));
+                                            }
+                                          });
+                                          // if (bool) {
+                                          //   fetchData();
+                                          // }
+                                        });
+                                  }
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  //   // TODO submit
+                                  FocusScope.of(context).requestFocus(FocusNode());
+                                  for (var i = 0; i < selectedReportList.length; i++) {
+                                    addProCatModel.add(new AddProCategoryModel(
+                                        id: selectedReportList[i]));
+                                  }
+                                toast(itemsModel.length.toString());
+                                if (itemsModel[0].options!.length > 0) {
+                                  print(itemsModel[0].name! +
+                                      itemsModel[0].options![0].toString());
+                                }
+                                if (itemsModel[1].options!.length > 0) {
+                                  print(itemsModel[1].name! +
+                                      itemsModel[1].options![0].toString());
+                                }
+                                if (itemsModel[2].options!.length > 0) {
+                                  print(itemsModel[2].name! +
+                                      itemsModel[2].options![0].toString());
+                                }
+                                if (itemsModel[3].options!.length > 0) {
+                                  print(itemsModel[3].name! +
+                                      itemsModel[3].options![0].toString());
+                                }
+                                // if (multimimageModel.length > 0) {
+                                AddProduct();
+                                // }else{
+                                //   toast("Please add a photo");
+                                // }
+                                }
+                              },
+                              child: Container(
+                                width: MediaQuery.of(context).size.width,
+                                padding: EdgeInsets.only(
+                                    top: spacing_middle,
+                                    bottom: spacing_middle),
+                                decoration: boxDecoration(
+                                    bgColor: sh_app_background,
+                                    radius: 10,
+                                    showShadow: true),
+                                child: text("UPDATE",
+                                    textColor: sh_app_txt_color,
+                                    isCentered: true,
+                                    fontFamily: 'Bold'),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          if (_formKey.currentState!.validate()) {
-                            //   // TODO submit
-                            FocusScope.of(context).requestFocus(FocusNode());
-                            for (var i = 0; i < selectedReportList.length; i++) {
-                              addProCatModel.add(new AddProCategoryModel(
-                                  id: selectedReportList[i]));
-                            }
-                            toast(itemsModel.length.toString());
-                            if (itemsModel[0].options!.length > 0) {
-                              print(itemsModel[0].name! +
-                                  itemsModel[0].options![0].toString());
-                            }
-                            if (itemsModel[1].options!.length > 0) {
-                              print(itemsModel[1].name! +
-                                  itemsModel[1].options![0].toString());
-                            }
-                            if (itemsModel[2].options!.length > 0) {
-                              print(itemsModel[2].name! +
-                                  itemsModel[2].options![0].toString());
-                            }
-                            if (itemsModel[3].options!.length > 0) {
-                              print(itemsModel[3].name! +
-                                  itemsModel[3].options![0].toString());
-                            }
-                            // if (multimimageModel.length > 0) {
-                            AddProduct();
-                            // }else{
-                            //   toast("Please add a photo");
-                            // }
-                          }
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          padding: EdgeInsets.only(
-                              top: spacing_middle,
-                              bottom: spacing_middle),
-                          decoration: boxDecoration(
-                              bgColor: sh_app_background,
-                              radius: 10,
-                              showShadow: true),
-                          child: text("UPDATE",
-                              textColor: sh_app_txt_color,
-                              isCentered: true,
-                              fontFamily: 'Bold'),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
+                );
+              } else if (snapshot.hasError) {
+                return Text("${snapshot.error}");
+              }
+              // By default, show a loading spinner.
+              return Center(child: CircularProgressIndicator());
+            },
           ),
         ),
         // Positioned to take only AppBar size
@@ -1240,126 +1123,6 @@ Padding editTextStyle2(var hintText, var cn, final node, String alert,
   );
 }
 
-class AttrWidget extends StatefulWidget {
-  // final AttributeModel? pro_det_model;
-  final AttributeModel? attributeModel;
-  final ProductDetailModel? pro_det_model;
-  NewAttributeModel? itModel;
-   List<NewAttributeModel> itemsModel = [];
-
-  AttrWidget(this.attributeModel, this.pro_det_model,this.itModel,this.itemsModel)
-      ;
-
-  @override
-  State<StatefulWidget> createState() {
-    return _AttrWidgetState();
-  }
-}
-
-class _AttrWidgetState extends State<AttrWidget> {
-  // String selectedReportList = '';
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // var _value = widget.pro_det_model!.attributes![widget.index!]!.options!.isEmpty
-    //     ? selectedItemValue
-    //     : widget.pro_det_model!.attributes![widget.index!]!.options!.firstWhere((item) => item.toString() == selectedItemValue.toString());
-
-    if (widget.attributeModel!.data!.attributes!.length > 0) {
-      return Container(
-        child: ListView.builder(
-            itemCount: widget.attributeModel!.data!.attributes!.length,
-            physics: NeverScrollableScrollPhysics(),
-            // itemExtent: 50.0,
-            shrinkWrap: true,
-            itemBuilder: (BuildContext context, int index) {
-              int? my_index=-1;
-              for (var i = 0; i < widget.pro_det_model!.metaData!.length; i++) {
-                if(widget.pro_det_model!.metaData![i]!.key=="attrs_val"){
-                  my_index=i;
-                }
-              }
-
-              int? my_index2=-1;
-              for (var i = 0; i < widget.pro_det_model!.metaData![my_index!]!.value!.length; i++) {
-                if(widget.pro_det_model!.metaData![my_index]!.value![i]!.key==widget.attributeModel!.data!.attributes![index]!.title!){
-
-                  my_index2=i;
-                }
-              }
-              if(my_index2==-1) {
-                widget.itModel = NewAttributeModel(
-                    name: widget.attributeModel!.data!.attributes![index]!.title!,
-                    position: 0,
-                    variation: true,
-                    visible: true,
-                    options: []);
-              }else{
-                widget.itModel = NewAttributeModel(
-                    name: widget.attributeModel!.data!.attributes![index]!.title!,
-                    position: 0,
-                    variation: true,
-                    visible: true,
-                    options: [widget.pro_det_model!.metaData![my_index]!.value![my_index2]!.value]);
-              }
-              widget.itemsModel.add(widget.itModel!);
-              // if(attributeModel!.data!.attributes![index]!.title!)
-
-
-              if(my_index2==-1) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    text(
-                        " Select " +
-                            widget.attributeModel!.data!.attributes![index]!.title!,
-                        textColor: sh_app_txt_color,
-                        fontFamily: "Bold"),
-                    PlayerWidget(
-                        pro_det_model: widget.attributeModel!,
-                        index: index,
-                        selectedReportList: '',
-                        itemsModel: widget.itemsModel),
-                    SizedBox(height: 10),
-
-
-                  ],
-                );
-              }else{
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-
-                    text(
-                        " Select " +
-                            widget.attributeModel!.data!.attributes![index]!.title!,
-                        textColor: sh_app_txt_color,
-                        fontFamily: "Bold"),
-                    PlayerWidget(
-                        pro_det_model: widget.attributeModel!,
-                        index: index,
-                        selectedReportList:
-                        widget.pro_det_model!.metaData![my_index]!.value![my_index2]!.value,
-                        itemsModel: widget.itemsModel),
-                    SizedBox(height: 10),
-
-
-                  ],
-                );
-              }
-            }),
-      );
-    } else {
-      return Container();
-    }
-  }
-}
-
 class PlayerWidget extends StatefulWidget {
   final AttributeModel? pro_det_model;
   final int? index;
@@ -1458,14 +1221,13 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
   // List<int> selectedChoices = [];
 
   _buildChoiceList() {
-    var unescape = HtmlUnescape();
     List<Widget> choices = [];
 
     widget.reportList.forEach((item) {
       choices.add(Container(
         padding: const EdgeInsets.all(2.0),
         child: ChoiceChip(
-          label: Text(unescape.convert(item.name!)),
+          label: Text(item.name!),
           selected: widget.selectedChoices.contains(item.catid),
           onSelected: (selected) {
             setState(() {
