@@ -449,7 +449,10 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                         productListModel!.products![index]!.data!.id
                             .toString());
                     // launchScreen(context, ProductUpdateScreen.tag);
-                    Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
+                    // Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => ProductUpdateScreen()),
+                    ).then((_) => setState(() {}));
                   },
                   child: Container(
                     padding: EdgeInsets.all(6.0),
@@ -493,7 +496,10 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                         productListModel!.products![index]!.data!.id
                             .toString());
                     // launchScreen(context, ProductUpdateScreen.tag);
-                    Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
+                    // Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => ProductUpdateScreen()),
+                    ).then((_) => setState(() {}));
                   },
                   child: Container(
                     padding: EdgeInsets.all(6.0),

@@ -644,20 +644,20 @@ int myind2=itemsModel.length-1;
                               addProCatModel.add(new AddProCategoryModel(
                                   id: selectedReportList[i]));
                             }
-                            toast(itemsModel!.length.toString());
-                          if(itemsModel![0].options!.length>0){
-                            print(itemsModel![0].name! +
-                                itemsModel![0].options![0].toString());
-                          }
-      if(itemsModel![1].options!.length>0) {
-        print(itemsModel![1].name! + itemsModel![1].options![0].toString());
-      }
-      if(itemsModel![2].options!.length>0) {
-        print(itemsModel![2].name! + itemsModel![2].options![0].toString());
-      }
-      if(itemsModel![3].options!.length>0) {
-        print(itemsModel![3].name! + itemsModel![3].options![0].toString());
-      }
+      //                       toast(itemsModel!.length.toString());
+      //                     if(itemsModel![0].options!.length>0){
+      //                       print(itemsModel![0].name! +
+      //                           itemsModel![0].options![0].toString());
+      //                     }
+      // if(itemsModel![1].options!.length>0) {
+      //   print(itemsModel![1].name! + itemsModel![1].options![0].toString());
+      // }
+      // if(itemsModel![2].options!.length>0) {
+      //   print(itemsModel![2].name! + itemsModel![2].options![0].toString());
+      // }
+      // if(itemsModel![3].options!.length>0) {
+      //   print(itemsModel![3].name! + itemsModel![3].options![0].toString());
+      // }
                             if (multimimageModel.length > 0) {
                               AddProduct();
                             }else{
@@ -751,6 +751,7 @@ int myind2=itemsModel.length-1;
       ]);
     }
 
+    // toast("value");
     return Scaffold(
 
       body: SafeArea(child: setUserForm()),

@@ -181,7 +181,6 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         attributeModel = null;
         itemsModel.clear();
 
-
         print('Response status2: ${response.statusCode}');
         print('Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
@@ -452,83 +451,66 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
     // var width = MediaQuery.of(context).size.width;
 
 
-    // toast("value");
+    toast("value");
 
 
     void _openCustomDialog(String ImageID,int index) {
       showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
-            return Sizer(
-                builder: (context, orientation, deviceType) {
-                  return
-                  Transform.scale(
-                    scale: a1.value,
-                    child: Opacity(
-                      opacity: a1.value,
-                      child: AlertDialog(
-                        shape: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0)),
-                        title: Center(child: Text(
-                          'Are you sure you want to Delete?\n This action cannot be undone',
-                          style: TextStyle(color: sh_colorPrimary2,
-                              fontSize: 18,
+            return Transform.scale(
+              scale: a1.value,
+              child: Opacity(
+                opacity: a1.value,
+                child: AlertDialog(
+                  shape: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0)),
+                  title: Center(child: Text('Are you sure you want to Delete?\n This action cannot be undone',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 16,),
+                      InkWell(
+                        onTap: () async {
+                          // BecameSeller();
+                          Navigator.of(context, rootNavigator: true).pop();
+                          DeletePhoto(ImageID,index);
+                          // _openCustomDialog2();
+                        },
+                        child: Container(
+                          width: .7.w,
+                          padding: EdgeInsets.only(
+                              top: 6, bottom: 10),
+                          decoration: boxDecoration(
+                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                          child: text("Delete",
+                              fontSize: 16.0,
+                              textColor: sh_white,
+                              isCentered: true,
                               fontFamily: 'Bold'),
-                          textAlign: TextAlign.center,)),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(height: 16,),
-                            InkWell(
-                              onTap: () async {
-                                // BecameSeller();
-                                Navigator.of(context, rootNavigator: true)
-                                    .pop();
-                                DeletePhoto(ImageID, index);
-                                // _openCustomDialog2();
-                              },
-                              child: Container(
-                                width: 100.w,
-                                padding: EdgeInsets.only(
-                                    top: 6, bottom: 10),
-                                decoration: boxDecoration(
-                                    bgColor: sh_colorPrimary2,
-                                    radius: 10,
-                                    showShadow: true),
-                                child: text("Delete",
-                                    fontSize: 16.0,
-                                    textColor: sh_white,
-                                    isCentered: true,
-                                    fontFamily: 'Bold'),
-                              ),
-                            ),
-                            SizedBox(height: 10,),
-                            InkWell(
-                              onTap: () async {
-                                Navigator.of(context, rootNavigator: true)
-                                    .pop();
-                              },
-                              child: Container(
-                                width: 100.w,
-                                padding: EdgeInsets.only(
-                                    top: 6, bottom: 10),
-                                decoration: boxDecoration(
-                                    bgColor: sh_btn_color,
-                                    radius: 10,
-                                    showShadow: true),
-                                child: text("Cancel",
-                                    fontSize: 16.0,
-                                    textColor: sh_colorPrimary2,
-                                    isCentered: true,
-                                    fontFamily: 'Bold'),
-                              ),
-                            )
-                          ],
                         ),
                       ),
-                    ),
-                  );
-
-                }
+                      SizedBox(height: 10,),
+                      InkWell(
+                        onTap: () async {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                        child: Container(
+                          width: .7.w,
+                          padding: EdgeInsets.only(
+                              top: 6, bottom: 10),
+                          decoration: boxDecoration(
+                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                          child: text("Cancel",
+                              fontSize: 16.0,
+                              textColor: sh_colorPrimary2,
+                              isCentered: true,
+                              fontFamily: 'Bold'),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
             );
           },
           transitionDuration: Duration(milliseconds: 200),
@@ -766,7 +748,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           "Please Enter Product Name",
                           sh_white,
                           sh_view_color,
-                          1,context),
+                          1),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -780,7 +762,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           "Please Enter Description",
                           sh_white,
                           sh_view_color,
-                          5,context),
+                          5),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -794,7 +776,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           "Please Enter Description",
                           sh_white,
                           sh_view_color,
-                          2,context),
+                          2),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -815,7 +797,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                     "Please Enter Price",
                                     sh_white,
                                     sh_view_color,
-                                    1,context),
+                                    1),
                               ],
                             ),
                           ),
@@ -834,7 +816,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           "Please Enter Brand",
                           sh_white,
                           sh_view_color,
-                          1,context),
+                          1),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -848,7 +830,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           "Please Enter Faults",
                           sh_white,
                           sh_view_color,
-                          1,context),
+                          1),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -859,9 +841,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                         categoryListModel2,
                         selectedReportList,
                         onSelectionChanged: (selectedList) {
-                          // setState(() {
-                          //   selectedReportList = selectedList;
-                          // });
+                          setState(() {
+                            selectedReportList = selectedList;
+                          });
                         },
                       ),
                       SizedBox(
@@ -1215,20 +1197,13 @@ class _GridItemState extends State<GridItem> {
 }
 
 Padding editTextStyle(var hintText, var cn, final node, String alert,
-    Color sh_white, Color sh_view_color, int min_lne,context) {
+    Color sh_white, Color sh_view_color, int min_lne) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
     child: TextFormField(
-
       maxLines: min_lne,
       controller: cn,
-      autofocus: false,
-      onFieldSubmitted: (value) async {
-        FocusScope.of(context).unfocus();
-        FocusScope.of(context).requestFocus(new
-        FocusNode());
-      },
-      // onEditingComplete: () => node.nextFocus(),
+      onEditingComplete: () => node.nextFocus(),
       style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
       validator: (text) {
         if (text == null || text.isEmpty) {
@@ -1255,16 +1230,10 @@ Padding editTextStyle(var hintText, var cn, final node, String alert,
 }
 
 Padding editTextStyle2(var hintText, var cn, final node, String alert,
-    Color sh_white, Color sh_view_color, int min_lne,context) {
+    Color sh_white, Color sh_view_color, int min_lne) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
     child: TextFormField(
-      autofocus: false,
-      onFieldSubmitted: (value) async {
-        FocusScope.of(context).unfocus();
-        FocusScope.of(context).requestFocus(new
-        FocusNode());
-      },
       maxLines: min_lne,
       controller: cn,
       onEditingComplete: () => node.nextFocus(),
@@ -1394,7 +1363,6 @@ class _AttrWidgetState extends State<AttrWidget> {
                         widget.pro_det_model!.metaData![my_index]!.value![my_index2]!.value,
                         itemsModel: widget.itemsModel),
                     SizedBox(height: 10),
-
 
                   ],
                 );
