@@ -32,6 +32,7 @@ import 'package:thrift/utils/ShStrings.dart';
 import 'package:thrift/utils/T3Dialog.dart';
 import 'package:badges/badges.dart';
 import 'package:thrift/utils/custom_pop_up_menu.dart';
+import 'package:sizer/sizer.dart';
 
 class ItemModel {
   String title;
@@ -60,38 +61,27 @@ class _HomeFragmentState extends State<HomeFragment> {
   String? filter_str = 'Newest to Oldest';
   AdvModel? advModel;
   int? cart_count;
+  Future<String?>? fetchDetailsMain;
+  Future<List<ProductListModel>?>? fetchAlbumMain;
+  @override
+  void initState() {
+    menuItems = [
+      ItemModel('Newest to Oldest'),
+      ItemModel('Oldest to Newest'),
+      ItemModel('Price High to Low'),
+      ItemModel('Price Low to High'),
+    ];
+    // Timerss();
+    fetchAdv();
+    fetchDetailsMain=fetchDetails();
+    // fetchAlbumMain=fetchAlbum();
+    super.initState();
+  }
+
 
   Future<String?> fetchDetails() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String UserId = prefs.getString('UserId');
-      // String? token = prefs.getString('token');
-      //
-      // print('Token : ${token}');
-      //
-      // Map<String, String> headers = {
-      //   'Content-Type': 'application/json',
-      //   'Accept': 'application/json',
-      //   'Authorization': 'Bearer $token',
-      // };
-      //
-      // var response = await http.get(
-      //     Uri.parse(
-      //         "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
-      //     headers: headers);
-      //
-      // final jsonResponse = json.decode(response.body);
-      // print('not json $jsonResponse');
-      //
-      // profileModel = new ProfileModel.fromJson(jsonResponse);
-      // // if (new_car == 0) {
-      //
-      // prefs.setString('profile_name',
-      //     profileModel!.data!.firstName! + " " + profileModel!.data!.lastName!);
-      // prefs.setString('new_profile_name', profileModel!.data!.userNicename!);
-      // prefs.setString('pro_first', profileModel!.data!.firstName!);
-      // prefs.setString('pro_last', profileModel!.data!.lastName!);
-      // prefs.setString('pro_email', profileModel!.data!.userEmail!);
 
       profile_name = prefs.getString("profile_name");
 
@@ -188,26 +178,6 @@ class _HomeFragmentState extends State<HomeFragment> {
       print('caught error $e');
     }
   }
-
-  @override
-  void initState() {
-    menuItems = [
-      ItemModel('Newest to Oldest'),
-      ItemModel('Oldest to Newest'),
-      ItemModel('Price High to Low'),
-      ItemModel('Price Low to High'),
-    ];
-    // Timerss();
-    fetchAdv();
-    super.initState();
-  }
-
-  Timerss() {
-
-  Timer timer = Timer(Duration(milliseconds: 1000), (){
-    T3Dialog();
-  });
-}
 
   Future<CheckUserModel?> fetchUserStatus() async {
     EasyLoading.show(status: 'Please wait...');
@@ -312,11 +282,12 @@ class _HomeFragmentState extends State<HomeFragment> {
             pageBuilder: (context, animation1, animation2) {
               return Container();
             });
-      } else if (checkUserModel!.is_store_owner==1) {
+      }
+      else if (checkUserModel!.is_store_owner==1) {
         // launchScreen(context, CreateProductScreen.tag);
         Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
       } else if (checkUserModel!.is_store_owner==2) {
-        toast("Approval is pending");
+        toast("Your Seller Registration is Pending. You will be notified once approved.");
       }
 
       print('sucess');
@@ -347,15 +318,6 @@ class _HomeFragmentState extends State<HomeFragment> {
 
   @override
   Widget build(BuildContext context) {
-    // Future.delayed(const Duration(milliseconds: 1000), () {
-    //   showDialog(
-    //     context: context,
-    //     builder: (BuildContext context) => CustomDialog(),
-    //   );
-    // });
-
-    final w = (MediaQuery.of(context).size.width - runSpacing * (columns - 1)) /
-        columns;
 
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
@@ -657,7 +619,7 @@ return FutureBuilder<String?>(
         elevation: 0,
         backgroundColor: sh_colorPrimary2,
         title: FutureBuilder<String?>(
-          future: fetchDetails(),
+          future: fetchDetailsMain,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return Text(
@@ -933,6 +895,13 @@ class T2Drawer extends StatefulWidget {
 class T2DrawerState extends State<T2Drawer> {
   var selectedItem = -1;
   List<CategoryModel> categoryListModel = [];
+  Future<List<CategoryModel>?>? fetchAlbumMain;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAlbumMain=fetchAlbum();
+  }
 
   Future<List<CategoryModel>?> fetchAlbum() async {
     try {
@@ -1018,7 +987,7 @@ class T2DrawerState extends State<T2Drawer> {
                 //      color: sh_colorPrimary2,),
 
                 FutureBuilder<List<CategoryModel>?>(
-                  future: fetchAlbum(),
+                  future: fetchAlbumMain,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       var unescape = HtmlUnescape();
@@ -1046,7 +1015,7 @@ class T2DrawerState extends State<T2Drawer> {
                                 child: Text(  unescape.convert(categoryListModel[index].name!),
                                     style: TextStyle(
                                         color: sh_colorPrimary2,
-                                        fontSize: 20,
+                                        fontSize: 20.sp,
                                         fontFamily: 'Bold')),
                               )
                             // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
@@ -1115,6 +1084,7 @@ class T2DrawerState extends State<T2Drawer> {
     );
   }
 }
+
 class CustomDialog extends StatelessWidget {
   CustomDialog(this.yourData);
 

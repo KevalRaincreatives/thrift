@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
@@ -67,8 +68,17 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   final List<UploadImageModel> uploadModel = [];
   UploadImageModel? upModel;
   CreateProModel? createProModel;
-
   int? cart_count;
+
+  @override
+  void initState() {
+    super.initState();
+    // fetchDetail();
+    fetchAlbum();
+
+    // fetchAttribute();
+  }
+
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -331,17 +341,11 @@ int myind2=itemsModel.length-1;
     print('object');
   }
 
-  @override
-  void initState() {
-    super.initState();
-    // fetchDetail();
-    fetchAlbum();
-    // fetchAttribute();
-  }
+
 
   @override
   Widget build(BuildContext context) {
-
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: sh_colorPrimary2));
     Widget prepareList(int k) {
       return Card(
         child: Hero(
@@ -985,6 +989,8 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
         child: ChoiceChip(
           label: Text(unescape.convert(item.name!)),
           selected: selectedChoices.contains(item.catid),
+          labelStyle: TextStyle(color: selectedChoices.contains(item.catid) ? sh_white : sh_black),
+          selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
               setState(() {
                 selectedChoices.contains(item.catid)
@@ -1060,7 +1066,9 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
         child: ChoiceChip(
 
           label: Text(item!.name!),
+          labelStyle: TextStyle(color: selectedChoices==item.name ? sh_white : sh_black),
           selected: selectedChoices==item.name,
+          selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
             setState(() {
               if(selectedChoices==item.name!){

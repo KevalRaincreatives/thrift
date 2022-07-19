@@ -228,6 +228,7 @@ class ProductSellerModelSeller {
   List<String?>? WcfmmpUniqueId;
   List<String?>? wcfmRegisterOn;
   List<String?>? DisableVendor;
+  String? profile_picture;
   String? sellerId;
 
   ProductSellerModelSeller({
@@ -286,6 +287,7 @@ class ProductSellerModelSeller {
     this.WcfmmpUniqueId,
     this.wcfmRegisterOn,
     this.DisableVendor,
+    this.profile_picture,
     this.sellerId,
   });
   ProductSellerModelSeller.fromJson(Map<String, dynamic> json) {
@@ -729,6 +731,7 @@ class ProductSellerModelSeller {
       });
       DisableVendor = arr0;
     }
+    profile_picture= json['profile_picture']?.toString();
     sellerId = json['seller_id']?.toString();
   }
   Map<String, dynamic> toJson() {
@@ -1173,6 +1176,7 @@ class ProductSellerModelSeller {
       });
       data['_disable_vendor'] = arr0;
     }
+    data['profile_picture']=profile_picture;
     data['seller_id'] = sellerId;
     return data;
   }

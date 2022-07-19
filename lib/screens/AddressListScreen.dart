@@ -31,6 +31,15 @@ class _AddressListScreenState extends State<AddressListScreen> {
   AddressListModel? _addressModel;
   Future<AddressListModel>? futureAlbum;
   String? add_from;
+  Future<AddressListModel?>? fetchAddressMain;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAddressMain=fetchAddress();
+
+  }
+
 
   Future<AddressListModel?> fetchAddress() async {
     try {
@@ -549,7 +558,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
               color: sh_white,
               child: Center(
                 child: FutureBuilder<AddressListModel?>(
-                  future: fetchAddress(),
+                  future: fetchAddressMain,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return Container(

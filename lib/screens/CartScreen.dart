@@ -5,6 +5,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:sizer/sizer.dart';
 import 'package:thrift/database/CartPro.dart';
 import 'package:thrift/database/database_hepler.dart';
 import 'package:thrift/model/AddShipModel.dart';
@@ -70,6 +71,21 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   int? address_pos;
   var myprice;
   ProductSellerModel? productSellerModel;
+  Future<AddressListModel?>? fetchAddressmy;
+  Future<PaymentModel?>? fetchPaymentmy;
+  Future<NewShipmentModel?>? fetchShipmentmy;
+  Future<CartModel?>? fetchAlbummy;
+
+
+  @override
+  void initState() {
+    fetchAddressmy = fetchAddress();
+    fetchPaymentmy=fetchPayment();
+    fetchShipmentmy=fetchShipment();
+    fetchAlbummy=fetchAlbum();
+    super.initState();
+  }
+
 
   Future<AddressListModel?> fetchAddress() async {
     try {
@@ -104,7 +120,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres");
 
       print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('Response bodyaddress: ${response.body}');
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');
 
@@ -151,7 +167,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           headers: headers);
       // EasyLoading.dismiss();
       print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('Response bodyshipmemt: ${response.body}');
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');
 
@@ -256,7 +272,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_payment_method/?country=$user_country'),
           headers: headers);
       final jsonResponse = json.decode(response.body);
-      print('not json count$jsonResponse');
+      print('not json 2count$jsonResponse');
       paymentModel = new PaymentModel.fromJson(jsonResponse);
 
       print(paymentModel!.data);
@@ -329,7 +345,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             headers: headers);
 
         print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('Response bodyalbum: ${response.body}');
         final jsonResponse = json.decode(response.body);
         print('not json $jsonResponse');
         cat_model = new CartModel.fromJson(jsonResponse);
@@ -608,7 +624,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       Response response = await get(Uri.parse(
           'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id'));
       final jsonResponse = json.decode(response.body);
-      print('not json prpr$jsonResponse');
+      print('not json p2pr$jsonResponse');
       productSellerModel = new ProductSellerModel.fromJson(jsonResponse);
       // prefs.setString("fnl_seller", productSellerModel.seller)
       prefs.setString("fnl_seller", productSellerModel!.seller!.sellerId.toString());
@@ -2513,7 +2529,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                                   textColor: sh_colorPrimary2),
 
                               FutureBuilder<PaymentModel?>(
-                                future: fetchPayment(),
+                                future: fetchPaymentmy,
                                 builder: (context, snapshot) {
                                   if (snapshot.hasData) {
                                     return PaymentWidget(
@@ -2590,7 +2606,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                                     Container(
                                       child: Center(
                                         child: FutureBuilder<AddressListModel?>(
-                                          future: fetchAddress(),
+                                          future: fetchAddressmy,
                                           builder: (context, snapshot) {
                                             if (snapshot.hasData) {
                                               return Container(
@@ -2891,11 +2907,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     CheckToken() {
       if (final_token != null && final_token != '') {
         return FutureBuilder<CartModel?>(
-            future: fetchAlbum(),
+            future: fetchAlbummy,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return FutureBuilder<NewShipmentModel?>(
-                  future: fetchShipment(),
+                  future: fetchShipmentmy,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return
@@ -3039,9 +3055,13 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       ]);
     }
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: SafeArea(child: setUserForm()),
+    return Sizer(
+        builder: (context, orientation, deviceType) {
+      return Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: SafeArea(child: setUserForm()),
+      );
+        },
     );
   }
 

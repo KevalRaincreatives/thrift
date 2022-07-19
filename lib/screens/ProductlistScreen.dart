@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/model/ProductListModel.dart';
@@ -27,6 +28,30 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
   List<ProductListModel> productListModel = [];
   var appBarTitleText ;
   String? fnl_token;
+  Future<String?>? fetchDataMain;
+  Future<List<ProductListModel>?>? fetchAlbumMain;
+  int? cart_count;
+  @override
+  void initState() {
+    super.initState();
+    fetchDataMain=fetchData();
+    fetchAlbumMain=fetchAlbum();
+
+  }
+  Future<String?> fetchtotal() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      if(prefs.getInt('cart_count')!=null){
+        cart_count = prefs.getInt('cart_count');
+      }else{
+        cart_count = 0;
+      }
+
+      return '';
+    } catch (e) {
+      print('caught error $e');
+    }
+  }
 
   Future<String?> fetchData() async {
     try {
@@ -75,6 +100,30 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
     final w = (MediaQuery.of(context).size.width - runSpacing * (columns - 1)) / columns;
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+
+    BadgeCount(){
+      if(cart_count==0){
+        return Image.asset(
+          sh_new_cart,
+          height: 50,
+          width: 50,
+          fit: BoxFit.fill,
+          color: sh_white,
+        );
+      }else{
+        return Badge(
+          position: BadgePosition.topEnd(top: 4, end: 6),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          child: Image.asset(
+            sh_new_cart,
+            height: 50,
+            width: 50,
+            fit: BoxFit.fill,
+            color: sh_white,
+          ),
+        );
+      }
+    }
 
     Imagevw4(int index) {
       if (productListModel[index].images!.length < 1) {
@@ -260,7 +309,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
 
                   padding: const EdgeInsets.fromLTRB(12.0,8,8,12),
                   child: FutureBuilder<String?>(
-                    future: fetchData(),
+                    future: fetchDataMain,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return  TextName(appBarTitleText);
@@ -270,7 +319,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
                   ),
                 ),
                 FutureBuilder<List<ProductListModel>?>(
-                  future: fetchAlbum(),
+                  future: fetchAlbumMain,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return Wrap(
@@ -371,20 +420,37 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
                     )
                   ],
                 ),
-                GestureDetector(
-                  onTap: () {
-                    launchScreen(context, CartScreen.tag);
-                  },
-                  child: Container(
-                    padding: EdgeInsets.fromLTRB(4, 0, 20, 0),
-                    child: Image.asset(
-                      sh_new_cart,
-                      height: 50,
-                      width: 50,
-                      color: sh_white,
-                    ),
-                  ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        prefs.setInt("shiping_index", -2);
+                        prefs.setInt("payment_index", -2);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  CartScreen()),).then((value) {   setState(() {
+                          // refresh state
+                        });});
+                      },
+                      child: FutureBuilder<String?>(
+                        future: fetchtotal(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return BadgeCount();
+                          } else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+                          // By default, show a loading spinner.
+                          return CircularProgressIndicator();
+                        },
+                      ),
 
+                    ),
+                    SizedBox(width: 16,)
+                  ],
                 ),
               ],
             ),
@@ -397,6 +463,6 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
 
     return Scaffold(
 
-        body: setUserForm());
+        body: SafeArea(child: setUserForm()));
   }
 }

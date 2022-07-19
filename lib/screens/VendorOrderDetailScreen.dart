@@ -31,6 +31,14 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
   TextEditingController controller5 = TextEditingController();
   String pro_rating="";
   int? cart_count;
+  Future<OrderDetailModel?>? fetchOrderMain;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOrderMain=fetchOrder();
+
+  }
 
   Future<String?> fetchtotal() async {
     try {
@@ -847,7 +855,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
               height: height,
               child: Center(
                 child: FutureBuilder<OrderDetailModel?>(
-                    future: fetchOrder(),
+                    future: fetchOrderMain,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return SingleChildScrollView(

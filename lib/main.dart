@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:device_preview/device_preview.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -51,7 +53,7 @@ import 'package:thrift/screens/WebPaymentScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/T3Dialog.dart';
-
+import 'package:sizer/sizer.dart';
 
 
 Future<void>  main() async {
@@ -68,7 +70,8 @@ Future<void>  main() async {
   );
 
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: sh_colorPrimary2,
+    // statusBarColor: Colors.red,
+      statusBarBrightness: Brightness.light
   ));
   HttpOverrides.global = new MyHttpOverrides();
   // FirebaseCrashlytics.instance.enableInDevMode = true;
@@ -76,13 +79,18 @@ Future<void>  main() async {
   // Pass all uncaught errors to Crashlytics.
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]).then((_) {
-      runZoned(() {
-        runApp(MyApp(),
-        );
-        configLoading();
-      }, onError: FirebaseCrashlytics.instance.recordError);
-  });
+  // SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]).then((_) {
+  //     runZoned(() {
+  //       runApp(MyApp(),
+  //       );
+  //       configLoading();
+  //     }, onError: FirebaseCrashlytics.instance.recordError);
+  // });
+  runApp(MyApp());
+  // runApp( DevicePreview(
+  //   enabled: !kReleaseMode,
+  //   builder: (context) => MyApp(), // Wrap your app
+  // ),);
 }
 
 void configLoading() {
@@ -118,77 +126,104 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     precacheImage(AssetImage(sh_app_logo), context);
-    return MaterialApp(
-      title: 'Cassie by Casuarina',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.lightBlue,
-          unselectedWidgetColor:sh_app_background,
-          disabledColor: sh_colorPrimary2,
+    return Sizer(
+        builder: (context, orientation, deviceType) {
+          return MaterialApp(
+            title: 'Cassie by Casuarina',
+            theme: ThemeData(
+              // This is the theme of your application.
+              //
+              // Try running your application with "flutter run". You'll see the
+              // application has a blue toolbar. Then, without quitting the app, try
+              // changing the primarySwatch below to Colors.green and then invoke
+              // "hot reload" (press "r" in the console where you ran "flutter run",
+              // or simply save your changes to "hot reload" in a Flutter IDE).
+              // Notice that the counter didn't reset back to zero; the application
+              // is not restarted.
+              primarySwatch: Colors.lightBlue,
+              unselectedWidgetColor: sh_app_background,
+              disabledColor: sh_colorPrimary2,
 
-      ),
-      initialRoute: SplashScreen.tag,
-      // navigatorObservers: [MyRouteObserver()],
-      builder: EasyLoading.init(),
-      routes: {
-        LoginScreen.tag: (BuildContext contex) => LoginScreen(),
-        SignUpScreen.tag: (BuildContext contex) => SignUpScreen(),
-        VerificationScreen.tag: (BuildContext contex) => VerificationScreen(),
-        ChangePasswordScreen.tag: (BuildContext contex) => ChangePasswordScreen(),
-        NewNumberScreen.tag: (BuildContext contex) => NewNumberScreen(),
-        OtpScreen.tag: (BuildContext contex) => OtpScreen(),
-        OtpNewScreen.tag: (BuildContext contex) => OtpNewScreen(),
-        // // SCCreatePasswordScreen.tag: (BuildContext contex) => SCCreatePasswordScreen(),
-        DashboardScreen.tag: (BuildContext contex) => DashboardScreen(selectedTab: 0,),
-        ProductlistScreen.tag: (BuildContext contex) => ProductlistScreen(),
-        CartScreen.tag: (BuildContext contex) => CartScreen(),
-        ProductDetailScreen.tag: (BuildContext contex) => ProductDetailScreen(),
-        SplashScreen.tag: (BuildContext contex) => SplashScreen(),
-        AddressListScreen.tag: (BuildContext contex) => AddressListScreen(),
-        SelectPaymentScreen.tag: (BuildContext contex) => SelectPaymentScreen(),
-        ShipmentScreen.tag: (BuildContext contex) => ShipmentScreen(),
-        DefaultAddressScreen.tag: (BuildContext contex) => DefaultAddressScreen(),
-        ForgotPasswordScreen.tag: (BuildContext contex) => ForgotPasswordScreen(),
-        ResetPasswordScreen.tag: (BuildContext contex) => ResetPasswordScreen(),
-        OrderConfirmScreen.tag: (BuildContext contex) => OrderConfirmScreen(),
-        // AddCardScreen.tag: (BuildContext contex) => AddCardScreen(),
-        CheckOut.tag: (BuildContext contex) => CheckOut(),
-        OrderListScreen.tag: (BuildContext contex) => OrderListScreen(),
-        // OrderDetailScreen.tag: (BuildContext contex) => OrderDetailScreen(),
-        // SearchScreen.tag: (BuildContext contex) => SearchScreen(),
-        MyProfileScreen.tag: (BuildContext contex) => MyProfileScreen(),
-        TermsConditionScreen.tag: (BuildContext contex) => TermsConditionScreen(),
+            ),
+            initialRoute: SplashScreen.tag,
+            // navigatorObservers: [MyRouteObserver()],
+            builder: EasyLoading.init(),
+            routes: {
+              LoginScreen.tag: (BuildContext contex) => LoginScreen(),
+              SignUpScreen.tag: (BuildContext contex) => SignUpScreen(),
+              VerificationScreen.tag: (BuildContext contex) =>
+                  VerificationScreen(),
+              ChangePasswordScreen.tag: (BuildContext contex) =>
+                  ChangePasswordScreen(),
+              NewNumberScreen.tag: (BuildContext contex) => NewNumberScreen(),
+              OtpScreen.tag: (BuildContext contex) => OtpScreen(),
+              OtpNewScreen.tag: (BuildContext contex) => OtpNewScreen(),
+              // // SCCreatePasswordScreen.tag: (BuildContext contex) => SCCreatePasswordScreen(),
+              DashboardScreen.tag: (BuildContext contex) =>
+                  DashboardScreen(selectedTab: 0,),
+              ProductlistScreen.tag: (BuildContext contex) =>
+                  ProductlistScreen(),
+              CartScreen.tag: (BuildContext contex) => CartScreen(),
+              ProductDetailScreen.tag: (BuildContext contex) =>
+                  ProductDetailScreen(),
+              SplashScreen.tag: (BuildContext contex) => SplashScreen(),
+              AddressListScreen.tag: (BuildContext contex) =>
+                  AddressListScreen(),
+              SelectPaymentScreen.tag: (BuildContext contex) =>
+                  SelectPaymentScreen(),
+              ShipmentScreen.tag: (BuildContext contex) => ShipmentScreen(),
+              DefaultAddressScreen.tag: (BuildContext contex) =>
+                  DefaultAddressScreen(),
+              ForgotPasswordScreen.tag: (BuildContext contex) =>
+                  ForgotPasswordScreen(),
+              ResetPasswordScreen.tag: (BuildContext contex) =>
+                  ResetPasswordScreen(),
+              OrderConfirmScreen.tag: (BuildContext contex) =>
+                  OrderConfirmScreen(),
+              // AddCardScreen.tag: (BuildContext contex) => AddCardScreen(),
+              CheckOut.tag: (BuildContext contex) => CheckOut(),
+              OrderListScreen.tag: (BuildContext contex) => OrderListScreen(),
+              // OrderDetailScreen.tag: (BuildContext contex) => OrderDetailScreen(),
+              // SearchScreen.tag: (BuildContext contex) => SearchScreen(),
+              MyProfileScreen.tag: (BuildContext contex) => MyProfileScreen(),
+              TermsConditionScreen.tag: (BuildContext contex) =>
+                  TermsConditionScreen(),
 
-        NewSignUpScreen.tag: (BuildContext contex) => NewSignUpScreen(),
-        CreateProductScreen.tag: (BuildContext contex) => CreateProductScreen(),
-        FAQScreen.tag: (BuildContext contex) => FAQScreen(),
-        CustomerSupportScreen.tag: (BuildContext contex) => CustomerSupportScreen(),
-        ProfileScreen.tag: (BuildContext contex) => ProfileScreen(),
-        PaymentOptionScreen.tag: (BuildContext contex) => PaymentOptionScreen(),
-        SellerProfileScreen.tag: (BuildContext contex) => SellerProfileScreen(),
-        SellerEditProfileScreen.tag: (BuildContext contex) => SellerEditProfileScreen(),
-        PaymentScreen.tag: (BuildContext contex) => PaymentScreen(),
-        OrderSuccessScreen.tag: (BuildContext contex) => OrderSuccessScreen(),
-        NewConfirmScreen.tag: (BuildContext contex) => NewConfirmScreen(),
-        SearchScreen.tag: (BuildContext contex) => SearchScreen(),
-        WebPaymentScreen.tag: (BuildContext contex) => WebPaymentScreen(),
-        BecameSellerScreen.tag: (BuildContext contex) => BecameSellerScreen(),
-        ProductUpdateScreen.tag: (BuildContext contex) => ProductUpdateScreen(),
-        SellerReviewScreen.tag: (BuildContext contex) => SellerReviewScreen(),
-        T3Dialog.tag: (BuildContext context) => T3Dialog(),
-        VendorOrderListScreen.tag: (BuildContext context) => VendorOrderListScreen(),
-        VendorOrderDetailScreen.tag: (BuildContext context) => VendorOrderDetailScreen(),
+              NewSignUpScreen.tag: (BuildContext contex) => NewSignUpScreen(),
+              CreateProductScreen.tag: (BuildContext contex) =>
+                  CreateProductScreen(),
+              FAQScreen.tag: (BuildContext contex) => FAQScreen(),
+              CustomerSupportScreen.tag: (BuildContext contex) =>
+                  CustomerSupportScreen(),
+              ProfileScreen.tag: (BuildContext contex) => ProfileScreen(),
+              PaymentOptionScreen.tag: (BuildContext contex) =>
+                  PaymentOptionScreen(),
+              SellerProfileScreen.tag: (BuildContext contex) =>
+                  SellerProfileScreen(),
+              SellerEditProfileScreen.tag: (BuildContext contex) =>
+                  SellerEditProfileScreen(),
+              PaymentScreen.tag: (BuildContext contex) => PaymentScreen(),
+              OrderSuccessScreen.tag: (BuildContext contex) =>
+                  OrderSuccessScreen(),
+              NewConfirmScreen.tag: (BuildContext contex) => NewConfirmScreen(),
+              SearchScreen.tag: (BuildContext contex) => SearchScreen(),
+              WebPaymentScreen.tag: (BuildContext contex) => WebPaymentScreen(),
+              BecameSellerScreen.tag: (BuildContext contex) =>
+                  BecameSellerScreen(),
+              ProductUpdateScreen.tag: (BuildContext contex) =>
+                  ProductUpdateScreen(),
+              SellerReviewScreen.tag: (BuildContext contex) =>
+                  SellerReviewScreen(),
+              T3Dialog.tag: (BuildContext context) => T3Dialog(),
+              VendorOrderListScreen.tag: (BuildContext context) =>
+                  VendorOrderListScreen(),
+              VendorOrderDetailScreen.tag: (BuildContext context) =>
+                  VendorOrderDetailScreen(),
 
 
-      },
+            },
+          );
+        }
     );
   }
 }

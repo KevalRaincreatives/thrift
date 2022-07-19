@@ -9,6 +9,7 @@ import 'package:thrift/model/AddressSuccessModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
 import 'package:thrift/model/CouponErrorModel.dart';
 import 'package:thrift/model/CouponModel.dart';
+import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/screens/AddressListScreen.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DefaultAddressScreen.dart';
@@ -59,11 +60,14 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
   int parish_size = 0;
   CouponModel? couponModel;
   CouponErrorModel? couponErrorModel;
+  ProfileModel? profileModel;
+  // Future<String?>? fetchtotalMain;
 
   @override
   void initState() {
     super.initState();
     init();
+    // fetchtotalMain=fetchtotal();
 
   }
 
@@ -83,9 +87,53 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       statename = widget.addressModel.state;
       countrydetail = fetchcountry();
     } else {
+      fetchDetails();
       countrydetail = fetchcountry();
     }
   }
+
+  Future<ProfileModel?> fetchDetails() async {
+//    Dialogs.showLoadingDialog(context, _keyLoader);
+    EasyLoading.show(status: 'Please wait...');
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // String UserId = prefs.getString('UserId');
+      String? token = prefs.getString('token');
+
+      print('Token : ${token}');
+
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      // Response response = await get(
+      //   'https://encros.rcstaging.co.in/wp-json/wooapp/v3/profile',
+      //   headers: headers
+      // );
+
+      var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
+          headers: headers);
+
+      final jsonResponse = json.decode(response.body);
+      print('not json $jsonResponse');
+      EasyLoading.dismiss();
+
+      profileModel = new ProfileModel.fromJson(jsonResponse);
+      // if (new_car == 0) {
+      firstNameCont.text = profileModel!.data!.firstName!;
+      lastNameCont.text = profileModel!.data!.lastName!;
+      emailCont.text = profileModel!.data!.userEmail!;
+
+      print('sucess');
+
+      return profileModel;
+    } catch (e) {
+      print('caught error $e');
+    }
+  }
+
 
   Future<AddressSuccessModel?> SaveAddress() async {
     String email = emailCont.text;

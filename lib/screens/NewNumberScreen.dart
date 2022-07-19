@@ -36,6 +36,14 @@ class _NewNumberScreenState extends State<NewNumberScreen> {
   int? _code;
   NumberCheckModel? numberCheckModel;
 
+  @override
+  void initState() {
+    super.initState();
+    // fetchtotalMain=fetchtotal();
+
+  }
+
+
   Future<String?> getCheck() async {
     try {
       String phoneNumber =  _phoneNumberController.text.toString().trim();

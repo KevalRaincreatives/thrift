@@ -5,6 +5,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/model/BecameSellerModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
+import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/screens/CartScreen2.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
@@ -46,12 +47,57 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
   bool _visible_text = false;
   int parish_size = 0;
   BecameSellerModel? becameSellerModel;
+  ProfileModel? profileModel;
 
   @override
   void initState() {
     super.initState();
     countrydetail = fetchcountry();
+    fetchDetails();
 
+  }
+
+  Future<ProfileModel?> fetchDetails() async {
+//    Dialogs.showLoadingDialog(context, _keyLoader);
+    EasyLoading.show(status: 'Please wait...');
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // String UserId = prefs.getString('UserId');
+      String? token = prefs.getString('token');
+
+      print('Token : ${token}');
+
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      // Response response = await get(
+      //   'https://encros.rcstaging.co.in/wp-json/wooapp/v3/profile',
+      //   headers: headers
+      // );
+
+      var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
+          headers: headers);
+
+      final jsonResponse = json.decode(response.body);
+      print('not json $jsonResponse');
+      EasyLoading.dismiss();
+
+      profileModel = new ProfileModel.fromJson(jsonResponse);
+      // if (new_car == 0) {
+      firstNameCont.text = profileModel!.data!.firstName!;
+      lastNameCont.text = profileModel!.data!.lastName!;
+      emailCont.text = profileModel!.data!.userEmail!;
+      phoneNumberCont.text= profileModel!.data!.phone!;
+
+      print('sucess');
+
+      return profileModel;
+    } catch (e) {
+      print('caught error $e');
+    }
   }
 
   Future<BecameSellerModel?> BecameSeller() async {

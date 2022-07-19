@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:nb_utils/nb_utils.dart' hide lightGrey;
@@ -79,10 +80,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isVisible_success = false;
   ProductSellerModel? productSellerModel;
   CartModel? cat_model;
+  Future<ProductDetailModel?>? fetchDetailMain;
+  Future<ProductSellerModel?>? fetchSellerMain;
 
   @override
   void initState() {
     _controller = PageController();
+    fetchDetailMain=fetchDetail();
+    fetchSellerMain=fetchSeller();
     super.initState();
 //    mListings2 = getPopular();
   }
@@ -130,6 +135,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       final jsonResponse = json.decode(response.body);
       print('not json prpr$jsonResponse');
       productSellerModel = new ProductSellerModel.fromJson(jsonResponse);
+      prefs.setString("seller_pic", productSellerModel!.seller!.profile_picture!);
       return productSellerModel;
     } catch (e) {
       print('caught error $e');
@@ -584,7 +590,6 @@ ct_changel=true;
 
   @override
   Widget build(BuildContext context) {
-    bool isLiked = true;
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
@@ -596,7 +601,7 @@ ct_changel=true;
           context: context,
           pageBuilder: (context, animation1, animation2) => Scaffold(
               backgroundColor: Colors.black87,
-              body: Stack(
+              body: SafeArea(child: Stack(
                 children: [
                   PageView.builder(
                     controller: _controller2,
@@ -606,16 +611,16 @@ ct_changel=true;
                         child: Padding(
                           padding: const EdgeInsets.all(1.0),
                           child: Card(
-                            semanticContainer: true,
-                            clipBehavior: Clip.antiAliasWithSaveLayer,
-                            elevation: 0,
-                            margin: EdgeInsets.all(0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: PhotoView(
-                              imageProvider: NetworkImage(pro_det_model!.images![index]!.src!,
-                            ))
+                              semanticContainer: true,
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              elevation: 0,
+                              margin: EdgeInsets.all(0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: PhotoView(
+                                  imageProvider: NetworkImage(pro_det_model!.images![index]!.src!,
+                                  ))
                             // Image.network(
                             //     pro_det_model!.images![index]!.src!,
                             //     fit: BoxFit.cover),
@@ -657,7 +662,8 @@ ct_changel=true;
                     ),
                   )
                 ],
-              )//Put your screen design here!
+              ))
+              //Put your screen design here!
           )
       );
     }
@@ -1282,6 +1288,7 @@ ct_changel=true;
     }
 
 
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: sh_colorPrimary2));
 
     Widget setUserForm() {
       AppBar appBar = AppBar(
@@ -1332,6 +1339,7 @@ ct_changel=true;
           child: Container(
             height: height,
             margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
+            color: sh_white,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -1341,7 +1349,7 @@ ct_changel=true;
                     child: Container(
                       width: width,
                       child: FutureBuilder<ProductDetailModel?>(
-                        future: fetchDetail(),
+                        future: fetchDetailMain,
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             return Container(
@@ -1450,7 +1458,7 @@ ct_changel=true;
                                         height: 26,
                                       ),
                                       FutureBuilder<ProductSellerModel?>(
-                                        future: fetchSeller(),
+                                        future: fetchSellerMain,
                                         builder: (context, snapshot) {
                                           if (snapshot.hasData) {
                                             return Container(
@@ -1494,11 +1502,26 @@ ct_changel=true;
                                                     ),
                                                     Row(
                                                       children: [
-                                                        Icon(
-                                                          Icons.circle,
-                                                          color: sh_grey,
-                                                          size: 40,
-                                                        ),
+                                                        Padding(
+                                                            padding: const EdgeInsets.all(2.0),
+                                                            child: productSellerModel!.seller!.profile_picture == null
+                                                                ? CircleAvatar(
+                                                              // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                              backgroundImage: NetworkImage(
+                                                                  "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"
+                                                                  ),
+                                                              radius: 22,
+                                                            )
+                                                                : CircleAvatar(
+                                                              // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                              backgroundImage: NetworkImage(productSellerModel!.seller!.profile_picture!),
+                                                              radius: 22,
+                                                            )),
+                                                        // Icon(
+                                                        //   Icons.circle,
+                                                        //   color: sh_grey,
+                                                        //   size: 40,
+                                                        // ),
                                                         SizedBox(
                                                           width: 10,
                                                         ),
@@ -1709,7 +1732,7 @@ ct_changel=true;
     return Scaffold(
       body: WillPopScope(
           onWillPop: _onWillPop,
-          child: setUserForm()),
+          child: SafeArea(child: setUserForm())),
     );
   }
 }

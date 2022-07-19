@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/retry.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/fragments/AccountFragment.dart';
@@ -46,58 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   var title = "Home";
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
 
-  Future<List<CategoryModel>?> fetchAlbum() async {
-    try {
-//      prefs = await SharedPreferences.getInstance();
-//      String UserId = prefs.getString('UserId');
-//       var response = await http.get(
-//           Uri.parse("https://encros.rcstaging.co.in/wp-json/wc/v3/products/categories"));
-      final client = RetryClient(http.Client());
-      var response;
-      try {
-        response=await client.get(
-            Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories"));
-      } finally {
-        client.close();
-      }
 
-
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-      for (Map i in jsonResponse) {
-        categoryListModel.add(CategoryModel.fromJson(i));
-//        orderListModel = new OrderListModel2.fromJson(i);
-      }
-
-      return categoryListModel;
-    } catch (e) {
-//      return orderListModel;
-      print('caught error $e');
-    }
-  }
-
-  // Future<bool> _onWillPop() {
-  //   return showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: Text('Are you sure?'),
-  //       content: Text('Do you want to exit an App'),
-  //       actions: <Widget>[
-  //         FlatButton(
-  //           onPressed: () => Navigator.of(context).pop(false),
-  //           child: Text('No'),
-  //         ),
-  //         FlatButton(
-  //           onPressed: () => exit(0),
-  //           /*Navigator.of(context).pop(true)*/
-  //           child: Text('Yes'),
-  //         ),
-  //       ],
-  //     ),
-  //   ) ??
-  //       false;
-  // }
 
   @override
   void initState() {
@@ -143,6 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
+    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: Colors.transparent));
 
     return Scaffold(
 

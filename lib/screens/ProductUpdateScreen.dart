@@ -1514,6 +1514,8 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
         child: ChoiceChip(
           label: Text(unescape.convert(item.name!)),
           selected: widget.selectedChoices.contains(item.catid),
+          labelStyle: TextStyle(color: widget.selectedChoices.contains(item.catid) ? sh_white : sh_black),
+          selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
             setState(() {
               widget.selectedChoices.contains(item.catid)
@@ -1575,7 +1577,9 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
         padding: const EdgeInsets.all(2.0),
         child: ChoiceChip(
           label: Text(item!.name!),
+          labelStyle: TextStyle(color: widget.selectedChoices==item.name ? sh_white : sh_black),
           selected: widget.selectedChoices==item.name,
+          selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
             setState(() {
               if(widget.selectedChoices==item.name!){

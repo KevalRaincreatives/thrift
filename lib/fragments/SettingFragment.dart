@@ -33,11 +33,13 @@ class _SettingFragmentState extends State<SettingFragment> {
   CountryParishModelDataCountries? selectedValue;
   Future<CountryParishModel?>? countrydetail;
   CheckUserModel? checkUserModel;
+  Future<String?>? fetchaddMain;
 
   @override
   void initState() {
     super.initState();
     countrydetail = fetchcountry();
+    fetchaddMain=fetchadd();
   }
 
   Future<String?> fetchadd() async {
@@ -130,6 +132,7 @@ class _SettingFragmentState extends State<SettingFragment> {
                         Navigator.of(context, rootNavigator: true).pop();
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         prefs.setString('user_selected_country', newVal.country!);
+                        toast(newVal.country);
                         EmptyCart();
 
                         setState(() {
@@ -550,7 +553,7 @@ hintMaxLines: 5,
                             ),
                           ),
                           FutureBuilder<String?>(
-                            future: fetchadd(),
+                            future: fetchaddMain,
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return Padding(

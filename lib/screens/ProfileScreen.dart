@@ -42,13 +42,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String fnl_img = 'https://secure.gravatar.com/avatar/598b1f668254d0f7097133846aa32daf?s=96&d=mm&r=g';
   final picker = ImagePicker();
   ViewProModel? viewProModel;
+  Future<ViewProModel?>? ViewProfilePicMain;
+  Future<String?>? fetchaddMain;
 
 
   @override
   void initState() {
     super.initState();
     fetchDetails();
-
+    ViewProfilePicMain=ViewProfilePic();
+    fetchaddMain=fetchadd();
   }
 
   getLogout() async {
@@ -402,7 +405,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       fnl_img = viewProModel!.profile_picture!;
 
 
-
       return viewProModel;
     } catch (e) {
       // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
@@ -540,7 +542,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Center(
                             child: FutureBuilder<ViewProModel?>(
-                              future: ViewProfilePic(),
+                              future: ViewProfilePicMain,
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
                                   return Stack(
@@ -807,7 +809,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           SizedBox(height: 16,),
                           FutureBuilder<String?>(
-                            future: fetchadd(),
+                            future: fetchaddMain,
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
 

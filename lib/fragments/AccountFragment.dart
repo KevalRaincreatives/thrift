@@ -32,6 +32,15 @@ class AccountFragment extends StatefulWidget {
 
 class _AccountFragmentState extends State<AccountFragment> {
   CheckUserModel? checkUserModel;
+  Future<CheckUserModel?>? fetchUserStatus2Main;
+
+  @override
+  void initState() {
+    fetchUserStatus2Main=fetchUserStatus2();
+    // fetchSellerMain=fetchSeller();
+    super.initState();
+//    mListings2 = getPopular();
+  }
 
   Future<CheckUserModel?> fetchUserStatus() async {
 
@@ -214,7 +223,7 @@ class _AccountFragmentState extends State<AccountFragment> {
               child: Column(
                 children: [
                   FutureBuilder<CheckUserModel?>(
-                    future: fetchUserStatus2(),
+                    future: fetchUserStatus2Main,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         if(checkUserModel!.is_store_owner==1) {

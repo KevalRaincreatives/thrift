@@ -35,6 +35,20 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   ReviewModel? reviewModel;
 
   int? cart_count;
+  String? seller_pic;
+  Future<String?>? fetchPicMain;
+  Future<String?>? fetchaddMain;
+  Future<ReviewModel?>? fetchREviewMain;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPicMain=fetchPic();
+    fetchaddMain=fetchadd();
+    fetchREviewMain=fetchREview();
+
+  }
+
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -50,6 +64,20 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     }
   }
 
+  Future<String?> fetchPic() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      if(prefs.getString('seller_pic')!=null){
+        seller_pic = prefs.getString('seller_pic');
+      }else{
+        seller_pic = "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366";
+      }
+
+      return '';
+    } catch (e) {
+      print('caught error $e');
+    }
+  }
 
   Future<ReviewModel?> fetchREview() async {
     try {
@@ -84,7 +112,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
 //      String UserId = prefs.getString('UserId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
         seller_id = prefs.getString('seller_id');
-      // toast(cat_id);
+      // toast(seller_id);
 
       var response = await http.get(
           Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?seller_id=$seller_id"));
@@ -248,15 +276,27 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
             margin: EdgeInsets.fromLTRB(16,0,16,0),
             child: Column(
               children: [
-                CircleAvatar(
-                  backgroundImage: AssetImage(sh_no_img),
-                  radius: 50,
+                FutureBuilder<String?>(
+                  future: fetchPicMain,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return CircleAvatar(
+                        backgroundImage: NetworkImage(seller_pic!),
+                        radius: 50,
+                      );
+                    } else if (snapshot.hasError) {
+                      return Text("${snapshot.error}");
+                    }
+                    // By default, show a loading spinner.
+                    return CircularProgressIndicator();
+                  },
                 ),
+
                 SizedBox(
                   height: 10,
                 ),
                 FutureBuilder<String?>(
-                  future: fetchadd(),
+                  future: fetchaddMain,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return Text(
@@ -277,7 +317,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   height: 16,
                 ),
                 FutureBuilder<ReviewModel?>(
-                  future: fetchREview(),
+                  future: fetchREviewMain,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return InkWell(

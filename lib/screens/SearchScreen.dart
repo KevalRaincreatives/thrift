@@ -38,12 +38,14 @@ class _SearchScreenState extends State<SearchScreen> {
 
 bool lasttime=true;
   List<String> _status = ["All","Popularity", "Latest", "Price Low to High", "Price High to Low"];
+  Future<String?>? fetchaddMain;
 
 
   @override
   void initState() {
     super.initState();
     SearchNewData();
+    fetchaddMain=fetchadd();
   }
 
 
@@ -246,7 +248,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
 
   Future<String?> fetchadd() async {
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
       if(firsttime!) {
         searchController.text = widget.serchdata!;
       }
@@ -520,7 +521,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
 
       body: SafeArea(child:
       FutureBuilder<String?>(
-        future: fetchadd(),
+        future: fetchaddMain,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return setUserForm();

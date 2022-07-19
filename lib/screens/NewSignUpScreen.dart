@@ -175,7 +175,8 @@ class _NewSignUpScreenState extends State<NewSignUpScreen> {
       EasyLoading.dismiss();
       // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
       print('verificationFailed');
-      toast('verification Failed');
+      toast('verification Failed ');
+      toast(error.message);
       setState(() {
         _status = '$error\n';
       });

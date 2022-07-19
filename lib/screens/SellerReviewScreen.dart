@@ -23,6 +23,14 @@ class SellerReviewScreen extends StatefulWidget {
 
 class _SellerReviewScreenState extends State<SellerReviewScreen> {
   ReviewModel? reviewModel;
+  Future<ReviewModel?>? fetchAlbumMain;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAlbumMain=fetchAlbum();
+
+  }
 
   Future<ReviewModel?> fetchAlbum() async {
     try {
@@ -280,7 +288,7 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
                 children: <Widget>[
                   // TopBar(t1_Listing),
                   FutureBuilder<ReviewModel?>(
-                    future: fetchAlbum(),
+                    future: fetchAlbumMain,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return reviews();

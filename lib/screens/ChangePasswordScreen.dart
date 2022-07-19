@@ -36,6 +36,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   CouponModel? couponModel;
   CouponErrorModel? couponErrorModel;
   int? cart_count;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -20,10 +20,12 @@ class OrderSuccessScreen extends StatefulWidget {
 
 class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
   String? order_proname,order_proprice,order_proimage;
+  Future<String?>? fetchaddMain;
 
   @override
   void initState() {
     AddPushNotification();
+    fetchaddMain=fetchadd();
     super.initState();
   }
 
@@ -186,7 +188,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                 height: 20,
               ),
               FutureBuilder<String?>(
-                future: fetchadd(),
+                future: fetchaddMain,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     return Column(

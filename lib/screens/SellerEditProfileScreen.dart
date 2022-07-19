@@ -56,6 +56,21 @@ class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
   ViewProModel? viewProModel;
 
   int? cart_count;
+  Future<ViewProModel?>? ViewProfilePicMain;
+
+
+  @override
+  void initState() {
+    menuItems = [
+      ItemModel('Newest to Oldest'),
+      ItemModel('Oldest to Newest'),
+      ItemModel('Price High to Low'),
+      ItemModel('Price Low to High'),
+    ];
+    super.initState();
+  }
+
+
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -332,16 +347,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
     }
   }
 
-  @override
-  void initState() {
-    menuItems = [
-      ItemModel('Newest to Oldest'),
-      ItemModel('Oldest to Newest'),
-      ItemModel('Price High to Low'),
-      ItemModel('Price Low to High'),
-    ];
-    super.initState();
-  }
 
   Future<String?> fetchadd() async {
     try {
@@ -953,7 +958,10 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                       if (snapshot.hasData) {
                         return     InkWell(
                           onTap: () {
-                            launchScreen(context, ProfileScreen.tag);
+                            // launchScreen(context, ProfileScreen.tag);
+                            Navigator.push(context,
+                              MaterialPageRoute(builder: (context) => ProfileScreen()),
+                            ).then((_) => setState(() {}));
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

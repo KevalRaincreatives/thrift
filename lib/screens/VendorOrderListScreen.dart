@@ -28,6 +28,14 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
       showDiscountPrice,
       showShortDesc,currency_symbol,price_decimal_sep,price_num_decimals;
   String? sh_app_bars;
+  Future<OrderListModel?>? fetchOrderMain;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOrderMain=fetchOrder();
+
+  }
 
   Future<OrderListModel?> fetchOrder() async {
     try {
@@ -310,7 +318,7 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
                       children: <Widget>[
                         // TopBar(t1_Listing),
                         FutureBuilder<OrderListModel?>(
-                          future: fetchOrder(),
+                          future: fetchOrderMain,
                           builder: (context, snapshot) {
                             if (snapshot.hasData) {
                               return listView();
