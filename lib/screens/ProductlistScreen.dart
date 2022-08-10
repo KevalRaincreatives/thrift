@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/ProductDetailScreen.dart';
@@ -31,6 +32,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
   Future<String?>? fetchDataMain;
   Future<List<ProductListModel>?>? fetchAlbumMain;
   int? cart_count;
+  int timer = 800, offset = 0;
   @override
   void initState() {
     super.initState();

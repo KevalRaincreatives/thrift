@@ -525,15 +525,15 @@ hintMaxLines: 5,
                               child: Text("FAQ's",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
                             ),
                           ),
-                          // InkWell(
-                          //   onTap: () {
-                          //     launchScreen(context, CustomerSupportScreen.tag);
-                          //   },
-                          //   child: Padding(
-                          //     padding: const EdgeInsets.fromLTRB(18.0,12,12,12),
-                          //     child: Text("Customer Support",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
-                          //   ),
-                          // ),
+                          InkWell(
+                            onTap: () {
+                              launchScreen(context, CustomerSupportScreen.tag);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(18.0,12,12,12),
+                              child: Text("Customer Support",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
+                            ),
+                          ),
                           InkWell(
                             onTap: () {
                               _openCustomDialog();

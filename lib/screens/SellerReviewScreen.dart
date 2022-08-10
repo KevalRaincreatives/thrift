@@ -24,10 +24,13 @@ class SellerReviewScreen extends StatefulWidget {
 class _SellerReviewScreenState extends State<SellerReviewScreen> {
   ReviewModel? reviewModel;
   Future<ReviewModel?>? fetchAlbumMain;
+  Future<String?>? fetchaddMain;
+  String? seller_name;
 
   @override
   void initState() {
     super.initState();
+    fetchaddMain=fetchadd();
     fetchAlbumMain=fetchAlbum();
 
   }
@@ -68,6 +71,16 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
         cart_count = 0;
       }
 
+      return '';
+    } catch (e) {
+      print('caught error $e');
+    }
+  }
+
+  Future<String?> fetchadd() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      seller_name = prefs.getString('seller_name');
       return '';
     } catch (e) {
       print('caught error $e');
@@ -326,10 +339,23 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
                       }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
                     ),
 
-                    Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("All Reviews",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
-                    )
+                    FutureBuilder<String?>(
+                      future: fetchaddMain,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text("$seller_name(All Reviews)",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text("${snapshot.error}");
+                        }
+                        // By default, show a loading spinner.
+                        return CircularProgressIndicator();
+                      },
+                    ),
+
+
                   ],
                 ),
                 Row(

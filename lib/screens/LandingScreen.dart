@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/screens/NewSignUpScreen.dart';
+import 'package:thrift/screens/TermsConditionScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
@@ -88,6 +89,7 @@ class _LandingScreenState extends State<LandingScreen> {
                     InkWell(
                       onTap: () async {
                         launchScreen(context, NewSignUpScreen.tag);
+                        // launchScreen(context, TermsConditionScreen.tag);
                         // if (_formKey.currentState!.validate()) {
                         //   // TODO submit
                         //   FocusScope.of(context).requestFocus(FocusNode());

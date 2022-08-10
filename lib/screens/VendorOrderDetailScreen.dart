@@ -5,6 +5,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/OrderDetailModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
@@ -878,16 +879,90 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                         return Text("${snapshot.error}");
                       }
                       // By default, show a loading spinner.
-                      return Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            SizedBox(
-                              child: CircularProgressIndicator(),
-                              height: 50.0,
-                              width: 50.0,
-                            )
-                          ],
+                      return Expanded(
+                        child: Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          enabled: true,
+                          child: Container(
+                            padding: EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Container(
+                                      width: 60.0,
+                                      height: 60.0,
+                                      color: Colors.white,
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Container(
+                                            width: double.infinity,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                                          ),
+                                          Container(
+                                            width: double.infinity,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                                          ),
+                                          Container(
+                                            width: 40.0,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(height: 20,),
+                                Container(
+                                  width: width*.3,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: 10,),
+                                Container(
+                                  width: double.infinity,
+                                  height: 40.0,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: 18,),
+                                Container(
+                                  width: width*.3,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: 10,),
+                                Container(
+                                  width: double.infinity,
+                                  height: 80.0,
+                                  color: Colors.white,
+                                ),
+
+                                SizedBox(height: 20,),
+                                Container(
+                                  width: double.infinity,
+                                  height: 100.0,
+                                  color: Colors.white,
+                                ),
+                              ],),
+                          ),
                         ),
                       );
                     }),

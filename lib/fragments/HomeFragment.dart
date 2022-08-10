@@ -33,6 +33,7 @@ import 'package:thrift/utils/T3Dialog.dart';
 import 'package:badges/badges.dart';
 import 'package:thrift/utils/custom_pop_up_menu.dart';
 import 'package:sizer/sizer.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ItemModel {
   String title;
@@ -63,6 +64,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   int? cart_count;
   Future<String?>? fetchDetailsMain;
   Future<List<ProductListModel>?>? fetchAlbumMain;
+  int timer = 800, offset = 0;
   @override
   void initState() {
     menuItems = [
@@ -284,8 +286,14 @@ class _HomeFragmentState extends State<HomeFragment> {
             });
       }
       else if (checkUserModel!.is_store_owner==1) {
-        // launchScreen(context, CreateProductScreen.tag);
-        Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
+        // launchScreen(context, BecameSellerScreen.tag);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CreateProductScreen(),
+          ),
+        ).then((_) => setState(() {}));
+        // Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
       } else if (checkUserModel!.is_store_owner==2) {
         toast("Your Seller Registration is Pending. You will be notified once approved.");
       }
@@ -612,6 +620,7 @@ return FutureBuilder<String?>(
           ),
         );
       }
+
     }
 
     Widget setUserForm() {
@@ -619,6 +628,7 @@ return FutureBuilder<String?>(
         elevation: 0,
         backgroundColor: sh_colorPrimary2,
         title: FutureBuilder<String?>(
+
           future: fetchDetailsMain,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -659,18 +669,26 @@ return FutureBuilder<String?>(
       );
       double app_height = appBar.preferredSize.height;
       return Stack(children: <Widget>[
+
         // Background with gradient
         Container(
+          margin: EdgeInsets.fromLTRB(0, 40, 0, 0),
             height: 120,
             width: width,
             child: Image.asset(sh_upper2, fit: BoxFit.fill)
             // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
             ),
+        Positioned(
+          top: 0.0,
+          left: 0.0,
+          right: 0.0,
+          child: appBar,
+        ),
         //Above card
         Container(
           height: height,
           // padding: EdgeInsets.fromLTRB(26,0,26,0),
-          margin: EdgeInsets.fromLTRB(0, app_height + 20, 0, 0),
+          margin: EdgeInsets.fromLTRB(0, app_height + 40, 0, 0),
           // color: Colors.white,
 
           child: SingleChildScrollView(
@@ -725,6 +743,7 @@ return FutureBuilder<String?>(
                 Container(
                   height: height - 128,
                   width: width,
+                  margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
                   padding: EdgeInsets.fromLTRB(26, 0, 26, 0),
                   color: sh_white,
                   child: Column(
@@ -814,7 +833,33 @@ return FutureBuilder<String?>(
                           if (snapshot.hasData) {
                             return listView();
                           }
-                          return Center(child: CircularProgressIndicator(color: sh_colorPrimary2));
+                          // return Center(child: CircularProgressIndicator(color: sh_colorPrimary2));
+                          return Expanded(
+                            child: Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              direction: ShimmerDirection.ltr,
+                              child: GridView.builder(
+                                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                                      maxCrossAxisExtent: 200,
+                                      crossAxisSpacing: 20,
+                                      mainAxisSpacing: 20),
+                                  itemCount: 8,
+                                  itemBuilder: (BuildContext ctx, index) {
+                                    offset +=50;
+                                    timer = 800 + offset;
+                                    print(timer);
+                                    return Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        height: 100,
+                                        width: 100,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  }),
+                            ),
+                          );
                         },
                       ),
                       SizedBox(
@@ -828,12 +873,7 @@ return FutureBuilder<String?>(
           ),
         ),
         // Positioned to take only AppBar size
-        Positioned(
-          top: 0.0,
-          left: 0.0,
-          right: 0.0,
-          child: appBar,
-        ),
+
       ]);
     }
 
@@ -879,8 +919,9 @@ return FutureBuilder<String?>(
         //   ),
         // ),
       ),
-      drawer: T2Drawer(),
+
       body: setUserForm(),
+      drawer: T2Drawer(),
     );
   }
 }
@@ -910,7 +951,7 @@ class T2DrawerState extends State<T2Drawer> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories"));
+              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories?per_page=25"));
         } finally {
           client.close();
         }
@@ -991,39 +1032,117 @@ class T2DrawerState extends State<T2Drawer> {
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       var unescape = HtmlUnescape();
-                      return ListView.builder(
-                        // physics:
-                        // NeverScrollableScrollPhysics(),
+                      return Expanded(
+                        child: ListView.builder(
+                          // physics:
+                          // NeverScrollableScrollPhysics(),
 
-                        scrollDirection: Axis.vertical,
-                        itemCount: categoryListModel.length,
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                              onTap: () async {
-                                SharedPreferences prefs =
-                                await SharedPreferences.getInstance();
-                                prefs.setString('cat_id',
-                                    categoryListModel[index].id.toString());
-                                prefs.setString('cat_names',
-                                    categoryListModel[index].name.toString());
-                                launchScreen(context, ProductlistScreen.tag);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                    18.0, 12, 12, 12),
-                                child: Text(  unescape.convert(categoryListModel[index].name!),
-                                    style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 20.sp,
-                                        fontFamily: 'Bold')),
-                              )
-                            // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
-                          );
-                        },
+                          scrollDirection: Axis.vertical,
+                          itemCount: categoryListModel.length,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            return GestureDetector(
+                                onTap: () async {
+                                  SharedPreferences prefs =
+                                  await SharedPreferences.getInstance();
+                                  prefs.setString('cat_id',
+                                      categoryListModel[index].id.toString());
+                                  prefs.setString('cat_names',
+                                      categoryListModel[index].name.toString());
+                                  launchScreen(context, ProductlistScreen.tag);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      18.0, 12, 12, 12),
+                                  child: Text(  unescape.convert(categoryListModel[index].name!),
+                                      style: TextStyle(
+                                          color: sh_colorPrimary2,
+                                          fontSize: 18.sp,
+                                          fontFamily: 'Bold')),
+                                )
+                              // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
+                            );
+                          },
+                        ),
                       );
                     }
-                    return Center(child: CircularProgressIndicator());
+                    return Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      direction: ShimmerDirection.ltr,
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(12,12,50,12),
+                        child: Column(
+                          children: [
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        18.0, 12, 12, 12),
+                                    child:                             Container(
+                                      width: double.infinity,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                            SizedBox(height: 10,),
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        18.0, 12, 12, 12),
+                                    child:                             Container(
+                                      width: double.infinity,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                            SizedBox(height: 10,),
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        18.0, 12, 12, 12),
+                                    child:                             Container(
+                                      width: double.infinity,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                            SizedBox(height: 10,),
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        18.0, 12, 12, 12),
+                                    child:                             Container(
+                                      width: double.infinity,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                            SizedBox(height: 10,),
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        18.0, 12, 12, 12),
+                                    child:                             Container(
+                                      width: double.infinity,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                          ],
+                        ),
+
+                      ),
+                    );
                   },
                 ),
 

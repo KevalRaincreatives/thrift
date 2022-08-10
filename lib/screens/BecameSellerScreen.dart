@@ -36,6 +36,15 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
   var phoneNumberCont = TextEditingController();
   var countryCont = TextEditingController();
   var parishCont = TextEditingController();
+  var accountNameCont = TextEditingController();
+  var accountNumberCont = TextEditingController();
+  var bankNameCont = TextEditingController();
+  var otherCont = TextEditingController();
+
+
+
+
+
   Future<CountryParishModel?>? countrydetail;
   List<CountryParishModel>? countryModel;
   CountryParishModel? countryNewModel;
@@ -147,7 +156,7 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
       // });
 
       final msg = jsonEncode({
-        "shop_name": ShopNameCont.text.toString(),
+        // "shop_name": ShopNameCont.text.toString(),
         "billing_first_name":firstNameCont.text.toString(),
         "billing_last_name":lastNameCont.text.toString(),
         "billing_email": emailCont.text.toString(),
@@ -166,6 +175,10 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
         "shipping_state":statename,
         "shipping_postcode":pinCodeCont.text.toString(),
         "shipping_country":countryname,
+        "name_of_account":accountNameCont.text.toString(),
+        "account_number":accountNumberCont.text.toString(),
+        "name_of_bank":bankNameCont.text.toString(),
+        "other_details":otherCont.text.toString()
       });
 
 
@@ -183,7 +196,9 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
       print('not json2 $jsonResponse');
       becameSellerModel = new BecameSellerModel.fromJson(jsonResponse);
 
+
 if(becameSellerModel!.success!) {
+  toast(becameSellerModel!.msg);
   Navigator.push(
     context,
     MaterialPageRoute(
@@ -437,13 +452,13 @@ if(becameSellerModel!.success!) {
 
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      text(" Shop Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Shop Name", ShopNameCont, node,
-                          "Please Enter Shop Name", sh_white, sh_view_color, 1),
-
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
+                      // text(" Shop Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      // editTextStyle("Shop Name", ShopNameCont, node,
+                      //     "Please Enter Shop Name", sh_white, sh_view_color, 1),
+                      //
+                      // SizedBox(
+                      //   height: spacing_middle,
+                      // ),
                       Row(
                         children: <Widget>[
                           Expanded(
@@ -521,6 +536,30 @@ if(becameSellerModel!.success!) {
                           return Center(child: CircularProgressIndicator());
                         },
                       ),
+                      SizedBox(
+                        height: spacing_middle,
+                      ),
+                      text(" Name of account", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      editTextStyle("Name of account", accountNameCont, node,
+                          "Please Enter Name of account", sh_white, sh_view_color, 1),
+                      SizedBox(
+                        height: spacing_middle,
+                      ),
+                      text(" Account number", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      editTextStyle("Account number", accountNumberCont, node,
+                          "Please Enter Account number", sh_white, sh_view_color, 1),
+                      SizedBox(
+                        height: spacing_middle,
+                      ),
+                      text(" Name of Bank", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      editTextStyle("Name of Bank", bankNameCont, node,
+                          "Please Enter Name of Bank", sh_white, sh_view_color, 1),
+                      SizedBox(
+                        height: spacing_middle,
+                      ),
+                      text(" Other Details", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      editTextStyle3("Other Details", otherCont, node,
+                          "Please Enter Other Details", sh_white, sh_view_color, 4),
 SizedBox(height: 16,),
                       InkWell(
                         onTap: () async {
@@ -624,6 +663,33 @@ Padding editTextStyle(var hintText, var cn, final node, String alert,
         }
         return null;
       },
+      cursorColor: sh_app_txt_color,
+      decoration: InputDecoration(
+        contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
+        hintText: hintText,
+        hintStyle: TextStyle(color: sh_app_txt_color),
+        filled: true,
+        fillColor: sh_white,
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+      ),
+    ),
+  );
+}
+
+Padding editTextStyle3(var hintText, var cn, final node, String alert,
+    Color sh_white, Color sh_view_color, int min_lne) {
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+    child: TextFormField(
+      maxLines: min_lne,
+      controller: cn,
+      onEditingComplete: () => node.nextFocus(),
+      style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
       cursorColor: sh_app_txt_color,
       decoration: InputDecoration(
         contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),

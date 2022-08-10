@@ -79,3 +79,20 @@ OutlineInputBorder outlineInputBorder() {
 final kApiUrl = defaultTargetPlatform == TargetPlatform.android
     ? 'http://192.168.1.189:4242'
     : 'http://192.168.1.1:4242';
+
+
+const _shimmerGradient = LinearGradient(
+  colors: [
+    Color(0xFFEBEBF4),
+    Color(0xFFF4F4F4),
+    Color(0xFFEBEBF4),
+  ],
+  stops: [
+    0.1,
+    0.3,
+    0.4,
+  ],
+  begin: Alignment(-1.0, -0.3),
+  end: Alignment(1.0, 0.3),
+  tileMode: TileMode.clamp,
+);

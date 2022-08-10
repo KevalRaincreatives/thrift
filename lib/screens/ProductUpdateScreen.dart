@@ -85,9 +85,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
 
@@ -109,7 +109,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories"));
+              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories?per_page=25"));
         } finally {
           client.close();
         }
@@ -128,7 +128,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           var product2;
           try {
             product2 = pro_det_model!.categories!.firstWhere(
-              (product) => product!.id == categoryListModel[i].id,
+                  (product) => product!.id == categoryListModel[i].id,
             );
           } catch (e) {
             print('caught error $e');
@@ -186,8 +186,6 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         print('Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         attributeModel = new AttributeModel.fromJson(jsonResponse);
-
-
       }
       EasyLoading.dismiss();
 
@@ -210,7 +208,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       addProMetaModel
           .add(new AddProMetaModel(key: "Faults", value: FaultsCont.text));
 
-      for (var j = 0; j < itemsModel.length; j++) {
+      for (var j = 0; j < attributeModel!.data!.attributes!.length; j++) {
         if (itemsModel[j].options!.length > 0) {
           print(itemsModel[j].name! + itemsModel[j].options![0].toString());
           addProMetaModel.add(new AddProMetaModel(
@@ -271,7 +269,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       //     headers: headers);
 
       var response = await http.post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id?_method=PUT'),
+          Uri.parse(
+              'https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id?_method=PUT'),
           body: body,
           headers: headers);
 
@@ -336,7 +335,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
     }
   }
 
-  Future<String?> DeletePhoto(String ImageId,int index) async {
+  Future<String?> DeletePhoto(String ImageId, int index) async {
     EasyLoading.show(status: 'Please wait...');
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -391,7 +390,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
 
   void ItemAdd(String prodId) {
     for (var i = 0; i < multimimageModel.length; i++) {
-      if(multimimageModel[i].newImage=="1") {
+      if (multimimageModel[i].newImage == "1") {
         File fls = File(multimimageModel[i].path!);
         Uint8List bytes = fls.readAsBytesSync();
         String base64Image = base64Encode(bytes);
@@ -432,7 +431,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         multimimageModel.add(
             new MultiImageUploadModel(
                 pro_det_model!.images![i]!.src!,
-                "","0",pro_det_model!.images![i]!.id!.toString()));
+                "", "0", pro_det_model!.images![i]!.id!.toString()));
       }
 
       fetchAlbum();
@@ -455,79 +454,78 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
     // toast("value");
 
 
-    void _openCustomDialog(String ImageID,int index) {
+    void _openCustomDialog(String ImageID, int index) {
       showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
             return Sizer(
                 builder: (context, orientation, deviceType) {
                   return
-                  Transform.scale(
-                    scale: a1.value,
-                    child: Opacity(
-                      opacity: a1.value,
-                      child: AlertDialog(
-                        shape: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0)),
-                        title: Center(child: Text(
-                          'Are you sure you want to Delete?\n This action cannot be undone',
-                          style: TextStyle(color: sh_colorPrimary2,
-                              fontSize: 18,
-                              fontFamily: 'Bold'),
-                          textAlign: TextAlign.center,)),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(height: 16,),
-                            InkWell(
-                              onTap: () async {
-                                // BecameSeller();
-                                Navigator.of(context, rootNavigator: true)
-                                    .pop();
-                                DeletePhoto(ImageID, index);
-                                // _openCustomDialog2();
-                              },
-                              child: Container(
-                                width: 100.w,
-                                padding: EdgeInsets.only(
-                                    top: 6, bottom: 10),
-                                decoration: boxDecoration(
-                                    bgColor: sh_colorPrimary2,
-                                    radius: 10,
-                                    showShadow: true),
-                                child: text("Delete",
-                                    fontSize: 16.0,
-                                    textColor: sh_white,
-                                    isCentered: true,
-                                    fontFamily: 'Bold'),
+                    Transform.scale(
+                      scale: a1.value,
+                      child: Opacity(
+                        opacity: a1.value,
+                        child: AlertDialog(
+                          shape: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16.0)),
+                          title: Center(child: Text(
+                            'Are you sure you want to Delete?\n This action cannot be undone',
+                            style: TextStyle(color: sh_colorPrimary2,
+                                fontSize: 18,
+                                fontFamily: 'Bold'),
+                            textAlign: TextAlign.center,)),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(height: 16,),
+                              InkWell(
+                                onTap: () async {
+                                  // BecameSeller();
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop();
+                                  DeletePhoto(ImageID, index);
+                                  // _openCustomDialog2();
+                                },
+                                child: Container(
+                                  width: 100.w,
+                                  padding: EdgeInsets.only(
+                                      top: 6, bottom: 10),
+                                  decoration: boxDecoration(
+                                      bgColor: sh_colorPrimary2,
+                                      radius: 10,
+                                      showShadow: true),
+                                  child: text("Delete",
+                                      fontSize: 16.0,
+                                      textColor: sh_white,
+                                      isCentered: true,
+                                      fontFamily: 'Bold'),
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 10,),
-                            InkWell(
-                              onTap: () async {
-                                Navigator.of(context, rootNavigator: true)
-                                    .pop();
-                              },
-                              child: Container(
-                                width: 100.w,
-                                padding: EdgeInsets.only(
-                                    top: 6, bottom: 10),
-                                decoration: boxDecoration(
-                                    bgColor: sh_btn_color,
-                                    radius: 10,
-                                    showShadow: true),
-                                child: text("Cancel",
-                                    fontSize: 16.0,
-                                    textColor: sh_colorPrimary2,
-                                    isCentered: true,
-                                    fontFamily: 'Bold'),
-                              ),
-                            )
-                          ],
+                              SizedBox(height: 10,),
+                              InkWell(
+                                onTap: () async {
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop();
+                                },
+                                child: Container(
+                                  width: 100.w,
+                                  padding: EdgeInsets.only(
+                                      top: 6, bottom: 10),
+                                  decoration: boxDecoration(
+                                      bgColor: sh_btn_color,
+                                      radius: 10,
+                                      showShadow: true),
+                                  child: text("Cancel",
+                                      fontSize: 16.0,
+                                      textColor: sh_colorPrimary2,
+                                      isCentered: true,
+                                      fontFamily: 'Bold'),
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-
+                    );
                 }
             );
           },
@@ -540,8 +538,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           });
     }
 
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
           height: 50,
@@ -549,10 +547,11 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(
+            cart_count.toString(), style: TextStyle(color: sh_white),),
           child: Image.asset(
             sh_new_cart,
             height: 50,
@@ -564,139 +563,149 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       }
     }
 
-    CheckVariant() {
-      if (attributeModel!.data!.attributes!.length > 0) {
-        return Container(
-          child: ListView.builder(
-              itemCount: attributeModel!.data!.attributes!.length,
-              physics: NeverScrollableScrollPhysics(),
-              // itemExtent: 50.0,
-              shrinkWrap: true,
-              itemBuilder: (BuildContext context, int index) {
-                int? my_index=-1;
-                for (var i = 0; i < pro_det_model!.metaData!.length; i++) {
-                  if(pro_det_model!.metaData![i]!.key=="attrs_val"){
-                    my_index=i;
-                  }
-                }
-
-                int? my_index2=-1;
-                for (var i = 0; i < pro_det_model!.metaData![my_index!]!.value!.length; i++) {
-                  if(pro_det_model!.metaData![my_index]!.value![i]!.key==attributeModel!.data!.attributes![index]!.title!){
-
-                    my_index2=i;
-                  }
-                }
-                if(my_index2==-1) {
-                  itModel = NewAttributeModel(
-                      name: attributeModel!.data!.attributes![index]!.title!,
-                      position: 0,
-                      variation: true,
-                      visible: true,
-                      options: []);
-                }else{
-                  itModel = NewAttributeModel(
-                      name: attributeModel!.data!.attributes![index]!.title!,
-                      position: 0,
-                      variation: true,
-                      visible: true,
-                      options: [pro_det_model!.metaData![my_index]!.value![my_index2]!.value]);
-                }
-                itemsModel.add(itModel!);
-                // if(attributeModel!.data!.attributes![index]!.title!)
-
-
-                if(my_index2==-1) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      text(
-                          " Select " +
-                              attributeModel!.data!.attributes![index]!.title!,
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      PlayerWidget(
-                          pro_det_model: attributeModel!,
-                          index: index,
-                          selectedReportList: '',
-                          itemsModel: itemsModel),
-                      SizedBox(height: 10),
-
-                      // DropdownButton(
-                      //   underline: SizedBox(),
-                      //   isExpanded: true,
-                      //   items: pro_det_model!.attributes![index]!.options!
-                      //       .map((item) {
-                      //     return new DropdownMenuItem(
-                      //       child: Text(
-                      //         item.toString(),
-                      //         style: TextStyle(
-                      //             color: sh_textColorPrimary,
-                      //             fontFamily: fontRegular,
-                      //             fontSize: textSizeNormal),
-                      //       ),
-                      //       value: item,
-                      //     );
-                      //   }).toList(),
-                      //   hint: Text('Select'),
-                      //   value: selectedValue,
-                      //   onChanged: (String? newVal) {
-                      //     selectedValue = newVal!;
-                      //     setState(() {});
-                      //   },
-                      // ),
-                    ],
-                  );
-                }else{
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-
-                      text(
-                          " Select " +
-                              attributeModel!.data!.attributes![index]!.title!,
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      PlayerWidget(
-                          pro_det_model: attributeModel!,
-                          index: index,
-                          selectedReportList:
-                          pro_det_model!.metaData![my_index]!.value![my_index2]!.value,
-                          itemsModel: itemsModel),
-                      SizedBox(height: 10),
-
-                      // DropdownButton(
-                      //   underline: SizedBox(),
-                      //   isExpanded: true,
-                      //   items: pro_det_model!.attributes![index]!.options!
-                      //       .map((item) {
-                      //     return new DropdownMenuItem(
-                      //       child: Text(
-                      //         item.toString(),
-                      //         style: TextStyle(
-                      //             color: sh_textColorPrimary,
-                      //             fontFamily: fontRegular,
-                      //             fontSize: textSizeNormal),
-                      //       ),
-                      //       value: item,
-                      //     );
-                      //   }).toList(),
-                      //   hint: Text('Select'),
-                      //   value: selectedValue,
-                      //   onChanged: (String? newVal) {
-                      //     selectedValue = newVal!;
-                      //     setState(() {});
-                      //   },
-                      // ),
-                    ],
-                  );
-                }
-              }),
-        );
-      } else {
-        return Container();
-      }
-    }
+    // CheckVariant() {
+    //   if (attributeModel!.data!.attributes!.length > 0) {
+    //     return Container(
+    //       child: ListView.builder(
+    //           itemCount: attributeModel!.data!.attributes!.length,
+    //           physics: NeverScrollableScrollPhysics(),
+    //           // itemExtent: 50.0,
+    //           shrinkWrap: true,
+    //           itemBuilder: (BuildContext context, int index) {
+    //             int? my_index = -1;
+    //             for (var i = 0; i < pro_det_model!.metaData!.length; i++) {
+    //               if (pro_det_model!.metaData![i]!.key == "attrs_val") {
+    //                 my_index = i;
+    //               }
+    //             }
+    //
+    //             int? my_index2 = -1;
+    //             for (var i = 0; i <
+    //                 pro_det_model!.metaData![my_index!]!.value!.length; i++) {
+    //               if (pro_det_model!.metaData![my_index]!.value![i]!.key ==
+    //                   attributeModel!.data!.attributes![index]!.title!) {
+    //                 my_index2 = i;
+    //               }
+    //             }
+    //             if (my_index2 == -1) {
+    //               itModel = NewAttributeModel(
+    //                   name: attributeModel!.data!.attributes![index]!.title!,
+    //                   position: 0,
+    //                   variation: true,
+    //                   visible: true,
+    //                   options: [],
+    //                   required:
+    //                   attributeModel!.data!.attributes![index]!.required!);
+    //             } else {
+    //               itModel = NewAttributeModel(
+    //                   name: attributeModel!.data!.attributes![index]!.title!,
+    //                   position: 0,
+    //                   variation: true,
+    //                   visible: true,
+    //                   options: [
+    //                     pro_det_model!.metaData![my_index]!.value![my_index2]!
+    //                         .value
+    //                   ],
+    //                   required:
+    //                   attributeModel!.data!.attributes![index]!.required!
+    //               );
+    //             }
+    //             itemsModel.add(itModel!);
+    //             // if(attributeModel!.data!.attributes![index]!.title!)
+    //
+    //
+    //             if (my_index2 == -1) {
+    //               return Column(
+    //                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                 children: <Widget>[
+    //                   text(
+    //                       " Select " +
+    //                           attributeModel!.data!.attributes![index]!.title!,
+    //                       textColor: sh_app_txt_color,
+    //                       fontFamily: "Bold"),
+    //                   PlayerWidget(
+    //                       pro_det_model: attributeModel!,
+    //                       index: index,
+    //                       selectedReportList: '',
+    //                       itemsModel: itemsModel),
+    //                   SizedBox(height: 10),
+    //
+    //                   // DropdownButton(
+    //                   //   underline: SizedBox(),
+    //                   //   isExpanded: true,
+    //                   //   items: pro_det_model!.attributes![index]!.options!
+    //                   //       .map((item) {
+    //                   //     return new DropdownMenuItem(
+    //                   //       child: Text(
+    //                   //         item.toString(),
+    //                   //         style: TextStyle(
+    //                   //             color: sh_textColorPrimary,
+    //                   //             fontFamily: fontRegular,
+    //                   //             fontSize: textSizeNormal),
+    //                   //       ),
+    //                   //       value: item,
+    //                   //     );
+    //                   //   }).toList(),
+    //                   //   hint: Text('Select'),
+    //                   //   value: selectedValue,
+    //                   //   onChanged: (String? newVal) {
+    //                   //     selectedValue = newVal!;
+    //                   //     setState(() {});
+    //                   //   },
+    //                   // ),
+    //                 ],
+    //               );
+    //             } else {
+    //               return Column(
+    //                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                 children: <Widget>[
+    //
+    //                   text(
+    //                       " Select " +
+    //                           attributeModel!.data!.attributes![index]!.title!,
+    //                       textColor: sh_app_txt_color,
+    //                       fontFamily: "Bold"),
+    //                   PlayerWidget(
+    //                       pro_det_model: attributeModel!,
+    //                       index: index,
+    //                       selectedReportList:
+    //                       pro_det_model!.metaData![my_index]!.value![my_index2]!
+    //                           .value,
+    //                       itemsModel: itemsModel),
+    //                   SizedBox(height: 10),
+    //
+    //                   // DropdownButton(
+    //                   //   underline: SizedBox(),
+    //                   //   isExpanded: true,
+    //                   //   items: pro_det_model!.attributes![index]!.options!
+    //                   //       .map((item) {
+    //                   //     return new DropdownMenuItem(
+    //                   //       child: Text(
+    //                   //         item.toString(),
+    //                   //         style: TextStyle(
+    //                   //             color: sh_textColorPrimary,
+    //                   //             fontFamily: fontRegular,
+    //                   //             fontSize: textSizeNormal),
+    //                   //       ),
+    //                   //       value: item,
+    //                   //     );
+    //                   //   }).toList(),
+    //                   //   hint: Text('Select'),
+    //                   //   value: selectedValue,
+    //                   //   onChanged: (String? newVal) {
+    //                   //     selectedValue = newVal!;
+    //                   //     setState(() {});
+    //                   //   },
+    //                   // ),
+    //                 ],
+    //               );
+    //             }
+    //           }),
+    //     );
+    //   } else {
+    //     return Container();
+    //   }
+    // }
 
     final node = FocusScope.of(context);
 
@@ -712,7 +721,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
           GestureDetector(
-            onTap: () async{
+            onTap: () async {
               SharedPreferences prefs = await SharedPreferences.getInstance();
               prefs.setInt("shiping_index", -2);
               prefs.setInt("payment_index", -2);
@@ -756,9 +765,17 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      text(" Product Name",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
+                      Row(children: [
+                        text(" Product Name",
+                            textColor: sh_app_txt_color,
+                            fontFamily: "Bold"),
+                        text("*",
+                            textColor: sh_red,
+                            fontFamily: "Bold"),
+                      ],),
+                      // text(" Product Name",
+                      //     textColor: sh_app_txt_color,
+                      //     fontFamily: "Bold"),
                       editTextStyle(
                           "Product Name",
                           ProductNameCont,
@@ -766,35 +783,38 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           "Please Enter Product Name",
                           sh_white,
                           sh_view_color,
-                          1,context),
+                          1,
+                          context),
                       SizedBox(
                         height: spacing_middle,
                       ),
                       text(" Description",
                           textColor: sh_app_txt_color,
                           fontFamily: "Bold"),
-                      editTextStyle(
+                      editTextStyle2(
                           "Description",
                           DescCont,
                           node,
                           "Please Enter Description",
                           sh_white,
                           sh_view_color,
-                          5,context),
+                          5,
+                          context),
                       SizedBox(
                         height: spacing_middle,
                       ),
                       text(" Short Description",
                           textColor: sh_app_txt_color,
                           fontFamily: "Bold"),
-                      editTextStyle(
+                      editTextStyle2(
                           "Short Description",
                           ShortDescCont,
                           node,
                           "Please Enter Description",
                           sh_white,
                           sh_view_color,
-                          2,context),
+                          2,
+                          context),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -805,9 +825,17 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                               crossAxisAlignment:
                               CrossAxisAlignment.start,
                               children: [
-                                text(" Price",
-                                    textColor: sh_app_txt_color,
-                                    fontFamily: "Bold"),
+                                Row(children: [
+                                  text(" Price",
+                                      textColor: sh_app_txt_color,
+                                      fontFamily: "Bold"),
+                                  text("*",
+                                      textColor: sh_red,
+                                      fontFamily: "Bold"),
+                                ],),
+                                // text(" Price*",
+                                //     textColor: sh_app_txt_color,
+                                //     fontFamily: "Bold"),
                                 editTextStyle(
                                     "Price",
                                     PriceCont,
@@ -815,7 +843,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                     "Please Enter Price",
                                     sh_white,
                                     sh_view_color,
-                                    1,context),
+                                    1,
+                                    context),
                               ],
                             ),
                           ),
@@ -824,9 +853,17 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Brand Name",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
+                      Row(children: [
+                        text(" Brand Name",
+                            textColor: sh_app_txt_color,
+                            fontFamily: "Bold"),
+                        text("*",
+                            textColor: sh_red,
+                            fontFamily: "Bold"),
+                      ],),
+                      // text(" Brand Name",
+                      //     textColor: sh_app_txt_color,
+                      //     fontFamily: "Bold"),
                       editTextStyle(
                           "Enter Brand",
                           BrandCont,
@@ -834,21 +871,31 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           "Please Enter Brand",
                           sh_white,
                           sh_view_color,
-                          1,context),
+                          1,
+                          context),
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Faults",
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      editTextStyle2(
+                      Row(children: [
+                        text(" Faults",
+                            textColor: sh_app_txt_color,
+                            fontFamily: "Bold"),
+                        text("*",
+                            textColor: sh_red,
+                            fontFamily: "Bold"),
+                      ],),
+                      // text(" Faults",
+                      //     textColor: sh_app_txt_color,
+                      //     fontFamily: "Bold"),
+                      editTextStyle(
                           "Enter if any Faults",
                           FaultsCont,
                           node,
                           "Please Enter Faults",
                           sh_white,
                           sh_view_color,
-                          1,context),
+                          1,
+                          context),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -930,7 +977,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                                   pickedFileList[i]
                                                       .name,
                                                   pickedFileList[i]
-                                                      .path,"1",""));
+                                                      .path, "1", ""));
                                         }
                                       });
                                       // if (bool) {
@@ -943,7 +990,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                         borderRadius: BorderRadius
                                             .all(Radius.circular(
                                             spacing_middle)),
-                                        child: multimimageModel[index].newImage=="1"?
+                                        child: multimimageModel[index]
+                                            .newImage == "1" ?
                                         Image.file(
                                           File(multimimageModel[
                                           index]
@@ -951,7 +999,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                           fit: BoxFit.cover,
                                           height: 300,
                                           width: 300,
-                                        ):Image.network(multimimageModel[index].name!,
+                                        ) : Image.network(
+                                          multimimageModel[index].name!,
                                           fit: BoxFit.cover,
                                           height: 300,
                                           width: 300,)),
@@ -959,8 +1008,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                       top: 0,
                                       right: 0,
                                       child: GestureDetector(
-                                        onTap: () async{
-                                          if(multimimageModel[index].newImage=="1") {
+                                        onTap: () async {
+                                          if (multimimageModel[index]
+                                              .newImage == "1") {
                                             toast(
                                                 'delete image from List');
 
@@ -971,8 +1021,10 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                               print(
                                                   'set new state of images');
                                             });
-                                          }else{
-                                            _openCustomDialog(multimimageModel[index].ImageId!,index);
+                                          } else {
+                                            _openCustomDialog(
+                                                multimimageModel[index]
+                                                    .ImageId!, index);
                                           }
                                         },
                                         child: Icon(
@@ -1002,7 +1054,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                                         multimimageModel.add(
                                             new MultiImageUploadModel(
                                                 pickedFileList[i].name,
-                                                pickedFileList[i].path,"1",""));
+                                                pickedFileList[i].path, "1",
+                                                ""));
                                       }
                                     });
                                     // if (bool) {
@@ -1021,29 +1074,48 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                           if (_formKey.currentState!.validate()) {
                             //   // TODO submit
                             FocusScope.of(context).requestFocus(FocusNode());
-                            for (var i = 0; i < selectedReportList.length; i++) {
+                            for (var i = 0; i <
+                                selectedReportList.length; i++) {
                               addProCatModel.add(new AddProCategoryModel(
                                   id: selectedReportList[i]));
                             }
-                            toast(itemsModel.length.toString());
-                            if (itemsModel[0].options!.length > 0) {
-                              print(itemsModel[0].name! +
-                                  itemsModel[0].options![0].toString());
-                            }
-                            if (itemsModel[1].options!.length > 0) {
-                              print(itemsModel[1].name! +
-                                  itemsModel[1].options![0].toString());
-                            }
-                            if (itemsModel[2].options!.length > 0) {
-                              print(itemsModel[2].name! +
-                                  itemsModel[2].options![0].toString());
-                            }
-                            if (itemsModel[3].options!.length > 0) {
-                              print(itemsModel[3].name! +
-                                  itemsModel[3].options![0].toString());
-                            }
+                            // toast(itemsModel.length.toString());
+                            // if (itemsModel[0].options!.length > 0) {
+                            //   print(itemsModel[0].name! +
+                            //       itemsModel[0].options![0].toString());
+                            // }
+                            // if (itemsModel[1].options!.length > 0) {
+                            //   print(itemsModel[1].name! +
+                            //       itemsModel[1].options![0].toString());
+                            // }
+                            // if (itemsModel[2].options!.length > 0) {
+                            //   print(itemsModel[2].name! +
+                            //       itemsModel[2].options![0].toString());
+                            // }
+                            // if (itemsModel[3].options!.length > 0) {
+                            //   print(itemsModel[3].name! +
+                            //       itemsModel[3].options![0].toString());
+                            // }
                             // if (multimimageModel.length > 0) {
-                            AddProduct();
+                            int jj = 0;
+                            String mj = '';
+
+                            for (var j = 0; j < attributeModel!.data!.attributes!.length; j++) {
+                              if (itemsModel[j].required == '1') {
+                                if (itemsModel[j].options!.length == 0) {
+                                  jj++;
+                                  mj = itemsModel[j].name!;
+                                  break;
+                                }
+                              }
+                            }
+                            // toast(jj.toString());
+                            if (jj > 0) {
+                              toast("Please Select $mj");
+                            } else {
+                              AddProduct();
+                            }
+                            // AddProduct();
                             // }else{
                             //   toast("Please add a photo");
                             // }
@@ -1113,16 +1185,19 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        SharedPreferences prefs = await SharedPreferences
+                            .getInstance();
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                                  CartScreen()),).then((value) {
+                          setState(() {
+                            // refresh state
+                          });
+                        });
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),
@@ -1156,8 +1231,6 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           );
         }
     );
-
-
   }
 
 
@@ -1196,15 +1269,15 @@ class _GridItemState extends State<GridItem> {
               Text(widget.item!.name!),
               isSelected
                   ? Align(
-                      alignment: Alignment.bottomRight,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.check_circle,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    )
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.blue,
+                  ),
+                ),
+              )
                   : Container()
             ],
           ),
@@ -1215,7 +1288,7 @@ class _GridItemState extends State<GridItem> {
 }
 
 Padding editTextStyle(var hintText, var cn, final node, String alert,
-    Color sh_white, Color sh_view_color, int min_lne,context) {
+    Color sh_white, Color sh_view_color, int min_lne, context) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
     child: TextFormField(
@@ -1255,7 +1328,7 @@ Padding editTextStyle(var hintText, var cn, final node, String alert,
 }
 
 Padding editTextStyle2(var hintText, var cn, final node, String alert,
-    Color sh_white, Color sh_view_color, int min_lne,context) {
+    Color sh_white, Color sh_view_color, int min_lne, context) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
     child: TextFormField(
@@ -1290,12 +1363,13 @@ Padding editTextStyle2(var hintText, var cn, final node, String alert,
 class AttrWidget extends StatefulWidget {
   // final AttributeModel? pro_det_model;
   AttributeModel? attributeModel;
-    ProductDetailModel? pro_det_model;
+  ProductDetailModel? pro_det_model;
   NewAttributeModel? itModel;
   List<NewAttributeModel> itemsModel = [];
 
-  AttrWidget(this.attributeModel, this.pro_det_model,this.itModel,this.itemsModel)
-      ;
+  AttrWidget(this.attributeModel, this.pro_det_model, this.itModel,
+      this.itemsModel)
+  ;
 
   @override
   State<StatefulWidget> createState() {
@@ -1325,48 +1399,67 @@ class _AttrWidgetState extends State<AttrWidget> {
             // itemExtent: 50.0,
             shrinkWrap: true,
             itemBuilder: (BuildContext context, int index) {
-              int? my_index=-1;
+              int? my_index = -1;
               for (var i = 0; i < widget.pro_det_model!.metaData!.length; i++) {
-                if(widget.pro_det_model!.metaData![i]!.key=="attrs_val"){
-                  my_index=i;
+                if (widget.pro_det_model!.metaData![i]!.key == "attrs_val") {
+                  my_index = i;
                 }
               }
 
-              int? my_index2=-1;
-              for (var i = 0; i < widget.pro_det_model!.metaData![my_index!]!.value!.length; i++) {
-                if(widget.pro_det_model!.metaData![my_index]!.value![i]!.key==widget.attributeModel!.data!.attributes![index]!.title!){
-
-                  my_index2=i;
+              int? my_index2 = -1;
+              for (var i = 0; i <
+                  widget.pro_det_model!.metaData![my_index!]!.value!
+                      .length; i++) {
+                if (widget.pro_det_model!.metaData![my_index]!.value![i]!.key ==
+                    widget.attributeModel!.data!.attributes![index]!.title!) {
+                  my_index2 = i;
                 }
               }
-              if(my_index2==-1) {
+              if (my_index2 == -1) {
                 widget.itModel = NewAttributeModel(
-                    name: widget.attributeModel!.data!.attributes![index]!.title!,
+                    name: widget.attributeModel!.data!.attributes![index]!
+                        .title!,
                     position: 0,
                     variation: true,
                     visible: true,
-                    options: []);
-              }else{
+                    options: [],
+                    required:
+                    widget.attributeModel!.data!.attributes![index]!.required!);
+              } else {
                 widget.itModel = NewAttributeModel(
-                    name: widget.attributeModel!.data!.attributes![index]!.title!,
+                    name: widget.attributeModel!.data!.attributes![index]!
+                        .title!,
                     position: 0,
                     variation: true,
                     visible: true,
-                    options: [widget.pro_det_model!.metaData![my_index]!.value![my_index2]!.value]);
+                    options: [
+                      widget.pro_det_model!.metaData![my_index]!
+                          .value![my_index2]!.value
+                    ],
+                    required:
+                    widget.attributeModel!.data!.attributes![index]!.required!);
               }
               widget.itemsModel.add(widget.itModel!);
               // if(attributeModel!.data!.attributes![index]!.title!)
 
 
-              if(my_index2==-1) {
+              if (my_index2 == -1) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    text(
-                        " Select " +
-                            widget.attributeModel!.data!.attributes![index]!.title!,
-                        textColor: sh_app_txt_color,
-                        fontFamily: "Bold"),
+                    Row(children: [
+                      text(
+                          " Select " +
+                              widget.attributeModel!.data!.attributes![index]!
+                                  .title!,
+                          textColor: sh_app_txt_color,
+                          fontFamily: "Bold"),
+                      text("*",
+                          textColor: widget.attributeModel!.data!.attributes![index]!
+                              .required=="1" ? sh_red:sh_transparent,
+                          fontFamily: "Bold"),
+                    ],),
+
                     PlayerWidget(
                         pro_det_model: widget.attributeModel!,
                         index: index,
@@ -1377,21 +1470,34 @@ class _AttrWidgetState extends State<AttrWidget> {
 
                   ],
                 );
-              }else{
+              } else {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-
-                    text(
-                        " Select " +
-                            widget.attributeModel!.data!.attributes![index]!.title!,
-                        textColor: sh_app_txt_color,
-                        fontFamily: "Bold"),
+                    Row(children: [
+                      text(
+                          " Select " +
+                              widget.attributeModel!.data!.attributes![index]!
+                                  .title!,
+                          textColor: sh_app_txt_color,
+                          fontFamily: "Bold"),
+                      text("*",
+                          textColor: widget.attributeModel!.data!.attributes![index]!
+                              .required=="1" ? sh_red:sh_transparent,
+                          fontFamily: "Bold"),
+                    ],),
+                    // text(
+                    //     " Select " +
+                    //         widget.attributeModel!.data!.attributes![index]!
+                    //             .title!,
+                    //     textColor: sh_app_txt_color,
+                    //     fontFamily: "Bold"),
                     PlayerWidget(
                         pro_det_model: widget.attributeModel!,
                         index: index,
                         selectedReportList:
-                        widget.pro_det_model!.metaData![my_index]!.value![my_index2]!.value,
+                        widget.pro_det_model!.metaData![my_index]!
+                            .value![my_index2]!.value,
                         itemsModel: widget.itemsModel),
                     SizedBox(height: 10),
 
@@ -1413,7 +1519,8 @@ class PlayerWidget extends StatefulWidget {
   final List<NewAttributeModel>? itemsModel;
   String? selectedReportList;
 
-  PlayerWidget({Key? key, this.pro_det_model, this.index,this.selectedReportList, this.itemsModel})
+  PlayerWidget(
+      {Key? key, this.pro_det_model, this.index, this.selectedReportList, this.itemsModel})
       : super(key: key);
 
   @override
@@ -1424,6 +1531,7 @@ class PlayerWidget extends StatefulWidget {
 
 class _PlayerWidgetState extends State<PlayerWidget> {
   String? selectedItemValue = null;
+
   // String selectedReportList = '';
 
   @override
@@ -1440,10 +1548,10 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     List<Widget> techChips2(StateSetter setState2) {
       List<Widget> chips = [];
       for (int i = 0;
-          i <
-              widget.pro_det_model!.data!.attributes![widget.index!]!.values!
-                  .length;
-          i++) {
+      i <
+          widget.pro_det_model!.data!.attributes![widget.index!]!.values!
+              .length;
+      i++) {
         Widget item = Padding(
           padding: const EdgeInsets.only(left: 5, right: 5),
           child: FilterChip(
@@ -1469,23 +1577,23 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
     return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState2) {
-      return MultiAttributeChip(
-        widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
-        widget.index!,
-        widget.itemsModel,
-        widget.selectedReportList,
-        onSelectionChanged: (selectedList) {
-          setState2(() {
-            widget.selectedReportList = selectedList;
-          });
-        },
-      );
-      //   Wrap(
-      //   spacing: 8,
-      //   direction: Axis.horizontal,
-      //   children: techChips2(setState2),
-      // );
-    });
+          return MultiAttributeChip(
+            widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
+            widget.index!,
+            widget.itemsModel,
+            widget.selectedReportList,
+            onSelectionChanged: (selectedList) {
+              setState2(() {
+                widget.selectedReportList = selectedList;
+              });
+            },
+          );
+          //   Wrap(
+          //   spacing: 8,
+          //   direction: Axis.horizontal,
+          //   children: techChips2(setState2),
+          // );
+        });
   }
 }
 
@@ -1494,7 +1602,8 @@ class MultiSelectChip extends StatefulWidget {
   final Function(List<int>)? onSelectionChanged;
   List<int> selectedChoices;
 
-  MultiSelectChip(this.reportList,this.selectedChoices, {this.onSelectionChanged});
+  MultiSelectChip(this.reportList, this.selectedChoices,
+      {this.onSelectionChanged});
 
   @override
   _MultiSelectChipState createState() => _MultiSelectChipState();
@@ -1514,7 +1623,10 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
         child: ChoiceChip(
           label: Text(unescape.convert(item.name!)),
           selected: widget.selectedChoices.contains(item.catid),
-          labelStyle: TextStyle(color: widget.selectedChoices.contains(item.catid) ? sh_white : sh_black),
+          labelStyle: TextStyle(
+              color: widget.selectedChoices.contains(item.catid)
+                  ? sh_white
+                  : sh_black),
           selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
             setState(() {
@@ -1546,7 +1658,8 @@ class MultiAttributeChip extends StatefulWidget {
   final int? index;
   String? selectedChoices;
 
-  MultiAttributeChip(this.reportList, this.index, this.itemsModel,this.selectedChoices,
+  MultiAttributeChip(this.reportList, this.index, this.itemsModel,
+      this.selectedChoices,
       {this.onSelectionChanged});
 
   @override
@@ -1558,7 +1671,6 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
   // List<String> selectedChoices = [];
 
   RemoveOther(String names) async {
-
     widget.itemsModel![widget.index!].options!.clear();
 
     widget.itemsModel![widget.index!].options!.add(names);
@@ -1577,14 +1689,15 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
         padding: const EdgeInsets.all(2.0),
         child: ChoiceChip(
           label: Text(item!.name!),
-          labelStyle: TextStyle(color: widget.selectedChoices==item.name ? sh_white : sh_black),
-          selected: widget.selectedChoices==item.name,
+          labelStyle: TextStyle(
+              color: widget.selectedChoices == item.name ? sh_white : sh_black),
+          selected: widget.selectedChoices == item.name,
           selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
             setState(() {
-              if(widget.selectedChoices==item.name!){
-                widget.selectedChoices='';
-              }else {
+              if (widget.selectedChoices == item.name!) {
+                widget.selectedChoices = '';
+              } else {
                 widget.selectedChoices = item.name!;
               }
               print("myccc" + widget.index!.toString());

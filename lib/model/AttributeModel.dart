@@ -91,10 +91,12 @@ class AttributeModelDataAttributes {
 
   String? title;
   List<AttributeModelDataAttributesValues?>? values;
+  String? required;
 
   AttributeModelDataAttributes({
     this.title,
     this.values,
+    this.required
   });
   AttributeModelDataAttributes.fromJson(Map<String, dynamic> json) {
     title = json['title']?.toString();
@@ -106,6 +108,7 @@ class AttributeModelDataAttributes {
       });
       values = arr0;
     }
+    required= json['required']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -118,6 +121,7 @@ class AttributeModelDataAttributes {
       });
       data['values'] = arr0;
     }
+    data['required']=required;
     return data;
   }
 }

@@ -115,7 +115,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       // toast(seller_id);
 
       var response = await http.get(
-          Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?seller_id=$seller_id"));
+          Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products_customers?seller_id=$seller_id"));
 
       print('Response status2: ${response.statusCode}');
       print('Response body2: ${response.body}');

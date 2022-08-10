@@ -13,6 +13,7 @@ import 'package:thrift/model/SignUpNewModel.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
 import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/screens/SignUpScreen.dart';
+import 'package:thrift/screens/TermsConditionScreen.dart';
 import 'package:thrift/utils/PinCodeTextField.dart';
 import 'package:thrift/utils/PinTheme.dart';
 import 'package:thrift/utils/ShColors.dart';
@@ -90,7 +91,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
       // Sign the user in (or link) with the credential
       await auth.signInWithCredential(phoneAuthCredential);
       EasyLoading.dismiss();
-      getSetting();
+      // getSetting();
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => TermsConditionScreen(
+                country_code: widget.country_code!,
+                fnlNumber: widget.fnlNumber!
+            )),
+      );
+
       setState(
             () {
           hasError = false;
@@ -601,8 +612,15 @@ SaveToken();
                           .shake); // Triggering error shake animation
                       setState(() => hasError = true);
                     } else {
-                      // getSetting();
-                      _login();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => TermsConditionScreen(
+                                country_code: widget.country_code!,
+                                fnlNumber: widget.fnlNumber!
+                            )),
+                      );
+                      // _login();
 
                     }
                   },

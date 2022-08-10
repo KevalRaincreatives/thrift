@@ -1,5 +1,12 @@
+import 'dart:convert';
+
+import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:http/retry.dart';
+import 'package:http/http.dart' as http;
 import 'package:nb_utils/nb_utils.dart';
+import 'package:thrift/model/TermsModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
@@ -14,10 +21,92 @@ class CustomerSupportScreen extends StatefulWidget {
 }
 
 class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
+  TermsModel? termsModel;
+  int? cart_count;
+  Future<String?> fetchtotal() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      if(prefs.getInt('cart_count')!=null){
+        cart_count = prefs.getInt('cart_count');
+      }else{
+        cart_count = 0;
+      }
+
+      return '';
+    } catch (e) {
+      print('caught error $e');
+    }
+  }
+
+  Future<TermsModel?> fetchDetails() async {
+//    Dialogs.showLoadingDialog(context, _keyLoader);
+    try {
+
+
+
+      // Response response = await get(
+      //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/terms'));
+
+      final client = RetryClient(http.Client());
+      var response;
+      try {
+        response=await client.get(
+            Uri.parse(
+                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/customer_service'));
+      } finally {
+        client.close();
+      }
+//      r.raiseForStatus();
+//      String body = r.content();
+//      print(body);
+
+      final jsonResponse = json.decode(response.body);
+      termsModel = new TermsModel.fromJson(jsonResponse);
+
+
+      print('sucess');
+      print('not json $jsonResponse');
+
+      return termsModel;
+    } catch (e) {
+      print('caught error $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
+
+    BadgeCount(){
+      if(cart_count==0){
+        return Image.asset(
+          sh_new_cart,
+          height: 50,
+          width: 50,
+          fit: BoxFit.fill,
+          color: sh_white,
+        );
+      }else{
+        return Badge(
+          position: BadgePosition.topEnd(top: 4, end: 6),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          child: Image.asset(
+            sh_new_cart,
+            height: 50,
+            width: 50,
+            fit: BoxFit.fill,
+            color: sh_white,
+          ),
+        );
+      }
+    }
+
+    HtmlText() {
+      return Html(
+        data: termsModel!.data!.content,
+      );
+    }
 
     Widget setUserForm() {
       AppBar appBar = AppBar(
@@ -65,43 +154,30 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
           child:   Container(
             height: height,
             width: width,
-            child: Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    width: width*.8,
-                    height: height,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          Text("Denroy Wilson",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold')),
-                          Text("(Customer Service Manager, JA)",style: TextStyle(color: sh_black,fontSize: 15,fontFamily: 'Regular')),
-                          Text("+1 (876) 322-0171",style: TextStyle(color: sh_textColorPrimary,fontSize: 14,fontFamily: 'Regular')),
-
-                          SizedBox(height: 30,),
-                          // Text("Charlotte Rajkumar (Customer Service Manager, TT) +1 (868) 752-2398",style: TextStyle(color: sh_app_txt_color,fontSize: 16,fontFamily: 'SemiBold')),
-                          Text("Charlotte Rajkumar",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold')),
-                          Text("(Customer Service Manager, TT)",style: TextStyle(color: sh_black,fontSize: 15,fontFamily: 'Regular')),
-                          Text("+1 (868) 752-2398",style: TextStyle(color: sh_textColorPrimary,fontSize: 14,fontFamily: 'Regular')),
-
-                          SizedBox(height: 30,),
-                          // Text("Emilie Trotman (Customer Service Manager, BB) +1(246) 289-7104",style: TextStyle(color: sh_app_txt_color,fontSize: 16,fontFamily: 'SemiBold')),
-                          Text("Emilie Trotman",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold')),
-                          Text("(Customer Service Manager, BB)",style: TextStyle(color: sh_black,fontSize: 15,fontFamily: 'Regular')),
-                          Text("+1(246) 289-7104",style: TextStyle(color: sh_textColorPrimary,fontSize: 14,fontFamily: 'Regular')),
-
-                          SizedBox(height: 26,),
-                        ],
-                      ),
+            child: FutureBuilder<TermsModel?>(
+                future: fetchDetails(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return SingleChildScrollView(
+                        child: HtmlText()
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text("${snapshot.error}");
+                  }
+                  // By default, show a loading spinner.
+                  return Center(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        SizedBox(
+                          child: CircularProgressIndicator(),
+                          height: 50.0,
+                          width: 50.0,
+                        )
+                      ],
                     ),
-
-                  ),
-                ),
-
-              ],
-            ),
+                  );
+                }),
           ),
         ),
         // Positioned to take only AppBar size
@@ -131,23 +207,37 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                     )
                   ],
                 ),
-                GestureDetector(
-                  onTap: () async{
-                    SharedPreferences prefs = await SharedPreferences.getInstance();
-                    prefs.setInt("shiping_index", -2);
-                    prefs.setInt("payment_index", -2);
-                    launchScreen(context, CartScreen.tag);
-                  },
-                  child: Container(
-                    padding: EdgeInsets.fromLTRB(4, 0, 20, 0),
-                    child: Image.asset(
-                      sh_new_cart,
-                      height: 50,
-                      width: 50,
-                      color: sh_white,
-                    ),
-                  ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        prefs.setInt("shiping_index", -2);
+                        prefs.setInt("payment_index", -2);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  CartScreen()),).then((value) {   setState(() {
+                          // refresh state
+                        });});
+                      },
+                      child: FutureBuilder<String?>(
+                        future: fetchtotal(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return BadgeCount();
+                          } else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+                          // By default, show a loading spinner.
+                          return CircularProgressIndicator();
+                        },
+                      ),
 
+                    ),
+                    SizedBox(width: 16,)
+                  ],
                 ),
               ],
             ),

@@ -12,6 +12,7 @@ import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:sizer/sizer.dart';
 import 'package:thrift/model/AddProCategoryModel.dart';
 import 'package:thrift/model/AddProMetaModel.dart';
 import 'package:thrift/model/AddProMetaModel2.dart';
@@ -62,13 +63,15 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   final List<AddProCategoryModel> addProCatModel = [];
   final List<AddProMetaModel> addProMetaModel = [];
   final List<AddProMetaModel2> addProMetaModel2 = [];
-  final List<MultiImageModel> multimimageModel=[];
-  List<XFile>? _imageFileList=[];
+  final List<MultiImageModel> multimimageModel = [];
+  List<XFile>? _imageFileList = [];
   final ImagePicker _picker = ImagePicker();
   final List<UploadImageModel> uploadModel = [];
   UploadImageModel? upModel;
   CreateProModel? createProModel;
   int? cart_count;
+  String dropdownValue = 'NONE';
+  bool _isVisible = false;
 
   @override
   void initState() {
@@ -82,9 +85,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
 
@@ -106,7 +109,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories"));
+              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories?per_page=25"));
         } finally {
           client.close();
         }
@@ -152,20 +155,16 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         } finally {
           client.close();
         }
-        attributeModel=null;
+        attributeModel = null;
         itemsModel!.clear();
 
         print('Response status2: ${response.statusCode}');
         print('Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         attributeModel = new AttributeModel.fromJson(jsonResponse);
-
-
       }
       EasyLoading.dismiss();
-      setState(() {
-
-      });
+      setState(() {});
 
       return attributeModel;
     } catch (e) {
@@ -175,30 +174,30 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     }
   }
 
-  Future<List<AddProMetaModel>?> getUserNameSharedPreference(List<NewAttributeModel> itemsModel,List<AddProMetaModel> addProMetaModel) async{
-    int myind=0;
-     for (var j = 0; j < itemsModel.length; j++) {
-      if(itemsModel[j].options!.length>0){
-        print("take"+itemsModel[j].name! + itemsModel[j].options![0].toString());
-        addProMetaModel.add(new AddProMetaModel(key: itemsModel[j].name!,value: itemsModel[j].options![0].toString()));
-
+  Future<List<AddProMetaModel>?> getUserNameSharedPreference(
+      List<NewAttributeModel> itemsModel,
+      List<AddProMetaModel> addProMetaModel) async {
+    int myind = 0;
+    for (var j = 0; j < itemsModel.length; j++) {
+      if (itemsModel[j].options!.length > 0) {
+        print("take" +
+            itemsModel[j].name! +
+            itemsModel[j].options![0].toString());
+        addProMetaModel.add(new AddProMetaModel(
+            key: itemsModel[j].name!,
+            value: itemsModel[j].options![0].toString()));
       }
-      myind=j;
+      myind = j;
     }
-int myind2=itemsModel.length-1;
-    if(myind==myind2) {
-      Future.delayed(
-        const Duration(seconds: 2),
-            () {
-              print("bcd3"+addProMetaModel.length.toString());
-              print("bcd"+myind.toString());
-              print("bcd2"+myind2.toString());
+    int myind2 = itemsModel.length - 1;
+    if (myind == myind2) {
+      Future.delayed(const Duration(seconds: 2), () {
+        print("bcd3" + addProMetaModel.length.toString());
+        print("bcd" + myind.toString());
+        print("bcd2" + myind2.toString());
 
-              return addProMetaModel;
-            }
-      );
-
-
+        return addProMetaModel;
+      });
     }
   }
 
@@ -206,75 +205,76 @@ int myind2=itemsModel.length-1;
     EasyLoading.show(status: 'Please wait...');
     try {
 
-        addProMetaModel.add(new AddProMetaModel(key: "Brand",value: BrandCont.text));
-        addProMetaModel.add(new AddProMetaModel(key: "Faults",value: FaultsCont.text));
 
-        int completedCount = 0;
-        // await getUserNameSharedPreference(itemsModel,addProMetaModel).then((value) async{
-          for (var j = 0; j < itemsModel!.length; j++) {
-            if (itemsModel![j].options!.length > 0) {
-              print("take" + itemsModel![j].name! +
-                  itemsModel![j].options![0].toString());
-              addProMetaModel.add(new AddProMetaModel(key: itemsModel![j].name!,
-                  value: itemsModel![j].options![0].toString()));
-              completedCount += 1;
-            }
-          }
+      addProMetaModel
+          .add(new AddProMetaModel(key: "Brand", value: BrandCont.text));
+      if(_isVisible) {
+        addProMetaModel
+            .add(new AddProMetaModel(key: "Faults", value: FaultsCont.text));
+      }else{
+        addProMetaModel
+            .add(new AddProMetaModel(key: "Faults", value: "NONE"));
+      }
+      int completedCount = 0;
+      // await getUserNameSharedPreference(itemsModel,addProMetaModel).then((value) async{
+      for (var j = 0; j < attributeModel!.data!.attributes!.length; j++) {
+        if (itemsModel![j].options!.length > 0) {
+          print("take" +
+              itemsModel![j].name! +
+              itemsModel![j].options![0].toString());
+          addProMetaModel.add(new AddProMetaModel(
+              key: itemsModel![j].name!,
+              value: itemsModel![j].options![0].toString()));
+          completedCount += 1;
+        }
+      }
 
-  addProMetaModel2.add(new AddProMetaModel2(key: "attrs_val",value: addProMetaModel));
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? token = prefs.getString('token');
+      addProMetaModel2
+          .add(new AddProMetaModel2(key: "attrs_val", value: addProMetaModel));
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
 
-  print(token);
+      print(token);
 
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+      var body = json.encode({
+        "name": ProductNameCont.text,
+        "type": "simple",
+        "description": DescCont.text,
+        "short_description": ShortDescCont.text,
+        "price": PriceCont.text,
+        "manage_stock": true,
+        "stock_quantity": "1",
+        "stock_status": "instock",
+        "regular_price": PriceCont.text,
+        "categories": addProCatModel,
+        // "attributes": itemsModel,
+        "meta_data": addProMetaModel2
+      });
 
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Authorization': 'Bearer $token',
-  };
-  var body = json.encode({
-    "name":ProductNameCont.text,
-    "type":"simple",
-    "description":DescCont.text,
-    "short_description":ShortDescCont.text,
-    "price":PriceCont.text,
-    "manage_stock":true,
-    "stock_quantity":"1",
-    "stock_status":"instock",
-    "regular_price":PriceCont.text,
-    "categories":addProCatModel,
-    // "attributes": itemsModel,
-    "meta_data": addProMetaModel2
-  });
+      print(body);
 
-  print(body);
+      // }
 
+      var response = await http.post(
+          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products'),
+          body: body,
+          headers: headers);
 
-          // }
+      print('Response body: addcart${response.body}');
+      final jsonResponse = json.decode(response.body);
+      print('not json $jsonResponse');
+      createProModel = new CreateProModel.fromJson(jsonResponse);
 
+      toast("Product Created Successfully");
+      ItemAdd(createProModel!.id.toString());
 
-          var response = await http.post(
-              Uri.parse(
-                  'https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products'),
-              body: body,
-              headers: headers);
-
-          print('Response body: addcart${response.body}');
-          final jsonResponse = json.decode(response.body);
-          print('not json $jsonResponse');
-          createProModel = new CreateProModel.fromJson(jsonResponse);
-
-
-
-          toast("Product Created Successfully");
-          ItemAdd(createProModel!.id.toString());
-
-        // }
-        // );
-
-
-
+      // }
+      // );
 
       return createProModel;
     } catch (e) {
@@ -299,8 +299,8 @@ int myind2=itemsModel.length-1;
       };
 
       var body = json.encode({
-        "product_id":prodId,
-        "product_images":uploadModel,
+        "product_id": prodId,
+        "product_images": uploadModel,
       });
 
       // final msg = jsonEncode({"username": username, "password": password});
@@ -316,7 +316,7 @@ int myind2=itemsModel.length-1;
       print('not json $jsonResponse');
       EasyLoading.dismiss();
 
-      EasyLoading.dismiss();
+      // EasyLoading.dismiss();
       toast("Image Uploaded Successfully");
 
       Navigator.pop(context);
@@ -341,77 +341,16 @@ int myind2=itemsModel.length-1;
     print('object');
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: sh_colorPrimary2));
-    Widget prepareList(int k) {
-      return Card(
-        child: Hero(
-          tag: "text$k",
-          child: Material(
-            child: InkWell(
-              onTap: () {},
-              child: Container(
-                color: Colors.blueGrey,
-                height: 100,
-                child: Stack(
-                  children: [
-                    Center(
-                        child: Text(
-                      categoryListModel2[k].name!,
-                      style: TextStyle(color: Colors.white, fontSize: 20),
-                    )),
-                    Positioned(
-                        child: Checkbox(
-                      value: categoryListModel2[k].selected,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          if (!value!) categoryListModel2[k].selected = value;
-                        });
-                      },
-                    ))
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(statusBarColor: sh_colorPrimary2));
 
-    List<Widget> techChips() {
-      List<Widget> chips = [];
-      for (int i = 0; i < categoryListModel2.length; i++) {
-        Widget item = Padding(
-          padding: const EdgeInsets.only(left: 5, right: 5),
-          child: FilterChip(
-            label: Text(categoryListModel2[i].name!),
-            labelStyle: TextStyle(color: Colors.white),
-            backgroundColor: Colors.grey,
-            selectedColor: Colors.blue.shade800,
-            disabledColor: Colors.blue.shade400,
-            selected: categoryListModel2[i].selected!,
-            onSelected: (bool value) {
-              ischange = true;
-              setState(() {
-                categoryListModel2[i].selected = value;
-              });
-            },
-          ),
-        );
-        chips.add(item);
-      }
-      return chips;
-    }
+    // var height = MediaQuery.of(context).size.height;
+    // var width = MediaQuery.of(context).size.width;
 
-
-    var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
-
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
           height: 50,
@@ -419,10 +358,13 @@ int myind2=itemsModel.length-1;
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(
+            cart_count.toString(),
+            style: TextStyle(color: sh_white),
+          ),
           child: Image.asset(
             sh_new_cart,
             height: 50,
@@ -449,11 +391,13 @@ int myind2=itemsModel.length-1;
                 // itemsModel.add(itModel!);
                 // itemsModel.clear();
                 itModel = NewAttributeModel(
-                    name :  attributeModel!.data!.attributes![index]!.title!,
-                position: 0,
-                variation: true,
-                visible: true,
-                options: []);
+                    name: attributeModel!.data!.attributes![index]!.title!,
+                    position: 0,
+                    variation: true,
+                    visible: true,
+                    options: [],
+                    required:
+                        attributeModel!.data!.attributes![index]!.required!);
                 itemsModel!.add(itModel!);
 
                 return Column(
@@ -466,7 +410,22 @@ int myind2=itemsModel.length-1;
                     //       fontFamily: 'Bold',
                     //       color: sh_textColorPrimary),
                     // ),
-                    text(" Select "+attributeModel!.data!.attributes![index]!.title!, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                    Row(children: [
+                      text(
+                          " Select " +
+                              attributeModel!.data!.attributes![index]!.title!,
+                          textColor: sh_app_txt_color,
+                          fontFamily: "Bold"),
+                      text("*",
+                          textColor: attributeModel!.data!.attributes![index]!
+                              .required=="1" ? sh_red:sh_transparent,
+                          fontFamily: "Bold"),
+                    ],),
+                    // text(
+                    //     " Select " +
+                    //         attributeModel!.data!.attributes![index]!.title!,
+                    //     textColor: sh_app_txt_color,
+                    //     fontFamily: "Bold"),
                     PlayerWidget(
                         pro_det_model: attributeModel!,
                         index: index,
@@ -513,7 +472,8 @@ int myind2=itemsModel.length-1;
         backgroundColor: sh_colorPrimary2,
         title: Text(
           "New Listing",
-          style: TextStyle(color: sh_white,fontFamily: 'Cursive',fontSize: 40),
+          style:
+              TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
@@ -527,7 +487,6 @@ int myind2=itemsModel.length-1;
               width: 50,
               color: sh_white,
             ),
-
           ),
           SizedBox(
             width: 22,
@@ -539,15 +498,15 @@ int myind2=itemsModel.length-1;
         // Background with gradient
         Container(
             height: 120,
-            width: width,
-            child: Image.asset(sh_upper2,fit: BoxFit.fill)
-          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-        ),
+            width: 100.w,
+            child: Image.asset(sh_upper2, fit: BoxFit.fill)
+            // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+            ),
         //Above card
 
         Container(
-          height: height,
-          width: width,
+          height: 100.h,
+          width: 100.w,
           color: sh_white,
           margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
           child: SingleChildScrollView(
@@ -558,24 +517,52 @@ int myind2=itemsModel.length-1;
                 child: Container(
                   color: sh_white,
                   child: Column(
-
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // text(" Product Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Product Name", ProductNameCont, node,
-                          "Please Enter Product Name", sh_white, sh_view_color, 1),
+                      Row(children: [
+                        text(" Product Name",
+                            textColor: sh_app_txt_color,
+                            fontFamily: "Bold"),
+                        text("*",
+                            textColor: sh_red,
+                            fontFamily: "Bold"),
+                      ],),
+                      editTextStyle(
+                          "Product Name",
+                          ProductNameCont,
+                          node,
+                          "Please Enter Product Name",
+                          sh_white,
+                          sh_view_color,
+                          1,context),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
+                      text(" Description",
+                          textColor: sh_app_txt_color,
+                          fontFamily: "Bold"),
                       // text(" Description", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Description", DescCont, node,
-                          "Please Enter Description", sh_white, sh_view_color, 5),
+                      editTextStyle2(
+                          "Description",
+                          DescCont,
+                          node,
+                          "Please Enter Description",
+                          sh_white,
+                          sh_view_color,
+                          5,context),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
-                      // text(" Short Description", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Short Description", ShortDescCont, node,
-                          "Please Enter Description", sh_white, sh_view_color, 2),
+                      text(" Short Description", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      editTextStyle2(
+                          "Short Description",
+                          ShortDescCont,
+                          node,
+                          "Please Enter Description",
+                          sh_white,
+                          sh_view_color,
+                          2,context),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
@@ -585,31 +572,110 @@ int myind2=itemsModel.length-1;
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Row(children: [
+                                  text(" Price",
+                                      textColor: sh_app_txt_color,
+                                      fontFamily: "Bold"),
+                                  text("*",
+                                      textColor: sh_red,
+                                      fontFamily: "Bold"),
+                                ],),
                                 // text(" Price", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                                editTextStyle("Price", PriceCont, node,
-                                    "Please Enter Price", sh_white, sh_view_color, 1),
+                                editTextStyle(
+                                    "Price",
+                                    PriceCont,
+                                    node,
+                                    "Please Enter Price",
+                                    sh_white,
+                                    sh_view_color,
+                                    1,context),
                               ],
                             ),
                           ),
-
                         ],
                       ),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
+                      Row(children: [
+                        text(" Brand Name",
+                            textColor: sh_app_txt_color,
+                            fontFamily: "Bold"),
+                        text("*",
+                            textColor: sh_red,
+                            fontFamily: "Bold"),
+                      ],),
                       // text(" Brand Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
                       editTextStyle("Enter Brand", BrandCont, node,
-                          "Please Enter Brand", sh_white, sh_view_color, 1),
+                          "Please Enter Brand", sh_white, sh_view_color, 1,context),
+                      SizedBox(
+                        height: spacing_standard_new,
+                      ),
+                      Row(children: [
+                        text(" Faults",
+                            textColor: sh_app_txt_color,
+                            fontFamily: "Bold"),
+                        text("*",
+                            textColor: sh_red,
+                            fontFamily: "Bold"),
+                      ],),
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(0.0,8,8,0),
+                          child: Container(
+                            decoration: boxDecoration(
+                                bgColor: sh_btn_color, radius: 22, showShadow: true),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16.0,0,16,0),
+                              child: Flexible(
+                                child: DropdownButton<String>(
+                                  underline: Container(),
+                                  value: dropdownValue,
+
+                                  elevation: 16,
+                                  // style: const TextStyle(color: Colors.deepPurple),
+
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      if(newValue=="Enter if any Faults"){
+                                        _isVisible=true;
+                                      }else{
+                                        _isVisible=false;
+                                      }
+                                      dropdownValue = newValue!;
+                                    });
+                                  },
+                                  items: <String>['NONE', 'Enter if any Faults']
+                                      .map<DropdownMenuItem<String>>((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(
+                                        value,
+                                        style: TextStyle(
+                                            color: sh_textColorPrimary,
+                                            fontFamily: fontRegular,
+                                            fontSize: textSizeMedium),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                          )
+                      ),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
                       // text(" Faults", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Enter if any Faults", FaultsCont, node,
-                          "Please Enter Faults", sh_white, sh_view_color, 1),
+                      Visibility(
+                        visible: _isVisible,
+                        child: editTextStyle("Enter if any Faults", FaultsCont, node,
+                            "Please Enter Faults", sh_white, sh_view_color, 1,context),
+                      ),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
-                      text(" Select Category", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      text(" Select Category",
+                          textColor: sh_app_txt_color, fontFamily: "Bold"),
                       MultiSelectChip(
                         categoryListModel2,
                         onSelectionChanged: (selectedList) {
@@ -623,18 +689,24 @@ int myind2=itemsModel.length-1;
                       ),
 
                       // text(" Select Attribute", textColor: t6textColorPrimary),
-                      CheckVariant(),
+                      // CheckVariant(),
+                      AttrWidget(
+                          attributeModel,
+                          itModel,
+                          itemsModel!
+                      ),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
-                      text(" Add Image", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      text(" Add Image",
+                          textColor: sh_app_txt_color, fontFamily: "Bold"),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
-                      PhotoWidget(multimimageModel: multimimageModel,
+                      PhotoWidget(
+                          multimimageModel: multimimageModel,
                           picker: _picker,
-                          imageFileList:_imageFileList),
-
+                          imageFileList: _imageFileList),
 
                       SizedBox(
                         height: spacing_standard_new,
@@ -644,37 +716,68 @@ int myind2=itemsModel.length-1;
                           if (_formKey.currentState!.validate()) {
                             //   // TODO submit
                             FocusScope.of(context).requestFocus(FocusNode());
-                            for (var i = 0; i < selectedReportList.length; i++) {
+                            for (var i = 0;
+                                i < selectedReportList.length;
+                                i++) {
                               addProCatModel.add(new AddProCategoryModel(
                                   id: selectedReportList[i]));
                             }
-      //                       toast(itemsModel!.length.toString());
-      //                     if(itemsModel![0].options!.length>0){
-      //                       print(itemsModel![0].name! +
-      //                           itemsModel![0].options![0].toString());
-      //                     }
-      // if(itemsModel![1].options!.length>0) {
-      //   print(itemsModel![1].name! + itemsModel![1].options![0].toString());
-      // }
-      // if(itemsModel![2].options!.length>0) {
-      //   print(itemsModel![2].name! + itemsModel![2].options![0].toString());
-      // }
-      // if(itemsModel![3].options!.length>0) {
-      //   print(itemsModel![3].name! + itemsModel![3].options![0].toString());
-      // }
+                            //                       toast(itemsModel!.length.toString());
+                            //                     if(itemsModel![0].options!.length>0){
+                            //                       print(itemsModel![0].name! +
+                            //                           itemsModel![0].options![0].toString());
+                            //                     }
+                            // if(itemsModel![1].options!.length>0) {
+                            //   print(itemsModel![1].name! + itemsModel![1].options![0].toString());
+                            // }
+                            // if(itemsModel![2].options!.length>0) {
+                            //   print(itemsModel![2].name! + itemsModel![2].options![0].toString());
+                            // }
+                            // if(itemsModel![3].options!.length>0) {
+                            //   print(itemsModel![3].name! + itemsModel![3].options![0].toString());
+                            // }
                             if (multimimageModel.length > 0) {
-                              AddProduct();
-                            }else{
+                              // AddProduct();
+                              int jj=0;
+                              String mj='';
+
+                              // itemsModel!.length = itemsModel.length - howMany;
+                              // itemsModel.length=attributeModel.data.attributes.length
+                              for (var j = 0; j < attributeModel!.data!.attributes!.length; j++) {
+                                if(itemsModel![j].required=='1'){
+                                  if (itemsModel![j].options!.length == 0) {
+                                    jj++;
+                                    // toast(itemsModel![j].name!);
+                                    mj=itemsModel![j].name!;
+                                    break;
+                                  }
+                                }
+
+                              }
+
+                              // toast(jj.toString());
+                              if(jj>0){
+                                toast("Please Select $mj");
+
+                              }else{
+                                AddProduct();
+                              }
+
+
+
+                            } else {
                               toast("Please add a photo");
                             }
                           }
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width,
+                          width: 100.w,
                           padding: EdgeInsets.only(
                               top: spacing_middle, bottom: spacing_middle),
                           decoration: boxDecoration(
-                              bgColor: sh_app_background, radius: 10, showShadow: true),
+                              bgColor: sh_app_background,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Add Product",
                               textColor: sh_app_txt_color,
                               isCentered: true,
@@ -694,7 +797,7 @@ int myind2=itemsModel.length-1;
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(0, spacing_middle4, 0, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -703,15 +806,26 @@ int myind2=itemsModel.length-1;
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      padding: const EdgeInsets.fromLTRB(6.0, 2, 6, 2),
+                      child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                            size: 36,
+                          )),
                     ),
-
                     Padding(
                       padding: const EdgeInsets.all(6.0),
-                      child: Text("New Listing",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      child: Text(
+                        "New Listing",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 45,
+                            fontFamily: 'Cursive'),
+                      ),
                     )
                   ],
                 ),
@@ -719,16 +833,18 @@ int myind2=itemsModel.length-1;
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        ).then((value) {
+                          setState(() {
+                            // refresh state
+                          });
+                        });
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),
@@ -742,22 +858,28 @@ int myind2=itemsModel.length-1;
                           return CircularProgressIndicator();
                         },
                       ),
-
                     ),
-                    SizedBox(width: 16,)
+                    SizedBox(
+                      width: 16,
+                    )
                   ],
                 ),
               ],
             ),
           ),
         ),
-
       ]);
     }
 
     // toast("value");
+    return Sizer(
+      builder: (context, orientation, deviceType) {
+        return Scaffold(
+          body: SafeArea(child: setUserForm()),
+        );
+      },
+    );
     return Scaffold(
-
       body: SafeArea(child: setUserForm()),
     );
   }
@@ -814,14 +936,84 @@ class _GridItemState extends State<GridItem> {
   }
 }
 
+// Padding editTextStyle(var hintText, var cn, final node, String alert,
+//     Color sh_white, Color sh_view_color, int min_lne) {
+//   return Padding(
+//     padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+//     child: TextFormField(
+//       maxLines: min_lne,
+//       controller: cn,
+//       onEditingComplete: () => node.nextFocus(),
+//       style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
+//       validator: (text) {
+//         if (text == null || text.isEmpty) {
+//           return alert;
+//         }
+//         return null;
+//       },
+//       cursorColor: sh_colorPrimary2,
+//       decoration: InputDecoration(
+//         contentPadding: EdgeInsets.fromLTRB(2, 16, 24, 6),
+//         hintText: hintText,
+//         hintStyle: TextStyle(color: sh_colorPrimary2, fontFamily: 'Regular'),
+//         labelText: hintText,
+//         labelStyle: TextStyle(color: sh_colorPrimary2, fontFamily: 'Bold'),
+//         filled: true,
+//         fillColor: sh_white,
+//         enabledBorder: UnderlineInputBorder(
+//             // borderRadius: BorderRadius.circular(20),
+//             borderSide: BorderSide(color: sh_colorPrimary2, width: 1.0)),
+//         focusedBorder: UnderlineInputBorder(
+//             // borderRadius: BorderRadius.circular(20),
+//             borderSide: BorderSide(color: sh_colorPrimary2, width: 1.0)),
+//       ),
+//     ),
+//   );
+// }
+//
+// Padding editTextStyle2(var hintText, var cn, final node, String alert,
+//     Color sh_white, Color sh_view_color, int min_lne) {
+//   return Padding(
+//     padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+//     child: TextFormField(
+//       maxLines: min_lne,
+//       controller: cn,
+//       onEditingComplete: () => node.nextFocus(),
+//       style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
+//       cursorColor: sh_app_txt_color,
+//       decoration: InputDecoration(
+//         contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
+//         hintText: hintText,
+//         hintStyle: TextStyle(color: sh_app_txt_color),
+//         filled: true,
+//         fillColor: sh_white,
+//         enabledBorder: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(20),
+//             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+//         focusedBorder: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(20),
+//             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+//       ),
+//     ),
+//   );
+// }
+
+
 Padding editTextStyle(var hintText, var cn, final node, String alert,
-    Color sh_white, Color sh_view_color, int min_lne) {
+    Color sh_white, Color sh_view_color, int min_lne, context) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
     child: TextFormField(
+
       maxLines: min_lne,
       controller: cn,
-      onEditingComplete: () => node.nextFocus(),
+      autofocus: false,
+      onFieldSubmitted: (value) async {
+        FocusScope.of(context).unfocus();
+        FocusScope.of(context).requestFocus(new
+        FocusNode());
+      },
+      // onEditingComplete: () => node.nextFocus(),
       style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
       validator: (text) {
         if (text == null || text.isEmpty) {
@@ -829,37 +1021,7 @@ Padding editTextStyle(var hintText, var cn, final node, String alert,
         }
         return null;
       },
-      cursorColor: sh_colorPrimary2,
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.fromLTRB(2, 16, 24, 6),
-        hintText: hintText,
-        hintStyle: TextStyle(color: sh_colorPrimary2,fontFamily: 'Regular'),
-        labelText: hintText,
-        labelStyle: TextStyle(color: sh_colorPrimary2,fontFamily: 'Bold'),
-        filled: true,
-        fillColor: sh_white,
-        enabledBorder: UnderlineInputBorder(
-            // borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: sh_colorPrimary2, width: 1.0)),
-        focusedBorder: UnderlineInputBorder(
-            // borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: sh_colorPrimary2, width: 1.0)),
-      ),
-    ),
-  );
-}
-
-Padding editTextStyle2(var hintText, var cn, final node, String alert,
-    Color sh_white, Color sh_view_color, int min_lne) {
-  return Padding(
-    padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-    child: TextFormField(
-      maxLines: min_lne,
-      controller: cn,
-      onEditingComplete: () => node.nextFocus(),
-      style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
-cursorColor: sh_app_txt_color,
-
+      cursorColor: sh_app_txt_color,
       decoration: InputDecoration(
         contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
         hintText: hintText,
@@ -877,17 +1039,133 @@ cursorColor: sh_app_txt_color,
   );
 }
 
+Padding editTextStyle2(var hintText, var cn, final node, String alert,
+    Color sh_white, Color sh_view_color, int min_lne, context) {
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+    child: TextFormField(
+      autofocus: false,
+      onFieldSubmitted: (value) async {
+        FocusScope.of(context).unfocus();
+        FocusScope.of(context).requestFocus(new
+        FocusNode());
+      },
+      maxLines: min_lne,
+      controller: cn,
+      onEditingComplete: () => node.nextFocus(),
+      style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
+      cursorColor: sh_app_txt_color,
+      decoration: InputDecoration(
+        contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
+        hintText: hintText,
+        hintStyle: TextStyle(color: sh_app_txt_color),
+        filled: true,
+        fillColor: sh_white,
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+      ),
+    ),
+  );
+}
+
+class AttrWidget extends StatefulWidget {
+  // final AttributeModel? pro_det_model;
+  AttributeModel? attributeModel;
+  NewAttributeModel? itModel;
+  List<NewAttributeModel> itemsModel = [];
+
+  AttrWidget(this.attributeModel, this.itModel,
+      this.itemsModel)
+  ;
+
+  @override
+  State<StatefulWidget> createState() {
+    return _AttrWidgetState();
+  }
+}
+
+class _AttrWidgetState extends State<AttrWidget> {
+  // String selectedReportList = '';
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // var _value = widget.pro_det_model!.attributes![widget.index!]!.options!.isEmpty
+    //     ? selectedItemValue
+    //     : widget.pro_det_model!.attributes![widget.index!]!.options!.firstWhere((item) => item.toString() == selectedItemValue.toString());
+
+    if (widget.attributeModel!.data!.attributes!.length > 0) {
+      return Container(
+        child: ListView.builder(
+            itemCount: widget.attributeModel!.data!.attributes!.length,
+            physics: NeverScrollableScrollPhysics(),
+            // itemExtent: 50.0,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+                widget.itModel = NewAttributeModel(
+                    name: widget.attributeModel!.data!.attributes![index]!
+                        .title!,
+                    position: 0,
+                    variation: true,
+                    visible: true,
+                    options: [],
+                    required:
+                    widget.attributeModel!.data!.attributes![index]!.required!);
+
+              widget.itemsModel.add(widget.itModel!);
+              // if(attributeModel!.data!.attributes![index]!.title!)
+
+
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(children: [
+                      text(
+                          " Select " +
+                              widget.attributeModel!.data!.attributes![index]!
+                                  .title!,
+                          textColor: sh_app_txt_color,
+                          fontFamily: "Bold"),
+                      text("*",
+                          textColor: widget.attributeModel!.data!.attributes![index]!
+                              .required=="1" ? sh_red:sh_transparent,
+                          fontFamily: "Bold"),
+                    ],),
+
+                    PlayerWidget(
+                        pro_det_model: widget.attributeModel!,
+                        index: index,
+                        itemsModel: widget.itemsModel),
+                    SizedBox(height: 10),
+
+
+                  ],
+                );
+
+            }),
+      );
+    } else {
+      return Container();
+    }
+  }
+}
+
 class PlayerWidget extends StatefulWidget {
   final AttributeModel? pro_det_model;
   final int? index;
   final List<NewAttributeModel>? itemsModel;
 
-  PlayerWidget({
-    Key? key,
-    this.pro_det_model,
-    this.index,
-    this.itemsModel
-  }) : super(key: key);
+  PlayerWidget({Key? key, this.pro_det_model, this.index, this.itemsModel})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -896,17 +1174,13 @@ class PlayerWidget extends StatefulWidget {
 }
 
 class _PlayerWidgetState extends State<PlayerWidget> {
-  String? selectedItemValue=null;
+  String? selectedItemValue = null;
   String selectedReportList = '';
-
-
-
 
   @override
   void initState() {
     super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -916,11 +1190,16 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
     List<Widget> techChips2(StateSetter setState2) {
       List<Widget> chips = [];
-      for (int i = 0; i < widget.pro_det_model!.data!.attributes![widget.index!]!.values!.length; i++) {
+      for (int i = 0;
+          i <
+              widget.pro_det_model!.data!.attributes![widget.index!]!.values!
+                  .length;
+          i++) {
         Widget item = Padding(
           padding: const EdgeInsets.only(left: 5, right: 5),
           child: FilterChip(
-            label: Text(widget.pro_det_model!.data!.attributes![widget.index!]!.values![i]!.name!),
+            label: Text(widget.pro_det_model!.data!.attributes![widget.index!]!
+                .values![i]!.name!),
             labelStyle: TextStyle(color: Colors.white),
             backgroundColor: Colors.grey,
             selectedColor: Colors.blue.shade800,
@@ -941,27 +1220,22 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
     return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState2) {
-
-
-
-          return MultiAttributeChip(
-            widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
-            widget.index!,
-              widget.itemsModel,
-            onSelectionChanged: (selectedList) {
-              setState2(() {
-                selectedReportList = selectedList;
-              });
-            },
-          );
-          //   Wrap(
-          //   spacing: 8,
-          //   direction: Axis.horizontal,
-          //   children: techChips2(setState2),
-          // );
-        })
-
-    ;
+      return MultiAttributeChip(
+        widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
+        widget.index!,
+        widget.itemsModel,
+        onSelectionChanged: (selectedList) {
+          setState2(() {
+            selectedReportList = selectedList;
+          });
+        },
+      );
+      //   Wrap(
+      //   spacing: 8,
+      //   direction: Axis.horizontal,
+      //   children: techChips2(setState2),
+      // );
+    });
   }
 }
 
@@ -989,16 +1263,17 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
         child: ChoiceChip(
           label: Text(unescape.convert(item.name!)),
           selected: selectedChoices.contains(item.catid),
-          labelStyle: TextStyle(color: selectedChoices.contains(item.catid) ? sh_white : sh_black),
+          labelStyle: TextStyle(
+              color:
+                  selectedChoices.contains(item.catid) ? sh_white : sh_black),
           selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
-              setState(() {
-                selectedChoices.contains(item.catid)
-                    ? selectedChoices.remove(item.catid)
-                    : selectedChoices.add(item.catid!);
-                widget.onSelectionChanged?.call(selectedChoices);
-              });
-
+            setState(() {
+              selectedChoices.contains(item.catid)
+                  ? selectedChoices.remove(item.catid)
+                  : selectedChoices.add(item.catid!);
+              widget.onSelectionChanged?.call(selectedChoices);
+            });
           },
         ),
       ));
@@ -1021,7 +1296,8 @@ class MultiAttributeChip extends StatefulWidget {
   final List<NewAttributeModel>? itemsModel;
   final int? index;
 
-  MultiAttributeChip(this.reportList,this.index,this.itemsModel, {this.onSelectionChanged});
+  MultiAttributeChip(this.reportList, this.index, this.itemsModel,
+      {this.onSelectionChanged});
 
   @override
   _MultiAttributeChipState createState() => _MultiAttributeChipState();
@@ -1029,18 +1305,18 @@ class MultiAttributeChip extends StatefulWidget {
 
 class _MultiAttributeChipState extends State<MultiAttributeChip> {
   String selectedChoices = "";
+
   // List<String> selectedChoices = [];
 
-  RemoveOther(String names) async{
+  RemoveOther(String names) async {
     // for (var j = 0; j < widget.itemsModel!.length; j++) {
-      // if(j==widget.index){
-      //   widget.itemsModel![widget.index!].options!.add(names);
-      // }else{
-      //   widget.itemsModel![widget.index!].options!.remove(names);
-      // }
+    // if(j==widget.index){
+    //   widget.itemsModel![widget.index!].options!.add(names);
+    // }else{
+    //   widget.itemsModel![widget.index!].options!.remove(names);
+    // }
 
-     // }
-
+    // }
 
     // for (var j = 0; j < widget.itemsModel![widget.index!].options!.length; j++) {
     //   widget.itemsModel![widget.index!].options![j].removeAllWhiteSpace();
@@ -1049,7 +1325,6 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
     widget.itemsModel![widget.index!].options!.clear();
 
     widget.itemsModel![widget.index!].options!.add(names);
-
   }
 
 //   RemoveOther2(String names) async{
@@ -1064,19 +1339,19 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
       choices.add(Container(
         padding: const EdgeInsets.all(2.0),
         child: ChoiceChip(
-
           label: Text(item!.name!),
-          labelStyle: TextStyle(color: selectedChoices==item.name ? sh_white : sh_black),
-          selected: selectedChoices==item.name,
+          labelStyle: TextStyle(
+              color: selectedChoices == item.name ? sh_white : sh_black),
+          selected: selectedChoices == item.name,
           selectedColor: sh_colorPrimary2,
           onSelected: (selected) {
             setState(() {
-              if(selectedChoices==item.name!){
-               selectedChoices='';
-              }else {
+              if (selectedChoices == item.name!) {
+                selectedChoices = '';
+              } else {
                 selectedChoices = item.name!;
               }
-print("myccc"+widget.index!.toString());
+              print("myccc" + widget.index!.toString());
               widget.itemsModel![widget.index!].options!.contains(item.name)
                   ? widget.itemsModel![widget.index!].options!.remove(item.name)
                   : RemoveOther(item.name!);
@@ -1086,7 +1361,6 @@ print("myccc"+widget.index!.toString());
               //     : RemoveOther2(item.name!);
               widget.onSelectionChanged?.call(selectedChoices);
             });
-
           },
         ),
       ));
@@ -1106,14 +1380,11 @@ print("myccc"+widget.index!.toString());
 class PhotoWidget extends StatefulWidget {
   List<MultiImageModel>? multimimageModel;
   final ImagePicker? picker;
-   List<XFile>? imageFileList;
+  List<XFile>? imageFileList;
 
-  PhotoWidget({
-    Key? key,
-    this.multimimageModel,
-    this.picker,
-    this.imageFileList
-  }) : super(key: key);
+  PhotoWidget(
+      {Key? key, this.multimimageModel, this.picker, this.imageFileList})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -1122,15 +1393,10 @@ class PhotoWidget extends StatefulWidget {
 }
 
 class _PhotoWidgetState extends State<PhotoWidget> {
-
-
-
-
   @override
   void initState() {
     super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -1138,62 +1404,78 @@ class _PhotoWidgetState extends State<PhotoWidget> {
     //     ? selectedItemValue
     //     : widget.pro_det_model!.attributes![widget.index!]!.options!.firstWhere((item) => item.toString() == selectedItemValue.toString());
 
-    Single2(StateSetter setState2,int index) {
+    Single2(StateSetter setState2, int index) {
       if (widget.multimimageModel!.length != 0) {
         return Padding(
           padding: const EdgeInsets.all(8.0),
-          child: index == widget.multimimageModel!.length ? IconButton(
-              color: sh_app_txt_color,
-              icon: Icon(Icons.add_circle_outline,size: 60,),
-              onPressed: () async {
-                final pickedFileList = await widget.picker!.pickMultiImage();
-                setState(() {
-                  widget.imageFileList = pickedFileList;
-                  for (var i = 0; i < pickedFileList!.length; i++) {
-                    widget.multimimageModel!.add(new MultiImageModel(pickedFileList[i].name,pickedFileList[i].path));
-                  }
-                });
-                // if (bool) {
-                //   fetchData();
-                // }
-              }) : Stack(
-            children: [ClipRRect(
-                borderRadius:
-                BorderRadius.all(Radius.circular(spacing_middle)),
-                child: Image.file(File(widget.multimimageModel![index].path!),fit: BoxFit.cover,height: 300,width: 300,)),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: (){
-                    toast('delete image from List');
-
-                    setState((){
-                      widget.multimimageModel!.removeAt(index);
-
-                      print('set new state of images');
-                    });
-                  },
-                  child: Icon(
-                    Icons.delete,
-                    color: sh_red,
+          child: index == widget.multimimageModel!.length
+              ? IconButton(
+                  color: sh_app_txt_color,
+                  icon: Icon(
+                    Icons.add_circle_outline,
+                    size: 60,
                   ),
+                  onPressed: () async {
+                    final pickedFileList =
+                        await widget.picker!.pickMultiImage();
+                    setState(() {
+                      widget.imageFileList = pickedFileList;
+                      for (var i = 0; i < pickedFileList!.length; i++) {
+                        widget.multimimageModel!.add(new MultiImageModel(
+                            pickedFileList[i].name, pickedFileList[i].path));
+                      }
+                    });
+                    // if (bool) {
+                    //   fetchData();
+                    // }
+                  })
+              : Stack(
+                  children: [
+                    ClipRRect(
+                        borderRadius:
+                            BorderRadius.all(Radius.circular(spacing_middle)),
+                        child: Image.file(
+                          File(widget.multimimageModel![index].path!),
+                          fit: BoxFit.cover,
+                          height: 300,
+                          width: 300,
+                        )),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          toast('delete image from List');
+
+                          setState(() {
+                            widget.multimimageModel!.removeAt(index);
+
+                            print('set new state of images');
+                          });
+                        },
+                        child: Icon(
+                          Icons.delete,
+                          color: sh_red,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         );
       } else {
         return IconButton(
             color: sh_app_txt_color,
-            icon: Icon(Icons.add_circle_outline,size: 60,),
+            icon: Icon(
+              Icons.add_circle_outline,
+              size: 60,
+            ),
             onPressed: () async {
               final pickedFileList = await widget.picker!.pickMultiImage();
               setState(() {
                 widget.imageFileList = pickedFileList;
                 for (var i = 0; i < pickedFileList!.length; i++) {
-                  widget.multimimageModel!.add(new MultiImageModel(pickedFileList[i].name,pickedFileList[i].path));
-
+                  widget.multimimageModel!.add(new MultiImageModel(
+                      pickedFileList[i].name, pickedFileList[i].path));
                 }
               });
               // if (bool) {
@@ -1203,32 +1485,26 @@ class _PhotoWidgetState extends State<PhotoWidget> {
       }
     }
 
-
     return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState2) {
-
-
-
-          return Container(
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3),
-              itemCount: widget.multimimageModel!.length+1,
-              itemBuilder: (context, index) {
-                return Single2(setState2,index);
-              },
-            ),
-          );
-          //   Wrap(
-          //   spacing: 8,
-          //   direction: Axis.horizontal,
-          //   children: techChips2(setState2),
-          // );
-        });
-
-
+      return Container(
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate:
+              SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+          itemCount: widget.multimimageModel!.length + 1,
+          itemBuilder: (context, index) {
+            return Single2(setState2, index);
+          },
+        ),
+      );
+      //   Wrap(
+      //   spacing: 8,
+      //   direction: Axis.horizontal,
+      //   children: techChips2(setState2),
+      // );
+    });
 
     ;
   }

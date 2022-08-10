@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/ViewProModel.dart';
 import 'package:thrift/utils/custom_pop_up_menu.dart';
 import 'package:flutter/material.dart';
@@ -131,16 +132,21 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       var response;
       if (filter_str == 'Newest to Oldest') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100&country=$user_country&seller_id=$UserId"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=desc&per_page=100&country=$user_country&seller_id=$UserId"));
+
+        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=desc&per_page=100&country=$user_country&seller_id=$UserId");
       } else if (filter_str == 'Oldest to Newest') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?stock_status=instock&status=publish&orderby=date&order=asc&per_page=100&country=$user_country&seller_id=$UserId"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=asc&per_page=100&country=$user_country&seller_id=$UserId"));
+        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=asc&per_page=100&country=$user_country&seller_id=$UserId");
       } else if (filter_str == 'Price High to Low') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?stock_status=instock&status=publish&orderby=price&order=desc&per_page=100&country=$user_country&seller_id=$UserId"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=desc&per_page=100&country=$user_country&seller_id=$UserId"));
+        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=desc&per_page=100&country=$user_country&seller_id=$UserId");
       } else if (filter_str == 'Price Low to High') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?stock_status=instock&status=publish&orderby=price&order=asc&per_page=100&country=$user_country&seller_id=$UserId"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=asc&per_page=100&country=$user_country&seller_id=$UserId"));
+        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=asc&per_page=100&country=$user_country&seller_id=$UserId");
       }
       print('Response status2: ${response.statusCode}');
       print('Response body2: ${response.body}');
@@ -386,7 +392,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       print('not json $jsonResponse');
       viewProModel = new ViewProModel.fromJson(jsonResponse);
 
-      fnl_img = viewProModel!.profile_picture!;
+      fnl_img = viewProModel!.profilePicture!;
       print(fnl_img);
 
 
@@ -1029,7 +1035,46 @@ onTap: () {
                         ),
                       );
                     }
-                    return Center(child: CircularProgressIndicator());
+                    return Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      direction: ShimmerDirection.ltr,
+                      child: Container(
+                        width: width,
+                        padding: EdgeInsets.fromLTRB(1,12,1,12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        1.0, 12, 1, 12),
+                                    child:                             Container(
+                                      width: width*.3,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                            SizedBox(height: 10,),
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        1.0, 12, 1, 12),
+                                    child:                             Container(
+                                      width: width*.3,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                          ],
+                        ),
+
+                      ),
+                    );
                   },
                 ),
 
@@ -1203,7 +1248,60 @@ onTap: () {
 
 
                     }
-                    return Center(child: CircularProgressIndicator());
+                    return Expanded(
+                      child: Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        enabled: true,
+                        child: ListView.builder(
+                          itemBuilder: (_, __) => Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: 48.0,
+                                  height: 48.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          itemCount: 6,
+                        ),
+                      ),
+                    );
                   },
                 ),
               ],

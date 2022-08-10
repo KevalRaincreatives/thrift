@@ -8,6 +8,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:nb_utils/nb_utils.dart' hide lightGrey;
 import 'package:photo_view/photo_view.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:thrift/database/CartPro.dart';
 import 'package:thrift/database/database_hepler.dart';
 import 'package:thrift/model/AddCartModel.dart';
@@ -1645,7 +1646,97 @@ ct_changel=true;
                             return Text("${snapshot.error}");
                           }
                           // By default, show a loading spinner.
-                          return Center(child: CircularProgressIndicator());
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            direction: ShimmerDirection.ltr,
+                            child: Container(
+                              width: width,
+                              padding: EdgeInsets.fromLTRB(12,12,12,12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    height: 250,
+                                    child: Column(
+                                      children: <Widget>[
+                                        Container(                                            width: double.infinity,
+                                          height: 200.0,
+
+                                          color: Colors.white,),
+                                        // Scrollindic()
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                      child: InkWell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              18.0, 0, 12, 12),
+                                          child:                             Container(
+                                            width: width*.40,
+                                            height: 12.0,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )),
+                                  SizedBox(height: 4,),
+                                  Container(
+                                      child: InkWell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              18.0, 12, 12, 12),
+                                          child:                             Container(
+                                            width: width*.30,
+                                            height: 12.0,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )),
+                                  SizedBox(height: 4,),
+                                  Container(
+                                      child: InkWell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              18.0, 12, 12, 12),
+                                          child:                             Container(
+                                            width: width*.35,
+                                            height: 12.0,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )),
+                                  SizedBox(height: 10,),
+                                  Container(
+                                      child: InkWell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              18.0, 12, 12, 12),
+                                          child:                             Container(
+                                            width: width*.20,
+                                            height: 12.0,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )),
+                                  SizedBox(height: 4,),
+                                  Container(
+                                      child: InkWell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              18.0, 12, 12, 12),
+                                          child:                             Container(
+                                            width: width,
+                                            height: 62.0,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )),
+                                ],
+                              ),
+
+                            ),
+                          );
                         },
                       ),
                     ),

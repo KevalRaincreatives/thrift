@@ -40,10 +40,6 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
   }
 
-  // callme() async {
-  //   await Future.delayed(Duration(seconds: 2));
-  //
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +79,7 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   return Builder(builder: (BuildContext context) {
+                    return Container();
                     return WebView(
                       initialUrl: weburl,
                       javascriptMode: JavascriptMode.unrestricted,

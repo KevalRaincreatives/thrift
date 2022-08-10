@@ -2,13 +2,15 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:nb_utils/nb_utils.dart' hide lightGrey;
 import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/model/ProfileUpdateModel.dart';
 import 'package:thrift/model/ViewProModel.dart';
+import 'package:thrift/screens/BankDetailScreen.dart';
 import 'package:thrift/screens/BecameSellerScreen.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/ChangePasswordScreen.dart';
@@ -402,7 +404,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print('not json $jsonResponse');
       viewProModel = new ViewProModel.fromJson(jsonResponse);
 
-      fnl_img = viewProModel!.profile_picture!;
+      fnl_img = viewProModel!.profilePicture!;
 
 
       return viewProModel;
@@ -764,6 +766,87 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                          SizedBox(height: 16,),
+                          FutureBuilder<String?>(
+                            future: fetchaddMain,
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+
+                                return is_store_owner=='1' ?
+                                FutureBuilder<ViewProModel?>(
+                                  future: ViewProfilePic(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return InkWell(
+                                        child: Container(
+                                          width: MediaQuery.of(context).size.width*.7,
+                                          padding: EdgeInsets.only(
+                                              top: 6, bottom: 6,left: 4,right: 4),
+                                          decoration: boxDecoration(
+                                              bgColor: lightGrey, radius: 4, showShadow: true),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  text("Banking Information",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+
+                                                  InkWell(
+                                                    onTap: () async{
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => BankDetailScreen(),
+                                                        ),
+                                                      ).then((_) => setState(() {}));
+                                                    },
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.fromLTRB(0, 1, 1, 0),
+                                                      child: Center(
+                                                        child: Container(
+                                                          alignment: Alignment.centerRight,
+                                                          child: Text(
+                                                            "Change",
+                                                            style: TextStyle(
+                                                                color: sh_app_blue,
+                                                                fontSize: 12,
+                                                                fontWeight: FontWeight.bold,
+                                                                fontFamily: 'Regular'),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                              SizedBox(height: 4,),
+                                              text("Name of account",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                              text(viewProModel!.nameOfAccount==null||viewProModel!.nameOfAccount=="" ? "Empty" :viewProModel!.nameOfAccount,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
+                                              SizedBox(height: 4,),
+                                              text("Account number",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                              text(viewProModel!.accountNumber==null||viewProModel!.accountNumber=="" ? "Empty" :viewProModel!.accountNumber,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
+                                              SizedBox(height: 4,),
+                                              text("Name of Bank",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                              text(viewProModel!.nameOfBank==null||viewProModel!.nameOfBank=="" ? "Empty" :viewProModel!.nameOfBank,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
+                                              SizedBox(height: 4,),
+                                              text("Other Details",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                              text(viewProModel!.otherDetails==null||viewProModel!.otherDetails=="" ? "Empty" :viewProModel!.otherDetails,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
+                                            ],),
+                                        ),
+                                      );
+                                    }
+                                    return Container();
+                                  },
+                                )
+                                 : Container();
+                              } else if (snapshot.hasError) {
+                                return Text("${snapshot.error}");
+                              }
+                              // By default, show a loading spinner.
+                              return CircularProgressIndicator();
+                            },
                           ),
                           SizedBox(height: 36,),
                           InkWell(

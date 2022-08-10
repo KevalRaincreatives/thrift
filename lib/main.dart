@@ -143,7 +143,6 @@ class MyApp extends StatelessWidget {
               primarySwatch: Colors.lightBlue,
               unselectedWidgetColor: sh_app_background,
               disabledColor: sh_colorPrimary2,
-
             ),
             initialRoute: SplashScreen.tag,
             // navigatorObservers: [MyRouteObserver()],

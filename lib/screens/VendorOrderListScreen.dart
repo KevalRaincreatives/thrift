@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/OrderListModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
@@ -323,7 +324,54 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
                             if (snapshot.hasData) {
                               return listView();
                             }
-                            return Center(child: CircularProgressIndicator());
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              enabled: true,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                scrollDirection: Axis.vertical,
+                                itemBuilder: (_, __) => Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Container(
+                                        width: double.infinity,
+                                        height: 10.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        height: 10.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                itemCount: 6,
+                              ),
+                            );
                           },
                         ),
 
@@ -355,7 +403,12 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
                       child: IconButton(onPressed: () {
-                        launchScreen(context, DashboardScreen.tag);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DashboardScreen(selectedTab: 2),
+                          ),
+                        );
                       }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
                     ),
 

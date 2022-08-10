@@ -5,6 +5,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:sizer/sizer.dart';
 import 'package:thrift/database/CartPro.dart';
 import 'package:thrift/database/database_hepler.dart';
@@ -2147,6 +2148,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                   },
                   child: Container(
                     padding: EdgeInsets.all(6.0),
+
                     decoration: boxDecoration(
                         bgColor: sh_app_background,
                         radius: 10,
@@ -2446,79 +2448,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                                     newShipmentModel!.methods!.length,
                                   ),
                                 ),
-                                // Column(
-                                //   children: [
-                                //
-                                //
-                                //     Row(
-                                //       crossAxisAlignment: CrossAxisAlignment.center,
-                                //       children: <Widget>[
-                                //         Radio(
-                                //           value: 1,
-                                //           groupValue: val2,
-                                //           onChanged: (int? value) {
-                                //             setState(() {
-                                //               val2 = value!;
-                                //             });
-                                //           },
-                                //           activeColor: sh_colorPrimary2,
-                                //         ),
-                                //         Expanded(
-                                //           child: Column(
-                                //             crossAxisAlignment: CrossAxisAlignment.start,
-                                //             children: <Widget>[
-                                //               Row(
-                                //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                //                 children: [
-                                //                   Text("Jamaica Post",style: TextStyle(color: sh_colorPrimary2,fontSize: 15,fontFamily: "Bold"),),
-                                //                   Text("\$300-600 JMD",style: TextStyle(color: sh_black,fontSize: 15,fontFamily: "Bold"),)
-                                //                 ],
-                                //               ),
-                                //               SizedBox(height: 4,),
-                                //               Text("1 day delivery",style: TextStyle(color: sh_black,fontSize: 13,fontFamily: "Regular"),)
-                                //
-                                //             ],
-                                //           ),
-                                //         )
-                                //       ],
-                                //     ),
-                                //     SizedBox(
-                                //       height: spacing_standard,
-                                //     ),
-                                //     Row(
-                                //       crossAxisAlignment: CrossAxisAlignment.center,
-                                //       children: <Widget>[
-                                //         Radio(
-                                //           value: 2,
-                                //           groupValue: val2,
-                                //           onChanged: (int? value) {
-                                //             setState(() {
-                                //               val2 = value!;
-                                //             });
-                                //           },
-                                //           activeColor: sh_colorPrimary2,
-                                //         ),
-                                //         Expanded(
-                                //           child: Column(
-                                //             crossAxisAlignment: CrossAxisAlignment.start,
-                                //             children: <Widget>[
-                                //               Row(
-                                //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                //                 children: [
-                                //                   Text("knutsford Express",style: TextStyle(color: sh_colorPrimary2,fontSize: 15,fontFamily: "Bold"),),
-                                //                   Text("\$650.00 JMD",style: TextStyle(color: sh_black,fontSize: 15,fontFamily: "Bold"),)
-                                //                 ],
-                                //               ),
-                                //               SizedBox(height: 4,),
-                                //               Text("Next day shipping",style: TextStyle(color: sh_black,fontSize: 13,fontFamily: "Regular"),)
-                                //
-                                //             ],
-                                //           ),
-                                //         )
-                                //       ],
-                                //     ),
-                                //   ],
-                                // ),
                               ),
                               SizedBox(
                                 height: spacing_standard,
@@ -2547,46 +2476,63 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                                     return Text("${snapshot.error}");
                                   }
                                   // By default, show a loading spinner.
-                                  return CircularProgressIndicator();
+                                  return Expanded(
+                                    child: Shimmer.fromColors(
+                                      baseColor: Colors.grey[300]!,
+                                      highlightColor: Colors.grey[100]!,
+                                      enabled: true,
+                                      child: ListView.builder(
+                                        itemBuilder: (_, __) => Padding(
+                                          padding: const EdgeInsets.all(20),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              Container(
+                                                width: 48.0,
+                                                height: 48.0,
+                                                color: Colors.white,
+                                              ),
+                                              const Padding(
+                                                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                              ),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Container(
+                                                      width: double.infinity,
+                                                      height: 8.0,
+                                                      color: Colors.white,
+                                                    ),
+                                                    const Padding(
+                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                    ),
+                                                    Container(
+                                                      width: double.infinity,
+                                                      height: 8.0,
+                                                      color: Colors.white,
+                                                    ),
+                                                    const Padding(
+                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                    ),
+                                                    Container(
+                                                      width: 40.0,
+                                                      height: 8.0,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                        itemCount: 6,
+                                      ),
+                                    ),
+                                  );
                                 },
                               ),
 
-                              // Column(
-                              //   mainAxisAlignment: MainAxisAlignment.start,
-                              //   crossAxisAlignment: CrossAxisAlignment.start,
-                              //   children: [
-                              //     Row(
-                              //       children: <Widget>[
-                              //         Radio(
-                              //           value: 1,
-                              //           groupValue: val,
-                              //           onChanged: (int? value) {
-                              //             setState(() {
-                              //               val = value!;
-                              //             });
-                              //           },
-                              //           activeColor: sh_colorPrimary2,
-                              //         ),
-                              //         const Text('Card'),
-                              //       ],
-                              //     ),
-                              //     Row(
-                              //       children: <Widget>[
-                              //         Radio(
-                              //           value: 2,
-                              //           groupValue: val,
-                              //           onChanged: (int? value) {
-                              //             setState(() {
-                              //               val = value!;
-                              //             });
-                              //           },
-                              //           activeColor: sh_colorPrimary2,
-                              //         ),
-                              //         const Text('Cash'),
-                              //       ],
-                              //     ),
-                              //   ],
-                              // ),
                               SizedBox(
                                 height: spacing_standard,
                               ),
@@ -2616,7 +2562,60 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                                               return Text("${snapshot.error}");
                                             }
                                             // By default, show a loading spinner.
-                                            return CircularProgressIndicator();
+                                            return Expanded(
+                                              child: Shimmer.fromColors(
+                                                baseColor: Colors.grey[300]!,
+                                                highlightColor: Colors.grey[100]!,
+                                                enabled: true,
+                                                child: ListView.builder(
+                                                  itemBuilder: (_, __) => Padding(
+                                                    padding: const EdgeInsets.all(20),
+                                                    child: Row(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: <Widget>[
+                                                        Container(
+                                                          width: 48.0,
+                                                          height: 48.0,
+                                                          color: Colors.white,
+                                                        ),
+                                                        const Padding(
+                                                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                                        ),
+                                                        Expanded(
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: <Widget>[
+                                                              Container(
+                                                                width: double.infinity,
+                                                                height: 8.0,
+                                                                color: Colors.white,
+                                                              ),
+                                                              const Padding(
+                                                                padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                              ),
+                                                              Container(
+                                                                width: double.infinity,
+                                                                height: 8.0,
+                                                                color: Colors.white,
+                                                              ),
+                                                              const Padding(
+                                                                padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                              ),
+                                                              Container(
+                                                                width: 40.0,
+                                                                height: 8.0,
+                                                                color: Colors.white,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  itemCount: 6,
+                                                ),
+                                              ),
+                                            );
                                           },
                                         ),
                                       ),
@@ -2920,7 +2919,61 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                       return Text("${snapshot.error}");
                     }
                     // By default, show a loading spinner.
-                    return Center(child: CircularProgressIndicator());
+                    return Expanded(
+                      child: Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        enabled: true,
+                        child: ListView.builder(
+                          itemBuilder: (_, __) => Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: 48.0,
+                                  height: 48.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          itemCount: 6,
+                        ),
+                      ),
+                    );
+                    // return Center(child: CircularProgressIndicator());
                   },
                 );
 
@@ -2939,7 +2992,60 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 ));
               }
               // By default, show a loading spinner.
-              return Center(child: CircularProgressIndicator());
+              return Expanded(
+                child: Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  enabled: true,
+                  child: ListView.builder(
+                    itemBuilder: (_, __) => Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
+                            width: 48.0,
+                            height: 48.0,
+                            color: Colors.white,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: double.infinity,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                ),
+                                Container(
+                                  width: 40.0,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    itemCount: 6,
+                  ),
+                ),
+              );
             });
       } else {
         return FutureBuilder<List<CartPro>>(
@@ -2962,7 +3068,60 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 ));
               }
               // By default, show a loading spinner.
-              return Center(child: CircularProgressIndicator());
+              return Expanded(
+                child: Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  enabled: true,
+                  child: ListView.builder(
+                    itemBuilder: (_, __) => Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
+                            width: 48.0,
+                            height: 48.0,
+                            color: Colors.white,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: double.infinity,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                ),
+                                Container(
+                                  width: 40.0,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    itemCount: 6,
+                  ),
+                ),
+              );
             });
       }
     }
@@ -3007,7 +3166,60 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                       );
                     }
                     // By default, show a loading spinner.
-                    return Center(child: CircularProgressIndicator());
+                    return Expanded(
+                      child: Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        enabled: true,
+                        child: ListView.builder(
+                          itemBuilder: (_, __) => Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: 48.0,
+                                  height: 48.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          itemCount: 6,
+                        ),
+                      ),
+                    );
                   })),
         ),
         // Positioned to take only AppBar size

@@ -1,17 +1,27 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/retry.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:thrift/model/ShLoginErrorNewModel.dart';
+import 'package:thrift/model/ShLoginModel.dart';
+import 'package:thrift/model/SignUpErrorNewModel.dart';
+import 'package:thrift/model/SignUpNewModel.dart';
 import 'package:thrift/model/TermsModel.dart';
+import 'package:thrift/screens/DashboardScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 
 class TermsConditionScreen extends StatefulWidget {
   static String tag='/TermsConditionScreen';
-  const TermsConditionScreen({Key? key}) : super(key: key);
+  final String? country_code,fnlNumber;
+
+
+  TermsConditionScreen({this.country_code,this.fnlNumber});
 
   @override
   _TermsConditionScreenState createState() => _TermsConditionScreenState();
@@ -20,19 +30,29 @@ class TermsConditionScreen extends StatefulWidget {
 class _TermsConditionScreenState extends State<TermsConditionScreen> {
 TermsModel? termsModel;
 int val = 1;
+SignUpNewModel? signup_model;
+SignUpErrorNewModel? signup_error_model;
+ShLoginModel? cat_model;
+ShLoginErrorNewModel? err_model;
+
   Future<TermsModel?> fetchDetails() async {
 //    Dialogs.showLoadingDialog(context, _keyLoader);
     try {
 
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
 
-      };
 
-      Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/terms'));
+      // Response response = await get(
+      //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/terms'));
 
+      final client = RetryClient(http.Client());
+      var response;
+      try {
+        response=await client.get(
+            Uri.parse(
+                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/terms'));
+      } finally {
+        client.close();
+      }
 //      r.raiseForStatus();
 //      String body = r.content();
 //      print(body);
@@ -50,6 +70,241 @@ int val = 1;
     }
   }
 
+
+Future<ShLoginModel?> SaveToken() async {
+  try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? device_id = prefs.getString('device_id');
+    String? UserId = prefs.getString('UserId');
+    String? token = prefs.getString('token');
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final msg = jsonEncode({"device_id": device_id});
+
+    // Response response = await post(
+    //   Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_device'),
+    //   headers: headers,
+    //   body: msg,
+    // );
+    final client = RetryClient(http.Client());
+    var response;
+    try {
+      response=await client.post(
+          Uri.parse(
+              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_device'),
+          headers: headers,
+          body: msg);
+    } finally {
+      client.close();
+    }
+
+
+//      r.raiseForStatus();
+//      String body = r.content();
+//      print(body);
+
+    final jsonResponse = json.decode(response.body);
+    print('device json $jsonResponse');
+    // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+
+    EasyLoading.dismiss();
+    launchScreen(context, DashboardScreen.tag);
+    // launchScreen(context, DashboardScreen.tag);
+    print('sucess');
+    return cat_model;
+  } catch (e) {
+    EasyLoading.dismiss();
+    // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+    print('caught error $e');
+  }
+}
+
+Future<ShLoginModel?> getLogin() async {
+  // EasyLoading.show(status: 'Please wait...');
+  try {
+    // String username = emailCont.text;
+    // String password = passwordCont.text;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? username = prefs.getString('sg_email');
+    String? password = prefs.getString('sg_password');
+
+    Map data = {
+      'username': username,
+      'password': password,
+    };
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+    final msg = jsonEncode({"username": username, "password": password});
+
+    // Response response = await get(
+    //     'http://zoo.webstylze.com/wp-json/v3/login?username=$username&password=$password');
+    // dynamic response = await http
+    //     .post(Uri.parse('https://encros.rcstaging.co.in/wp-json/wooapp/v3/login'), body: {
+    //   "username": username,
+    //   "password": password
+    //   // "country_code":country_code
+    // });
+
+    final client = RetryClient(http.Client());
+    var response;
+    try {
+      response=await client.post(
+          Uri.parse(
+              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/login'),
+          headers: headers,
+          body: msg);
+    } finally {
+      client.close();
+    }
+
+
+
+    final jsonResponse = json.decode(response.body);
+    print('not json login$jsonResponse');
+    print('Response bodylogin: ${response.body}');
+    if (response.statusCode == 200) {
+
+
+      cat_model = new ShLoginModel.fromJson(jsonResponse);
+      print("cat dta$cat_model");
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('token', cat_model!.data!.token.toString());
+      prefs.setString('UserId', cat_model!.ID.toString());
+      prefs.setString('is_store_owner', cat_model!.data!.is_store_owner.toString());
+      prefs.setString('user_country', cat_model!.data!.country!);
+      prefs.setString('user_selected_country', cat_model!.data!.country!);
+
+
+      prefs.setString('profile_name',cat_model!.data!.userNicename!);
+      prefs.setString('OrderUserName', cat_model!.data!.displayName!);
+      prefs.setString('OrderUserEmail', cat_model!.data!.userEmail!);
+      prefs.commit();
+
+
+      SaveToken();
+
+// toast("sucess");
+      print('sucess');
+    } else {
+      EasyLoading.dismiss();
+      err_model = new ShLoginErrorNewModel.fromJson(jsonResponse);
+
+      toast(err_model!.message);
+      // toast('Something Went Wrong');
+//        print("cat dta$cat_model");
+
+    }
+    return cat_model;
+  } catch (e) {
+    EasyLoading.dismiss();
+    print('caught error $e');
+  }
+}
+
+
+Future<SignUpNewModel?> getSetting() async {
+  // Dialogs.showLoadingDialog(context, _keyLoader);
+  EasyLoading.show(status: 'Loading...');
+  try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? first = prefs.getString('sg_first');
+    String? last = prefs.getString('sg_last');
+    String? email = prefs.getString('sg_email');
+    String? username = prefs.getString('sg_username');
+    String? password = prefs.getString('sg_password');
+    String? bl_country=prefs.getString('bl_country');
+    String phone=widget.fnlNumber!;
+    String country_code=widget.country_code!;
+
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+
+    // Response response = await get(
+    //   'http://54.245.123.190/gotspotz/wp-json/wooapp/v3/registration?first_name=$first&last_name=$last&username=$username&email=$email&phone=$phone&password=$password',
+    //   headers: headers
+    // );
+    // dynamic response = await http.post(
+    //     Uri.parse('https://encros.rcstaging.co.in/wp-json/wooapp/v3/registration'),
+    //     body: {
+    //       "first_name": first,
+    //       "last_name": last,
+    //       "username": username,
+    //       "email": email,
+    //       "phone": phone,
+    //       "phone_code":country_code,
+    //       "password": password
+    //       // "country_code":country_code
+    //     });
+    final msg = jsonEncode(
+        {
+          "first_name": first,
+          "last_name": last,
+          "username": username,
+          "email": email,
+          "phone": phone,
+          "phone_code":country_code,
+          "password": password,
+          "billing_country": bl_country
+        });
+
+    print(msg);
+
+    final client = RetryClient(http.Client());
+    var response;
+    try {
+      response=await client.post(
+          Uri.parse(
+              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/registration'),
+          headers: headers,
+          body: msg);
+    } finally {
+      client.close();
+    }
+
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    final jsonResponse = json.decode(response.body);
+    print('not json $jsonResponse');
+    // signup_model = new SignUpModel.fromJson(jsonResponse);
+    signup_model = new SignUpNewModel.fromJson(jsonResponse);
+    if(signup_model!.status=='Yes'){
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // prefs.setString('Login', "Yes");
+      // prefs.setString('login_email', email);
+      // prefs.setString('login_pass', password);
+      // prefs.setString('login_name', first);
+      // getLogin();
+      prefs.setString('Login', "Yes");
+      prefs.setString('login_email', email!);
+      prefs.setString('login_pass', password!);
+      prefs.setString('login_name', first!);
+      // prefs.setString('login_secret', signup_model!.secret!);
+      // toast('Success');
+      // getLogin();
+      // EasyLoading.dismiss();
+      // launchScreen(context, LoginScreen.tag);
+      getLogin();
+
+      // launchScreen(context, T2Dialog.tag);
+    }else{
+      EasyLoading.dismiss();
+      signup_error_model= new SignUpErrorNewModel.fromJson(jsonResponse);
+      toast(signup_error_model!.msg);
+    }
+
+    return null;
+  } catch (e) {
+    EasyLoading.dismiss();
+//      Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+    print('caught error $e');
+  }
+}
 
 
   @override
@@ -149,7 +404,9 @@ int val = 1;
                   child: InkWell(
                 onTap: () async {
                   if(val==2){
-
+getSetting();
+                  }else{
+                    toast("Please agree to the terms & conditions");
                   }
                 },
                 child: Container(
@@ -182,7 +439,31 @@ int val = 1;
           top: 0.0,
           left: 0.0,
           right: 0.0,
-          child: appBar,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      child: IconButton(onPressed: () {
+                        Navigator.pop(context);
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Text("Terms & Conditions",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ]);
     }
