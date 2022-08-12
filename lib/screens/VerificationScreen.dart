@@ -612,15 +612,15 @@ SaveToken();
                           .shake); // Triggering error shake animation
                       setState(() => hasError = true);
                     } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => TermsConditionScreen(
-                                country_code: widget.country_code!,
-                                fnlNumber: widget.fnlNumber!
-                            )),
-                      );
-                      // _login();
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //       builder: (context) => TermsConditionScreen(
+                      //           country_code: widget.country_code!,
+                      //           fnlNumber: widget.fnlNumber!
+                      //       )),
+                      // );
+                      _login();
 
                     }
                   },

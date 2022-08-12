@@ -6,6 +6,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/model/ProductListSellerModel.dart';
 import 'package:thrift/model/ReviewModel.dart';
@@ -355,7 +356,46 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                         ),
                       );
                     }
-                    return Center(child: CircularProgressIndicator());
+                    return Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      direction: ShimmerDirection.ltr,
+                      child: Container(
+                        width: width,
+                        padding: EdgeInsets.fromLTRB(1,12,1,12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        1.0, 12, 1, 12),
+                                    child:                             Container(
+                                      width: width*.3,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                            SizedBox(height: 10,),
+                            Container(
+                                child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        1.0, 12, 1, 12),
+                                    child:                             Container(
+                                      width: width*.3,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
+                          ],
+                        ),
+
+                      ),
+                    );
                   },
                 ),
                 SizedBox(
@@ -470,7 +510,60 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
 
 
                     }
-                    return Center(child: CircularProgressIndicator());
+                    return Expanded(
+                      child: Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        enabled: true,
+                        child: ListView.builder(
+                          itemBuilder: (_, __) => Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: 48.0,
+                                  height: 48.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          itemCount: 6,
+                        ),
+                      ),
+                    );
                   },
                 ),
               ],

@@ -741,7 +741,7 @@ return FutureBuilder<String?>(
                   ),
                 ),
                 Container(
-                  height: height - 128,
+                  height: height - 138,
                   width: width,
                   margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
                   padding: EdgeInsets.fromLTRB(26, 0, 26, 0),

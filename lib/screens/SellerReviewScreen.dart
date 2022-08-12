@@ -42,6 +42,7 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
       String? seller_id = prefs.getString('seller_id');
       // toast(cat_id);
 
+      print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id");
       var response;
         response = await http.get(Uri.parse(
             "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
@@ -326,70 +327,32 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
           child: Container(
             padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
+
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
-                    ),
-
-                    FutureBuilder<String?>(
-                      future: fetchaddMain,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return Padding(
-                            padding: const EdgeInsets.all(6.0),
-                            child: Text("$seller_name(All Reviews)",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
-                          );
-                        } else if (snapshot.hasError) {
-                          return Text("${snapshot.error}");
-                        }
-                        // By default, show a loading spinner.
-                        return CircularProgressIndicator();
-                      },
-                    ),
-
-
-                  ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                  child: IconButton(onPressed: () {
+                    Navigator.pop(context);
+                  }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
                 ),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
-                        prefs.setInt("shiping_index", -2);
-                        prefs.setInt("payment_index", -2);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
-                      },
-                      child: FutureBuilder<String?>(
-                        future: fetchtotal(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return BadgeCount();
-                          } else if (snapshot.hasError) {
-                            return Text("${snapshot.error}");
-                          }
-                          // By default, show a loading spinner.
-                          return CircularProgressIndicator();
-                        },
-                      ),
 
-                    ),
-                    SizedBox(width: 16,)
-                  ],
+                FutureBuilder<String?>(
+                  future: fetchaddMain,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Flexible(child: Text("$seller_name's Reviews",maxLines : 3,style: TextStyle(color: Colors.white,fontSize: 22,fontFamily: 'Regular'),)),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Text("${snapshot.error}");
+                    }
+                    // By default, show a loading spinner.
+                    return CircularProgressIndicator();
+                  },
                 ),
+
               ],
             ),
           ),

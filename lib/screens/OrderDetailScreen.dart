@@ -103,7 +103,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String UserId = prefs.getString('UserId');
       String? token = prefs.getString('token');
-      String? profile_name = prefs.getString("new_profile_name");
+      String? profile_name = prefs.getString("profile_name");
       String? OrderUserEmail = prefs.getString('OrderUserEmail');
 
 
@@ -121,6 +121,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         "rating": pro_rating
       });
 
+      print(msg.toString());
 
       // String body = json.encode(data2);
 

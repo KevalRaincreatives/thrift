@@ -3,12 +3,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/retry.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:sizer/sizer.dart';
 import 'package:thrift/fragments/AccountFragment.dart';
 import 'package:thrift/fragments/HomeFragment.dart';
+import 'package:thrift/fragments/MySalesFragment.dart';
 import 'package:thrift/fragments/SettingFragment.dart';
 import 'package:thrift/model/CategoryModel.dart';
+import 'package:thrift/model/CheckUserModel.dart';
 import 'package:thrift/screens/AddressListScreen.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/CreateProductScreen.dart';
@@ -42,19 +47,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
   var homeFragment = HomeFragment();
   var settingFragment = SettingFragment();
   var profileFragment = AccountFragment();
+  var mysalesFragment = MySalesFragment();
   var fragments;
   var selectedTab = 0;
   var title = "Home";
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
-
+  CheckUserModel? checkUserModel;
+  int timer = 800, offset = 0;
 
 
   @override
   void initState() {
     super.initState();
-    fragments = [homeFragment, settingFragment, profileFragment];
 
+    // fragments = [homeFragment, settingFragment, profileFragment];
     // fetchData();
+  }
+
+  Future<CheckUserModel?> fetchUserStatus() async {
+    // EasyLoading.show(status: 'Please wait...');
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? UserId = prefs.getString('UserId');
+      String? token = prefs.getString('token');
+
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId");
+      var response = await http.get(Uri.parse(
+        "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
+          ,headers: headers);
+
+      final jsonResponse = json.decode(response.body);
+      checkUserModel = new CheckUserModel.fromJson(jsonResponse);
+      prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
+      // EasyLoading.dismiss();
+      if(checkUserModel!.is_store_owner==0){
+        fragments = [homeFragment, settingFragment, profileFragment];
+      }
+      else if (checkUserModel!.is_store_owner==1) {
+        // toast("value");
+        // launchScreen(context, BecameSellerScreen.tag);
+        fragments = [homeFragment, settingFragment, mysalesFragment,profileFragment];
+        // Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
+      } else if (checkUserModel!.is_store_owner==2) {
+        fragments = [homeFragment, settingFragment, profileFragment];
+      }
+
+      print('sucess');
+      print('not json $jsonResponse');
+
+      return checkUserModel;
+    } catch (e) {
+      // EasyLoading.dismiss();
+      print('caught error $e');
+    }
   }
 
   Future<bool> _onWillPop()  async{
@@ -95,44 +146,110 @@ class _DashboardScreenState extends State<DashboardScreen> {
     var height = MediaQuery.of(context).size.height;
     // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: Colors.transparent));
 
-    return Scaffold(
+    return Sizer(
+      builder: (context, orientation, deviceType) {
+        return Scaffold(
 
 
-      body: WillPopScope(
-        onWillPop: _onWillPop,
-child: Stack(
-  alignment: Alignment.bottomLeft,
-  children: <Widget>[
-    fragments[widget.selectedTab],
-    Container(
-      height: 58,
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: <Widget>[
-          Center(
-            child: Container(
-              decoration: boxDecoration(
-                  bgColor: sh_colorPrimary2, radius: 22, showShadow: true),
-              margin: EdgeInsets.fromLTRB(12,0,12,6),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  tabItem(0, myimg,myimg_home, 'Home'),
-                  tabItem(1, sh_setting,sh_setting_dark, 'Setting'),
-                  tabItem(2, sh_account,sh_account_dark, 'Account'),
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
-    )
-  ],
-),
-      )
+            body: WillPopScope(
+                onWillPop: _onWillPop,
+                child: FutureBuilder<CheckUserModel?>(
+                  future: fetchUserStatus(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Stack(
+                        alignment: Alignment.bottomLeft,
+                        children: <Widget>[
+                          fragments[widget.selectedTab],
+                          Container(
+                            height: 58,
+                            child: Stack(
+                              alignment: Alignment.centerLeft,
+                              children: <Widget>[
+                                Center(
+                                  child: Container(
+                                    decoration: boxDecoration(
+                                        bgColor: sh_colorPrimary2, radius: 22, showShadow: true),
+                                    margin: EdgeInsets.fromLTRB(12,0,12,6),
+                                    child:  checkUserModel!.is_store_owner==1 ?
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: <Widget>[
+                                        tabItem(0, sh_homes, sh_homes_dark, 'Home'),
+                                        tabItem(1, sh_setting, sh_setting_dark, 'Setting'),
+                                        tabItem(2, sh_dollar, sh_dollar_dark, 'Dollar'),
 
+                                        tabItem(3, sh_account, sh_account_dark, 'Account'),
+                                      ],
+                                    ) : Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: <Widget>[
+                                        tabItem(0, sh_homes, sh_homes_dark, 'Home'),
+                                        tabItem(1, sh_setting, sh_setting_dark, 'Setting'),
+                                        tabItem(2, sh_account, sh_account_dark, 'Account'),
+                                      ],
+                                    )
+                                    ,
+                                  ),
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      );
+
+                    }
+                    return Column(
+                      children: [
+                        Container(height: 30,color: sh_colorPrimary2,),
+                        Container(
+                            height: 130,
+                            width: width,
+                            child: Image.asset(sh_upper2,fit: BoxFit.fill)
+                          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+                        ),
+                        Expanded(
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            direction: ShimmerDirection.ltr,
+                            child: Container(
+                              padding: EdgeInsets.all(40),
+                              child: GridView.builder(
+                                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                                      maxCrossAxisExtent: 200,
+                                      crossAxisSpacing: 20,
+                                      mainAxisSpacing: 20),
+                                  itemCount: 8,
+                                  itemBuilder: (BuildContext ctx, index) {
+                                    offset +=50;
+                                    timer = 800 + offset;
+                                    print(timer);
+                                    return Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        height: 100,
+                                        width: 100,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  }),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                )
+
+            )
+
+        );
+      },
     );
+
   }
   Widget tabItem(var pos, var icon,var icon2, var title) {
     return Expanded(
@@ -204,8 +321,9 @@ child: Stack(
 //                  height: 24,
 //                  color: widget.selectedTab == pos ? sh_colorPrimary : sh_app_black),
               Image.asset(widget.selectedTab == pos ? icon2 :icon,
-                  width: 48,
-                  height: 48,
+                  width: 25,
+                  height: 25,
+                  fit: BoxFit.fill,
                   color: widget.selectedTab == pos ? sh_white : sh_white),
               // SizedBox(
               //   height: 4.0,

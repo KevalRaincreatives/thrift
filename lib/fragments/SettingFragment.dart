@@ -703,7 +703,9 @@ hintMaxLines: 5,
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {}, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      child: IconButton(onPressed: () {
+                        // Navigator.pop(context);
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
                     ),
 
                     Padding(

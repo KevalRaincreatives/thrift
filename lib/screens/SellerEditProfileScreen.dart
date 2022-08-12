@@ -216,6 +216,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
 
       profileModel = new ProfileModel.fromJson(jsonResponse);
 
+      prefs.setString("seller_name", profileModel!.data!.firstName!+" "+profileModel!.data!.lastName!);
+
 
       print('sucess');
 

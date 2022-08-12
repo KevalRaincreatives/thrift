@@ -6,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:http/retry.dart';
 import 'package:http/http.dart' as http;
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/TermsModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
@@ -165,16 +166,81 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
                     return Text("${snapshot.error}");
                   }
                   // By default, show a loading spinner.
-                  return Center(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(
-                          child: CircularProgressIndicator(),
-                          height: 50.0,
-                          width: 50.0,
-                        )
-                      ],
+                  return Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    direction: ShimmerDirection.ltr,
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(12,12,50,12),
+                      child: Column(
+                        children: [
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      18.0, 12, 12, 12),
+                                  child:                             Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )),
+                          SizedBox(height: 10,),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      18.0, 12, 12, 12),
+                                  child:                             Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )),
+                          SizedBox(height: 10,),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      18.0, 12, 12, 12),
+                                  child:                             Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )),
+                          SizedBox(height: 10,),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      18.0, 12, 12, 12),
+                                  child:                             Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )),
+                          SizedBox(height: 10,),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      18.0, 12, 12, 12),
+                                  child:                             Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )),
+                        ],
+                      ),
+
                     ),
                   );
                 }),

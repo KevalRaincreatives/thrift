@@ -301,6 +301,8 @@ SaveToken();
 
 
         prefs.setString('profile_name',cat_model!.data!.userNicename!);
+
+
         prefs.setString('OrderUserName', cat_model!.data!.displayName!);
         // prefs.setString('OrderFirstName', cat_model!.data!.first_name!);
         // prefs.setString('OrderLastName', cat_model!.data!.last_name!);

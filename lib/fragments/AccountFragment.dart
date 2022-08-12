@@ -223,303 +223,99 @@ class _AccountFragmentState extends State<AccountFragment> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  FutureBuilder<CheckUserModel?>(
-                    future: fetchUserStatus2Main,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        if(checkUserModel!.is_store_owner==1) {
-                          return Container(
-                            width: width,
-                            padding: EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Container(
-                                    child: InkWell(
-                                      onTap: () async {
-                                        fetchUserStatus();
-                                        // SharedPreferences prefs = await SharedPreferences.getInstance();
-                                        // if (prefs.getString("is_store_owner") == '0') {
-                                        //   launchScreen(context, ProfileScreen.tag);
-                                        // } else if (prefs.getString("is_store_owner") == '1') {
-                                        //   launchScreen(context, SellerEditProfileScreen.tag);
-                                        // } else if (prefs.getString("is_store_owner") == '2') {
-                                        //   launchScreen(context, ProfileScreen.tag);
-                                        //
-                                        // }
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            18.0, 12, 12, 12),
-                                        child: Text("My Account",
-                                          style: TextStyle(
-                                              color: sh_colorPrimary2,
-                                              fontSize: 20,
-                                              fontFamily: 'Bold'),),
-                                      ),
-                                    )),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => OrderListScreen(),
-                                      ),
-                                    );
-                                    // launchScreen(context, OrderListScreen.tag);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child: Text("My Orders", style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 20,
-                                        fontFamily: 'Bold'),),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    launchScreen(context, VendorOrderListScreen.tag);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child: Text("My Sales", style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 20,
-                                        fontFamily: 'Bold'),),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    SharedPreferences prefs = await SharedPreferences
-                                        .getInstance();
-                                    prefs.setString('from', "address");
-                                    launchScreen(
-                                        context, AddressListScreen.tag);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child: Text("My Addresses",
-                                      style: TextStyle(color: sh_colorPrimary2,
-                                          fontSize: 20,
-                                          fontFamily: 'Bold'),),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    SharedPreferences prefs = await SharedPreferences
-                                        .getInstance();
-                                    String? final_token = prefs.getString(
-                                        'token');
-                                    prefs.setString("token", "");
-                                    // Navigator.push(
-                                    //   context,
-                                    //   MaterialPageRoute(
-                                    //     builder: (context) => LoginScreen(),
-                                    //   ),
-                                    // );
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) =>
-                                              LoginScreen()),
-                                      ModalRoute.withName('/LoginScreen'),
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child: Text("Sign Out", style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 20,
-                                        fontFamily: 'Bold'),),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                          );
-                        }else{
-                          return Container(
-                            width: width,
-                            padding: EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Container(
-                                    child: InkWell(
-                                      onTap: () async {
-                                        fetchUserStatus();
-                                        // SharedPreferences prefs = await SharedPreferences.getInstance();
-                                        // if (prefs.getString("is_store_owner") == '0') {
-                                        //   launchScreen(context, ProfileScreen.tag);
-                                        // } else if (prefs.getString("is_store_owner") == '1') {
-                                        //   launchScreen(context, SellerEditProfileScreen.tag);
-                                        // } else if (prefs.getString("is_store_owner") == '2') {
-                                        //   launchScreen(context, ProfileScreen.tag);
-                                        //
-                                        // }
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            18.0, 12, 12, 12),
-                                        child: Text("My Account",
-                                          style: TextStyle(
-                                              color: sh_colorPrimary2,
-                                              fontSize: 20,
-                                              fontFamily: 'Bold'),),
-                                      ),
-                                    )),
-                                InkWell(
-                                  onTap: () {
-                                    launchScreen(context, OrderListScreen.tag);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child: Text("My Orders", style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 20,
-                                        fontFamily: 'Bold'),),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    SharedPreferences prefs = await SharedPreferences
-                                        .getInstance();
-                                    prefs.setString('from', "address");
-                                    launchScreen(
-                                        context, AddressListScreen.tag);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child: Text("My Addresses",
-                                      style: TextStyle(color: sh_colorPrimary2,
-                                          fontSize: 20,
-                                          fontFamily: 'Bold'),),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    SharedPreferences prefs = await SharedPreferences
-                                        .getInstance();
-                                    String? final_token = prefs.getString(
-                                        'token');
-                                    prefs.setString("token", "");
-                                    // Navigator.push(
-                                    //   context,
-                                    //   MaterialPageRoute(
-                                    //     builder: (context) => LoginScreen(),
-                                    //   ),
-                                    // );
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) =>
-                                              LoginScreen()),
-                                      ModalRoute.withName('/LoginScreen'),
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child: Text("Sign Out", style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 20,
-                                        fontFamily: 'Bold'),),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                          );
-                        }
-                      } else if (snapshot.hasError) {
-                        return Text("${snapshot.error}");
-                      }
-                      // By default, show a loading spinner.
-                      return Shimmer.fromColors(
-                        baseColor: Colors.grey[300]!,
-                        highlightColor: Colors.grey[100]!,
-                        direction: ShimmerDirection.ltr,
-                        child: Container(
-                          width: width,
-                          padding: EdgeInsets.fromLTRB(12,12,50,12),
-                          child: Column(
-                            children: [
-                              Container(
-                                  child: InkWell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          18.0, 12, 12, 12),
-                                      child:                             Container(
-                                        width: double.infinity,
-                                        height: 12.0,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  )),
-                              SizedBox(height: 10,),
-                              Container(
-                                  child: InkWell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          18.0, 12, 12, 12),
-                                      child:                             Container(
-                                        width: double.infinity,
-                                        height: 12.0,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  )),
-                              SizedBox(height: 10,),
-                              Container(
-                                  child: InkWell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          18.0, 12, 12, 12),
-                                      child:                             Container(
-                                        width: double.infinity,
-                                        height: 12.0,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  )),
-                              SizedBox(height: 10,),
-                              Container(
-                                  child: InkWell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          18.0, 12, 12, 12),
-                                      child:                             Container(
-                                        width: double.infinity,
-                                        height: 12.0,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  )),
-SizedBox(height: 10,),
-                              Container(
-                                  child: InkWell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          18.0, 12, 12, 12),
-                                      child:                             Container(
-                                        width: double.infinity,
-                                        height: 12.0,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  )),
-                            ],
+                  Container(
+                    width: width,
+                    padding: EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                            child: InkWell(
+                              onTap: () async {
+                                fetchUserStatus();
+                                // SharedPreferences prefs = await SharedPreferences.getInstance();
+                                // if (prefs.getString("is_store_owner") == '0') {
+                                //   launchScreen(context, ProfileScreen.tag);
+                                // } else if (prefs.getString("is_store_owner") == '1') {
+                                //   launchScreen(context, SellerEditProfileScreen.tag);
+                                // } else if (prefs.getString("is_store_owner") == '2') {
+                                //   launchScreen(context, ProfileScreen.tag);
+                                //
+                                // }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    18.0, 12, 12, 12),
+                                child: Text("My Account",
+                                  style: TextStyle(
+                                      color: sh_colorPrimary2,
+                                      fontSize: 20,
+                                      fontFamily: 'Bold'),),
+                              ),
+                            )),
+                        InkWell(
+                          onTap: () {
+                            launchScreen(context, OrderListScreen.tag);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                18.0, 12, 12, 12),
+                            child: Text("My Orders", style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: 20,
+                                fontFamily: 'Bold'),),
                           ),
-
                         ),
-                      );
-                    },
+                        InkWell(
+                          onTap: () async {
+                            SharedPreferences prefs = await SharedPreferences
+                                .getInstance();
+                            prefs.setString('from', "address");
+                            launchScreen(
+                                context, AddressListScreen.tag);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                18.0, 12, 12, 12),
+                            child: Text("My Addresses",
+                              style: TextStyle(color: sh_colorPrimary2,
+                                  fontSize: 20,
+                                  fontFamily: 'Bold'),),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () async {
+                            SharedPreferences prefs = await SharedPreferences
+                                .getInstance();
+                            String? final_token = prefs.getString(
+                                'token');
+                            prefs.setString("token", "");
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => LoginScreen(),
+                            //   ),
+                            // );
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      LoginScreen()),
+                              ModalRoute.withName('/LoginScreen'),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                                18.0, 12, 12, 12),
+                            child: Text("Sign Out", style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: 20,
+                                fontFamily: 'Bold'),),
+                          ),
+                        ),
+                      ],
+                    ),
+
                   ),
 
 
@@ -545,7 +341,9 @@ SizedBox(height: 10,),
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {}, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      child: IconButton(onPressed: () {
+                        // Navigator.pop(context);
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
                     ),
 
                     Padding(

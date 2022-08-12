@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:sizer/sizer.dart';
 import 'package:thrift/model/BecameSellerModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
 import 'package:thrift/model/ProfileModel.dart';
@@ -642,10 +643,15 @@ SizedBox(height: 16,),
       ]);
     }
 
-    return Scaffold(
+    return Sizer(
+      builder: (context, orientation, deviceType) {
+        return Scaffold(
 
-      body: SafeArea(child: setUserForm()),
+          body: SafeArea(child: setUserForm()),
+        );
+      },
     );
+
   }
 }
 Padding editTextStyle(var hintText, var cn, final node, String alert,
