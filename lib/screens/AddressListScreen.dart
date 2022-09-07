@@ -14,6 +14,10 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class AddressListScreen extends StatefulWidget {
   static String tag = '/AddressListScreen';
@@ -172,7 +176,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
         scrollDirection: Axis.vertical,
         physics: NeverScrollableScrollPhysics(),
         padding: EdgeInsets.only(
-            top: spacing_standard_new, bottom: spacing_standard_new),
+            top: spacing_standard_new, bottom: spacing_standard_new,left: 16,right: 16),
         itemBuilder: (item, index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: spacing_standard_new),
@@ -189,10 +193,11 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   right: spacing_standard_new,
                   left: spacing_standard_new,
                 ),
-                decoration: boxDecoration(
-                    radius: 2,
-                    showShadow: true,
-                    color: sh_white
+                decoration: BoxDecoration(
+                  border: Border.all(color: sh_colorPrimary2),
+                  color: sh_white,
+                  borderRadius: BorderRadius.circular(10.0),
+                  // boxShadow: true
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,41 +214,37 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                     _addressModel!.data![index]!.lastName!,
                                 style: TextStyle(
                                     color: sh_textColorPrimary,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Regular'),
+                                    fontSize: 16,
+                                    fontFamily: fontBold),
                               ),
 
                             ],
                           ),
-                          SizedBox(height: 12,),
+                          SizedBox(height: 8,),
                           Text(
                             _addressModel!.data![index]!.address! +
                                 ", " + _addressModel!.data![index]!.city!+",",
                             style: TextStyle(
                                 color: sh_textColorPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Regular'),
+                                fontSize: 14,
+                                fontFamily: fontRegular),
                           ),
-                          SizedBox(height: 8,),
+                          SizedBox(height: 6,),
                           Text(
                             _addressModel!.data![index]!.state! +
                                 " - " + _addressModel!.data![index]!.postcode!,
                             style: TextStyle(
                                 color: sh_textColorPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Regular'),
+                                fontSize: 14,
+                                fontFamily: fontRegular),
                           ),
-                          SizedBox(height: 8,),
+                          SizedBox(height: 6,),
                           Text(
                             _addressModel!.data![index]!.country!,
                             style: TextStyle(
                                 color: sh_textColorPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Regular'),
+                                fontSize: 14,
+                                fontFamily: fontRegular),
                           ),
                           SizedBox(height: 12,),
                           Row(
@@ -332,6 +333,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
               alignment: Alignment.center,
               child: MaterialButton(
                 color: sh_colorPrimary2,
+                shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(8.0) ),
                 elevation: 0,
                 padding: EdgeInsets.only(
                     top: spacing_middle, bottom: spacing_middle),
@@ -366,7 +368,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     text("Deliver to this address",
-                        textColor: sh_white, fontFamily: 'Bold')
+                        textColor: sh_white, fontFamily: 'Bold',fontSize: 17.0)
                   ],
                 ),
               ),
@@ -383,7 +385,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
         scrollDirection: Axis.vertical,
         physics: NeverScrollableScrollPhysics(),
         padding: EdgeInsets.only(
-            top: spacing_standard_new, bottom: spacing_standard_new),
+            top: spacing_standard_new, bottom: spacing_standard_new,left: 16,right: 16),
         itemBuilder: (item, index) {
           return Padding(
             padding: const EdgeInsets.only(bottom: spacing_standard_new),
@@ -395,15 +397,16 @@ class _AddressListScreenState extends State<AddressListScreen> {
               },
               child: Container(
 
-                padding: EdgeInsets.all(textSizeNormal),
+                padding: EdgeInsets.fromLTRB(10,20,20,20),
                 margin: EdgeInsets.only(
                   right: spacing_standard_new,
                   left: spacing_standard_new,
                 ),
-                decoration: boxDecoration(
-                    radius: 2,
-                    showShadow: true,
-                    color: sh_white
+                decoration: BoxDecoration(
+                  border: Border.all(color: sh_colorPrimary2),
+                  color: sh_white,
+                  borderRadius: BorderRadius.circular(10.0),
+                  // boxShadow: true
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,41 +432,37 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                     _addressModel!.data![index]!.lastName!,
                                 style: TextStyle(
                                     color: sh_textColorPrimary,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Regular'),
+                                    fontSize: 16,
+                                    fontFamily: fontBold),
                               ),
 
                             ],
                           ),
-                          SizedBox(height: 12,),
+                          SizedBox(height: 10,),
                           Text(
                             _addressModel!.data![index]!.address! +
                                 ", " + _addressModel!.data![index]!.city!+",",
                             style: TextStyle(
                                 color: sh_textColorPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Regular'),
+                                fontSize: 14,
+                                fontFamily: fontRegular),
                           ),
-                          SizedBox(height: 8,),
+                          SizedBox(height: 6,),
                           Text(
                             _addressModel!.data![index]!.state! +
                                 " - " + _addressModel!.data![index]!.postcode!,
                             style: TextStyle(
                                 color: sh_textColorPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Regular'),
+                                fontSize: 14,
+                                fontFamily: fontRegular),
                           ),
-                          SizedBox(height: 8,),
+                          SizedBox(height: 6,),
                           Text(
                             _addressModel!.data![index]!.country!,
                             style: TextStyle(
                                 color: sh_textColorPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Regular'),
+                                fontSize: 14,
+                                fontFamily: fontRegular),
                           ),
                           SizedBox(height: 12,),
 
@@ -648,7 +647,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -657,15 +656,15 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text(   sh_lbl_address_manager,style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text(   sh_lbl_address_manager,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -697,7 +696,25 @@ class _AddressListScreenState extends State<AddressListScreen> {
 
     return Scaffold(
 
-      body: SafeArea(child: setUserForm()),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

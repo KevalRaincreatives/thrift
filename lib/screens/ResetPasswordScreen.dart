@@ -9,6 +9,9 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   static String tag='/ResetPasswordScreen';
@@ -317,7 +320,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                     Padding(
                       padding: const EdgeInsets.all(6.0),
-                      child: Text("Reset Password",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      child: Text("Reset Password",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -332,8 +335,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
 

@@ -23,12 +23,16 @@ import 'package:thrift/screens/OrderListScreen.dart';
 import 'package:thrift/screens/ProductlistScreen.dart';
 import 'package:thrift/screens/SplashScreen.dart';
 import 'package:thrift/screens/TermsConditionScreen.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:http/http.dart' as http;
 import 'package:thrift/utils/T3Dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   static String tag='/DashboardScreen';
@@ -151,100 +155,119 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Scaffold(
 
 
-            body: WillPopScope(
-                onWillPop: _onWillPop,
-                child: FutureBuilder<CheckUserModel?>(
-                  future: fetchUserStatus(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Stack(
-                        alignment: Alignment.bottomLeft,
-                        children: <Widget>[
-                          fragments[widget.selectedTab],
-                          Container(
-                            height: 58,
-                            child: Stack(
-                              alignment: Alignment.centerLeft,
-                              children: <Widget>[
-                                Center(
-                                  child: Container(
-                                    decoration: boxDecoration(
-                                        bgColor: sh_colorPrimary2, radius: 22, showShadow: true),
-                                    margin: EdgeInsets.fromLTRB(12,0,12,6),
-                                    child:  checkUserModel!.is_store_owner==1 ?
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: <Widget>[
-                                        tabItem(0, sh_homes, sh_homes_dark, 'Home'),
-                                        tabItem(1, sh_setting, sh_setting_dark, 'Setting'),
-                                        tabItem(2, sh_dollar, sh_dollar_dark, 'Dollar'),
-
-                                        tabItem(3, sh_account, sh_account_dark, 'Account'),
-                                      ],
-                                    ) : Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: <Widget>[
-                                        tabItem(0, sh_homes, sh_homes_dark, 'Home'),
-                                        tabItem(1, sh_setting, sh_setting_dark, 'Setting'),
-                                        tabItem(2, sh_account, sh_account_dark, 'Account'),
-                                      ],
-                                    )
-                                    ,
-                                  ),
-                                )
-                              ],
-                            ),
-                          )
-                        ],
-                      );
-
-                    }
-                    return Column(
-                      children: [
-                        Container(height: 30,color: sh_colorPrimary2,),
-                        Container(
-                            height: 130,
-                            width: width,
-                            child: Image.asset(sh_upper2,fit: BoxFit.fill)
-                          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-                        ),
-                        Expanded(
-                          child: Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
-                            direction: ShimmerDirection.ltr,
-                            child: Container(
-                              padding: EdgeInsets.all(40),
-                              child: GridView.builder(
-                                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                                      maxCrossAxisExtent: 200,
-                                      crossAxisSpacing: 20,
-                                      mainAxisSpacing: 20),
-                                  itemCount: 8,
-                                  itemBuilder: (BuildContext ctx, index) {
-                                    offset +=50;
-                                    timer = 800 + offset;
-                                    print(timer);
-                                    return Padding(
-                                      padding: const EdgeInsets.all(8.0),
+            body: StreamProvider<NetworkStatus>(
+              initialData: NetworkStatus.Online,
+              create: (context) =>
+              NetworkStatusService().networkStatusController.stream,
+              child: NetworkAwareWidget(
+                onlineChild: WillPopScope(
+                    onWillPop: _onWillPop,
+                    child: FutureBuilder<CheckUserModel?>(
+                      future: fetchUserStatus(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Stack(
+                            alignment: Alignment.bottomLeft,
+                            children: <Widget>[
+                              fragments[widget.selectedTab],
+                              Container(
+                                height: 58,
+                                child: Stack(
+                                  alignment: Alignment.centerLeft,
+                                  children: <Widget>[
+                                    Center(
                                       child: Container(
-                                        height: 100,
-                                        width: 100,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  }),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                )
+                                        decoration: boxDecoration(
+                                            bgColor: sh_colorPrimary2, radius: 22, showShadow: true),
+                                        margin: EdgeInsets.fromLTRB(12,0,12,6),
+                                        child:  checkUserModel!.is_store_owner==1 ?
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: <Widget>[
+                                            tabItem(0, sh_homes, sh_homes_dark, 'Home'),
+                                            tabItem(1, sh_setting, sh_setting_dark, 'Setting'),
+                                            tabItem(2, sh_dollar, sh_dollar_dark, 'Dollar'),
 
+                                            tabItem(3, sh_account, sh_account_dark, 'Account'),
+                                          ],
+                                        ) : Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: <Widget>[
+                                            tabItem(0, sh_homes, sh_homes_dark, 'Home'),
+                                            tabItem(1, sh_setting, sh_setting_dark, 'Setting'),
+                                            tabItem(2, sh_account, sh_account_dark, 'Account'),
+                                          ],
+                                        )
+                                        ,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              )
+                            ],
+                          );
+
+                        }
+                        return Column(
+                          children: [
+                            Container(height: 30,color: sh_colorPrimary2,),
+                            Container(
+                                height: 130,
+                                width: width,
+                                child: Image.asset(sh_upper2,fit: BoxFit.fill)
+                              // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+                            ),
+                            Expanded(
+                              child: Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                direction: ShimmerDirection.ltr,
+                                child: Container(
+                                  padding: EdgeInsets.all(40),
+                                  child: GridView.builder(
+                                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                                          maxCrossAxisExtent: 200,
+                                          crossAxisSpacing: 20,
+                                          mainAxisSpacing: 20),
+                                      itemCount: 8,
+                                      itemBuilder: (BuildContext ctx, index) {
+                                        offset +=50;
+                                        timer = 800 + offset;
+                                        print(timer);
+                                        return Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Container(
+                                            height: 100,
+                                            width: 100,
+                                            color: Colors.grey,
+                                          ),
+                                        );
+                                      }),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    )
+
+                ),
+                offlineChild: Container(
+                  child: Center(
+                    child: Text(
+                      "No internet connection!",
+                      style: TextStyle(
+                          color: Colors.grey[400],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20.0),
+                    ),
+                  ),
+                ),
+              ),
             )
+
 
         );
       },

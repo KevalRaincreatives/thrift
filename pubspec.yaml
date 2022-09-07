@@ -63,6 +63,9 @@ dependencies:
   device_preview: ^1.1.0
   shimmer: ^2.0.0
   webview_flutter: ^2.0.4
+  ensure_visible_when_focused: ^1.0.0+1
+  connectivity_plus: ^2.3.6+1
+  provider: ^6.0.1
 
 dev_dependencies:
   flutter_test:
@@ -138,6 +141,17 @@ flutter:
     - family: Cursive
       fonts:
         - asset: fonts/RetroSignature.otf
+
+    - family: TitleCursive
+      fonts:
+        - asset: fonts/FreightSansProMedium-Regular.ttf
+
+    - family: NormalText
+      fonts:
+        - asset: fonts/FontsFree-Net-Proxima-Nova-Light.otf
+
+
+
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

@@ -7,6 +7,7 @@ const fontRegular = 'Regular';
 const fontMedium = 'Medium';
 const fontSemibold = 'Semibold';
 const fontBold = 'Bold';
+const fontExtraBold = 'ExtraBold';
 /* font sizes*/
 const textSizeSmall = 12.0;
 const textSizeSMedium2 = 13.0;
@@ -38,6 +39,7 @@ const sh_account="images/account5.png";
 const sh_account_dark="images/account5_dark.png";
 const sh_dollar="images/dollars.png";
 const sh_dollar_dark="images/dollar_dark.png";
+
 const sh_upper="images/cassie_landing_bg.png";
 const sh_spls_upper2="images/spls_upper2.svg";
 const sh_upper2="images/spls_upper.png";
@@ -48,11 +50,16 @@ const sh_toolbar="images/toolbar.png";
 
 const sh_floating="images/floating.png";
 
-const sh_menu_filter="images/menu_filter.svg";
+// const sh_menu_filter="images/menu_filter.svg";
+const sh_menu_filter="images/menu_filter2.png";
+
+const sh_newmenu='images/newmenu.png';
+const sh_add_image="images/add_image.png";
 /* margin */
 
 const spacing_control_half = 2.0;
 const spacing_control = 4.0;
+const spacing_control_new = 6.0;
 const spacing_standard = 8.0;
 const spacing_middle = 10.0;
 const spacing_middle4 = 12.0;

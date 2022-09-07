@@ -35,6 +35,10 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class NewConfirmScreen extends StatefulWidget {
   static String tag = '/NewConfirmScreen';
@@ -612,7 +616,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
       var myprice = myprice2.toStringAsFixed(2);
 
       return text(currency! + myprice + " " + cat_model!.currency!,
-          textColor: sh_app_black, fontFamily: 'Bold', fontSize: 16.0);
+          textColor: sh_black, fontFamily: fontSemibold, fontSize: 16.0);
     }
 
     Cart(CartModel models, int positions, animation, bool rsize) {
@@ -624,21 +628,19 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
           child: Column(
             children: [
               SizedBox(
-                height: 8,
+                height: 1,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  SizedBox(
-                    width: 8,
-                  ),
+
                   Expanded(
                     flex: 3,
                     child: AnimatedSize(
                       curve: Curves.bounceInOut,
                       child: ClipRRect(
                         borderRadius:
-                            BorderRadius.all(Radius.circular(spacing_middle)),
+                            BorderRadius.all(Radius.circular(16)),
                         child: Image.network(
                           cat_model!.cart![positions]!.productImage!,
                           fit: BoxFit.fill,
@@ -704,23 +706,24 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
             child: Column(
               children: [
                 SizedBox(
-                  height: 8,
+                  height: 2,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     SizedBox(
-                      width: 8,
+                      width: 1,
                     ),
                     Expanded(
                       flex: 3,
                       child: ClipRRect(
                         borderRadius:
-                            BorderRadius.all(Radius.circular(spacing_middle)),
+                            BorderRadius.all(Radius.circular(spacing_standard_new)),
                         child: Image.network(
                           cat_model!.cart![positions]!.productImage!,
                           fit: BoxFit.fill,
-                          height: width * 0.28,
+                          height: width * 0.26,
                         ),
                       ),
                     ),
@@ -731,13 +734,17 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                       flex: 6,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
+                          SizedBox(
+                            height: spacing_standard,
+                          ),
                           Text(
                             cat_model!.cart![positions]!.productName!,
                             style: TextStyle(
                                 color: sh_colorPrimary2,
                                 fontSize: 16,
-                                fontFamily: 'Bold'),
+                                fontFamily: fontBold),
                           ),
                           Container(child: VariationName(positions)),
                           SizedBox(
@@ -1195,7 +1202,9 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
       }
     }
 
+
     TotalPrice() {
+
       var myprice2 = double.parse(total_amount.toString());
       var myprice = myprice2.toStringAsFixed(2);
       return Row(
@@ -1217,7 +1226,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
       var myprice2 = double.parse(shipping_charge.toString());
       var myprice = myprice2.toStringAsFixed(2);
       return Text(currency! + myprice + " " + cat_model!.currency!,
-          style: TextStyle(color: sh_black, fontSize: 15, fontFamily: "Bold"));
+          style: TextStyle(color: sh_colorPrimary2, fontSize: 15, fontFamily: fontBold));
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
@@ -1284,7 +1293,12 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
           },
           child: Container(
             padding: EdgeInsets.all(12.0),
-            color: lightgrey,
+            decoration: BoxDecoration(
+              border: Border.all(color: sh_colorPrimary2),
+              color: sh_white,
+              borderRadius: BorderRadius.circular(10.0),
+              // boxShadow: true
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -1337,14 +1351,14 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                 flex: 9,
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 70.0),
+                    padding: const EdgeInsets.only(bottom: 70),
                     child: Column(
                       children: <Widget>[
                         Container(
                           margin: EdgeInsets.only(
-                              left: spacing_standard_new,
-                              right: spacing_standard_new,
-                              top: spacing_control),
+                              left: 26,
+                              right: 26,
+                              top: 0),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1370,21 +1384,25 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                                 margin: EdgeInsets.only(
                                     bottom: spacing_standard_new),
                               ),
-                              SizedBox(
-                                height: spacing_standard,
-                              ),
+
                               text("Details",
                                   fontSize: textSizeMedium,
                                   fontFamily: fontBold,
                                   textColor: sh_colorPrimary2),
                               SizedBox(
-                                height: 12.0,
+                                height: 6.0,
                               ),
                               Visibility(
                                 visible: isSwitched,
                                 child: Container(
                                   padding: EdgeInsets.all(12.0),
-                                  color: lightgrey,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: sh_colorPrimary2),
+                                    color: sh_white,
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    // boxShadow: true
+                                  ),
+
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -1396,16 +1414,19 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                                             return Visibility(
                                               visible: isVisible!,
                                               child: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 mainAxisAlignment:
                                                     MainAxisAlignment
                                                         .spaceBetween,
                                                 children: [
-                                                  Text(
-                                                    shipment_method!,
-                                                    style: TextStyle(
-                                                        color: sh_black,
-                                                        fontSize: 15,
-                                                        fontFamily: "Bold"),
+                                                  Flexible(
+                                                    child: Text(
+                                                      shipment_method!,
+                                                      style: TextStyle(
+                                                          color: sh_black,
+                                                          fontSize: 15,
+                                                          fontFamily: fontSemibold),
+                                                    ),
                                                   ),
                                                   ShipPrice()
                                                   // Text("\$"+shipping_charge!+".00"+" "+cat_model!.currency!,style: TextStyle(color: sh_black,fontSize: 15,fontFamily: "Bold"),)
@@ -1416,92 +1437,92 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                                             return Text("${snapshot.error}");
                                           }
                                           // By default, show a loading spinner.
-                                          return Expanded(
-                                            child: Shimmer.fromColors(
-                                              baseColor: Colors.grey[300]!,
-                                              highlightColor: Colors.grey[100]!,
-                                              enabled: true,
-                                              child: Container(
-                                                padding: EdgeInsets.all(20),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Row(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: <Widget>[
-                                                        Container(
-                                                          width: 60.0,
-                                                          height: 60.0,
-                                                          color: Colors.white,
-                                                        ),
-                                                        const Padding(
-                                                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                                        ),
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: <Widget>[
-                                                              Container(
-                                                                width: double.infinity,
-                                                                height: 8.0,
-                                                                color: Colors.white,
-                                                              ),
-                                                              const Padding(
-                                                                padding: EdgeInsets.symmetric(vertical: 8.0),
-                                                              ),
-                                                              Container(
-                                                                width: double.infinity,
-                                                                height: 8.0,
-                                                                color: Colors.white,
-                                                              ),
-                                                              const Padding(
-                                                                padding: EdgeInsets.symmetric(vertical: 8.0),
-                                                              ),
-                                                              Container(
-                                                                width: 40.0,
-                                                                height: 8.0,
-                                                                color: Colors.white,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        )
-                                                      ],
-                                                    ),
-                                                    SizedBox(height: 20,),
-                                                    Container(
-                                                      width: width*.3,
-                                                      height: 8.0,
-                                                      color: Colors.white,
-                                                    ),
-                                                    SizedBox(height: 10,),
-                                                    Container(
-                                                      width: double.infinity,
-                                                      height: 40.0,
-                                                      color: Colors.white,
-                                                    ),
-                                                    SizedBox(height: 18,),
-                                                    Container(
-                                                      width: width*.3,
-                                                      height: 8.0,
-                                                      color: Colors.white,
-                                                    ),
-                                                    SizedBox(height: 10,),
-                                                    Container(
-                                                      width: double.infinity,
-                                                      height: 80.0,
-                                                      color: Colors.white,
-                                                    ),
-
-                                                    SizedBox(height: 20,),
-                                                    Container(
-                                                      width: double.infinity,
-                                                      height: 100.0,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ],),
-                                              ),
-                                            ),
-                                          );
+                                          // return Container();
+                                          return CircularProgressIndicator();
+                                          // return Shimmer.fromColors(
+                                          //   baseColor: Colors.grey[300]!,
+                                          //   highlightColor: Colors.grey[100]!,
+                                          //   enabled: true,
+                                          //   child: Container(
+                                          //     padding: EdgeInsets.all(20),
+                                          //     child: Column(
+                                          //       crossAxisAlignment: CrossAxisAlignment.start,
+                                          //       children: [
+                                          //         Row(
+                                          //           crossAxisAlignment: CrossAxisAlignment.start,
+                                          //           children: <Widget>[
+                                          //             Container(
+                                          //               width: 60.0,
+                                          //               height: 60.0,
+                                          //               color: Colors.white,
+                                          //             ),
+                                          //             const Padding(
+                                          //               padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                          //             ),
+                                          //             Expanded(
+                                          //               child: Column(
+                                          //                 crossAxisAlignment: CrossAxisAlignment.start,
+                                          //                 children: <Widget>[
+                                          //                   Container(
+                                          //                     width: double.infinity,
+                                          //                     height: 8.0,
+                                          //                     color: Colors.white,
+                                          //                   ),
+                                          //                   const Padding(
+                                          //                     padding: EdgeInsets.symmetric(vertical: 8.0),
+                                          //                   ),
+                                          //                   Container(
+                                          //                     width: double.infinity,
+                                          //                     height: 8.0,
+                                          //                     color: Colors.white,
+                                          //                   ),
+                                          //                   const Padding(
+                                          //                     padding: EdgeInsets.symmetric(vertical: 8.0),
+                                          //                   ),
+                                          //                   Container(
+                                          //                     width: 40.0,
+                                          //                     height: 8.0,
+                                          //                     color: Colors.white,
+                                          //                   ),
+                                          //                 ],
+                                          //               ),
+                                          //             )
+                                          //           ],
+                                          //         ),
+                                          //         SizedBox(height: 20,),
+                                          //         Container(
+                                          //           width: width*.3,
+                                          //           height: 8.0,
+                                          //           color: Colors.white,
+                                          //         ),
+                                          //         SizedBox(height: 10,),
+                                          //         Container(
+                                          //           width: double.infinity,
+                                          //           height: 40.0,
+                                          //           color: Colors.white,
+                                          //         ),
+                                          //         SizedBox(height: 18,),
+                                          //         Container(
+                                          //           width: width*.3,
+                                          //           height: 8.0,
+                                          //           color: Colors.white,
+                                          //         ),
+                                          //         SizedBox(height: 10,),
+                                          //         Container(
+                                          //           width: double.infinity,
+                                          //           height: 80.0,
+                                          //           color: Colors.white,
+                                          //         ),
+                                          //
+                                          //         SizedBox(height: 20,),
+                                          //         Container(
+                                          //           width: double.infinity,
+                                          //           height: 100.0,
+                                          //           color: Colors.white,
+                                          //         ),
+                                          //       ],),
+                                          //   ),
+                                          // );
                                         },
                                       ),
                                       SizedBox(
@@ -1514,7 +1535,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                                             style: TextStyle(
                                                 color: sh_black,
                                                 fontSize: 15,
-                                                fontFamily: "Bold"),
+                                                fontFamily: fontSemibold),
                                           ),
                                         ],
                                       ),
@@ -1523,7 +1544,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                                 ),
                               ),
                               SizedBox(
-                                height: spacing_standard,
+                                height: spacing_standard_new,
                               ),
                               FutureBuilder<String?>(
                                 future: fetchdeliverymy,
@@ -1532,6 +1553,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                                     return Visibility(
                                       visible: isVisible!,
                                       child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           text("Delivered to",
                                               fontSize: textSizeMedium,
@@ -1900,91 +1922,91 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                   ),
                 ));
               }
+              // return CircularProgressIndicator();
+              // return Container();
               // By default, show a loading spinner.
-              return Expanded(
-                child: Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
-                  enabled: true,
-                  child: Container(
-                    padding: EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
-                              width: 60.0,
-                              height: 60.0,
-                              color: Colors.white,
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                enabled: true,
+                child: Container(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
+                            width: 60.0,
+                            height: 60.0,
+                            color: Colors.white,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: double.infinity,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                ),
+                                Container(
+                                  width: 40.0,
+                                  height: 8.0,
+                                  color: Colors.white,
+                                ),
+                              ],
                             ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8.0),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Container(
-                                    width: double.infinity,
-                                    height: 8.0,
-                                    color: Colors.white,
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                                  ),
-                                  Container(
-                                    width: double.infinity,
-                                    height: 8.0,
-                                    color: Colors.white,
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                                  ),
-                                  Container(
-                                    width: 40.0,
-                                    height: 8.0,
-                                    color: Colors.white,
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                        SizedBox(height: 20,),
-                        Container(
-                          width: width*.3,
-                          height: 8.0,
-                          color: Colors.white,
-                        ),
-                        SizedBox(height: 10,),
-                        Container(
-                          width: double.infinity,
-                          height: 40.0,
-                          color: Colors.white,
-                        ),
-                        SizedBox(height: 18,),
-                        Container(
-                          width: width*.3,
-                          height: 8.0,
-                          color: Colors.white,
-                        ),
-                        SizedBox(height: 10,),
-                        Container(
-                          width: double.infinity,
-                          height: 80.0,
-                          color: Colors.white,
-                        ),
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 20,),
+                      Container(
+                        width: width*.3,
+                        height: 8.0,
+                        color: Colors.white,
+                      ),
+                      SizedBox(height: 10,),
+                      Container(
+                        width: double.infinity,
+                        height: 40.0,
+                        color: Colors.white,
+                      ),
+                      SizedBox(height: 18,),
+                      Container(
+                        width: width*.3,
+                        height: 8.0,
+                        color: Colors.white,
+                      ),
+                      SizedBox(height: 10,),
+                      Container(
+                        width: double.infinity,
+                        height: 80.0,
+                        color: Colors.white,
+                      ),
 
-                        SizedBox(height: 20,),
-                        Container(
-                          width: double.infinity,
-                          height: 100.0,
-                          color: Colors.white,
-                        ),
-                      ],),
-                  ),
+                      SizedBox(height: 20,),
+                      Container(
+                        width: double.infinity,
+                        height: 100.0,
+                        color: Colors.white,
+                      ),
+                    ],),
                 ),
               );
             });
@@ -2048,65 +2070,62 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                   future: fetchToken(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      return Stack(
-                        alignment: Alignment.bottomLeft,
-                        children: <Widget>[CheckToken()],
-                      );
+                      return CheckToken();
                     }
                     // By default, show a loading spinner.
-                    return Expanded(
-                      child: Shimmer.fromColors(
-                        baseColor: Colors.grey[300]!,
-                        highlightColor: Colors.grey[100]!,
-                        enabled: true,
-                        child: Container(
-                          padding: EdgeInsets.all(20),
-                          child: Column(children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Container(
-                                  width: 48.0,
-                                  height: 48.0,
-                                  color: Colors.white,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Container(
-                                        width: double.infinity,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                                      ),
-                                      Container(
-                                        width: double.infinity,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                                      ),
-                                      Container(
-                                        width: 40.0,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            )
-                          ],),
-                        ),
-                      ),
-                    );
+                    return CircularProgressIndicator();
+                    // return Container();
+                    // return Shimmer.fromColors(
+                    //   baseColor: Colors.grey[300]!,
+                    //   highlightColor: Colors.grey[100]!,
+                    //   enabled: true,
+                    //   child: Container(
+                    //     padding: EdgeInsets.all(20),
+                    //     child: Column(children: [
+                    //       Row(
+                    //         crossAxisAlignment: CrossAxisAlignment.start,
+                    //         children: <Widget>[
+                    //           Container(
+                    //             width: 48.0,
+                    //             height: 48.0,
+                    //             color: Colors.white,
+                    //           ),
+                    //           const Padding(
+                    //             padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    //           ),
+                    //           Expanded(
+                    //             child: Column(
+                    //               crossAxisAlignment: CrossAxisAlignment.start,
+                    //               children: <Widget>[
+                    //                 Container(
+                    //                   width: double.infinity,
+                    //                   height: 8.0,
+                    //                   color: Colors.white,
+                    //                 ),
+                    //                 const Padding(
+                    //                   padding: EdgeInsets.symmetric(vertical: 8.0),
+                    //                 ),
+                    //                 Container(
+                    //                   width: double.infinity,
+                    //                   height: 8.0,
+                    //                   color: Colors.white,
+                    //                 ),
+                    //                 const Padding(
+                    //                   padding: EdgeInsets.symmetric(vertical: 8.0),
+                    //                 ),
+                    //                 Container(
+                    //                   width: 40.0,
+                    //                   height: 8.0,
+                    //                   color: Colors.white,
+                    //                 ),
+                    //               ],
+                    //             ),
+                    //           )
+                    //         ],
+                    //       )
+                    //     ],),
+                    //   ),
+                    // );
                   })),
         ),
         // Positioned to take only AppBar size
@@ -2115,7 +2134,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0, spacing_middle4, 0, 0),
+            padding: const EdgeInsets.fromLTRB(10, 18, 10, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -2124,7 +2143,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0, 2, 6, 2),
+                      padding: const EdgeInsets.fromLTRB(1.0, 2, 6, 2),
                       child: IconButton(
                           onPressed: () {
                             Navigator.pop(context);
@@ -2132,17 +2151,17 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                           icon: Icon(
                             Icons.chevron_left_rounded,
                             color: Colors.white,
-                            size: 36,
+                            size: 32,
                           )),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
                       child: Text(
                         "Checkout",
                         style: TextStyle(
                             color: Colors.white,
-                            fontSize: 45,
-                            fontFamily: 'Cursive'),
+                            fontSize: 24,
+                            fontFamily: 'TitleCursive'),
                       ),
                     )
                   ],
@@ -2158,7 +2177,25 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
         builder: (context, orientation, deviceType) {
       return Scaffold(
         resizeToAvoidBottomInset: true,
-        body: SafeArea(child: setUserForm()),
+        body: StreamProvider<NetworkStatus>(
+          initialData: NetworkStatus.Online,
+          create: (context) =>
+          NetworkStatusService().networkStatusController.stream,
+          child: NetworkAwareWidget(
+            onlineChild: SafeArea(child: setUserForm()),
+            offlineChild: Container(
+              child: Center(
+                child: Text(
+                  "No internet connection!",
+                  style: TextStyle(
+                      color: Colors.grey[400],
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20.0),
+                ),
+              ),
+            ),
+          ),
+        ),
       );
         },
     );

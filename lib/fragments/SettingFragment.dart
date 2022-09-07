@@ -39,7 +39,7 @@ class _SettingFragmentState extends State<SettingFragment> {
   void initState() {
     super.initState();
     countrydetail = fetchcountry();
-    fetchaddMain=fetchadd();
+    // fetchaddMain=fetchadd();
   }
 
   Future<String?> fetchadd() async {
@@ -52,7 +52,8 @@ class _SettingFragmentState extends State<SettingFragment> {
     }
   }
 
-  Future<String?> EmptyCart() async {
+  Future<String?> EmptyCart(CountryParishModelDataCountries newVal) async {
+    EasyLoading.show(status: 'Please wait...');
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String pro_id = prefs.getString('pro_id');
@@ -74,11 +75,19 @@ class _SettingFragmentState extends State<SettingFragment> {
         final jsonResponse = json.decode(response.body);
         print('not json $jsonResponse');
       }
+
+      prefs.setInt("cart_count", 0);
+      EasyLoading.dismiss();
+      setState(() {
+        selectedValue = newVal;
+
+      });
       // first2=false;
 
 //      print(cat_model.data);
       return "cat_model";
     } catch (e) {
+      EasyLoading.dismiss();
       print('caught error $e');
       // return cat_model;
     }
@@ -133,12 +142,12 @@ class _SettingFragmentState extends State<SettingFragment> {
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         prefs.setString('user_selected_country', newVal.country!);
                         toast(newVal.country);
-                        EmptyCart();
+                        EmptyCart(newVal);
 
-                        setState(() {
-                          selectedValue = newVal;
-
-                        });
+                        // setState(() {
+                        //   selectedValue = newVal;
+                        //
+                        // });
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width*.7,
@@ -406,19 +415,19 @@ hintMaxLines: 5,
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -468,10 +477,12 @@ hintMaxLines: 5,
       double app_height = appBar.preferredSize.height;
       return Stack(children: <Widget>[
         // Background with gradient
+
+        // Background with gradient
         Container(
             height: 120,
             width: width,
-            child: Image.asset(sh_upper2,fit: BoxFit.fill)
+            child: Image.asset(sh_upper2, fit: BoxFit.fill)
           // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
         ),
         //Above card
@@ -513,7 +524,7 @@ hintMaxLines: 5,
                             child: Container(
                                 child: Padding(
                                   padding: const EdgeInsets.fromLTRB(18.0,12,12,12),
-                                  child: Text("My Account",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
+                                  child: Text("My Account",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: fontSemibold),),
                                 )),
                           ),
                           InkWell(
@@ -522,7 +533,7 @@ hintMaxLines: 5,
                             },
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(18.0,12,12,12),
-                              child: Text("FAQ's",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
+                              child: Text("FAQ's",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: fontSemibold),),
                             ),
                           ),
                           InkWell(
@@ -531,7 +542,7 @@ hintMaxLines: 5,
                             },
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(18.0,12,12,12),
-                              child: Text("Customer Support",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
+                              child: Text("Customer Support",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: fontSemibold),),
                             ),
                           ),
                           InkWell(
@@ -540,7 +551,7 @@ hintMaxLines: 5,
                             },
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(18.0,12,12,12),
-                              child: Text("Delete my Account",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
+                              child: Text("Delete my Account",style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: fontSemibold),),
                             ),
                           ),
                           InkWell(
@@ -549,16 +560,16 @@ hintMaxLines: 5,
                             },
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(18.0,12,12,0),
-                              child: Text("Current Country: ",style: TextStyle(color: sh_textColorPrimary,fontSize: 16,fontFamily: 'Bold'),),
+                              child: Text("Current Country: ",style: TextStyle(color: sh_textColorPrimary,fontSize: 16,fontFamily: fontSemibold),),
                             ),
                           ),
                           FutureBuilder<String?>(
-                            future: fetchaddMain,
+                            future: fetchadd(),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return Padding(
                                   padding: const EdgeInsets.fromLTRB(18.0,6,12,6),
-                                  child: Text(user_selected_country!,style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: 'Bold'),),
+                                  child: Text(user_selected_country!,style: TextStyle(color: sh_colorPrimary2,fontSize: 20,fontFamily: fontSemibold),),
                                 );
                               } else if (snapshot.hasError) {
                                 return Text("${snapshot.error}");
@@ -596,7 +607,7 @@ hintMaxLines: 5,
                                                     style: TextStyle(
                                                         color: sh_textColorPrimary,
                                                         fontFamily: fontRegular,
-                                                        fontSize: textSizeNormal),
+                                                        fontSize: textSizeMedium),
                                                   ),
                                                   value: item,
                                                 );
@@ -693,7 +704,7 @@ hintMaxLines: 5,
           right: 0.0,
           child:
           Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(30,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -701,16 +712,16 @@ hintMaxLines: 5,
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        // Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.fromLTRB(1.0,0,6,0),
+                    //   child: IconButton(onPressed: () {
+                    //     // Navigator.pop(context);
+                    //   }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                    // ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Settings",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("Settings",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -743,7 +754,7 @@ hintMaxLines: 5,
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],

@@ -72,6 +72,7 @@ const sh_lbl_total_amount = "Total Amount :";
 const sh_lbl_sub_total = "Sub Total :";
 const sh_lbl_security = "Security Deposite -";
 const sh_lbl_shipping_details = "Shipping Details";
+const sh_lbl_order_details = "Order Details";
 const sh_lbl_sales_details = "Sales Details";
 const sh_lbl_view_order_details = "View Order Details";
 const sh_lbl_order_id = "Order ID -";

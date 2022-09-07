@@ -15,6 +15,10 @@ import 'package:thrift/utils/PinTheme.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class OtpNewScreen extends StatefulWidget {
   static String tag='/OtpNewScreen';
@@ -231,19 +235,19 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -305,7 +309,7 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
                 children: <Widget>[
 
                   Container(
-                    padding: EdgeInsets.fromLTRB(20,0,20,0),
+                    padding: EdgeInsets.fromLTRB(26,0,26,0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -547,7 +551,7 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -556,15 +560,15 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Enter OTP",style: TextStyle(color: Colors.white,fontSize: 36,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("Enter OTP",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -597,7 +601,6 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -610,8 +613,24 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

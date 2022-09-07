@@ -12,6 +12,9 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class SellerReviewScreen extends StatefulWidget {
   static String tag='/SellerReviewScreen';
@@ -343,7 +346,7 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
                     if (snapshot.hasData) {
                       return Padding(
                         padding: const EdgeInsets.all(6.0),
-                        child: Flexible(child: Text("$seller_name's Reviews",maxLines : 3,style: TextStyle(color: Colors.white,fontSize: 22,fontFamily: 'Regular'),)),
+                        child: Text("$seller_name's Reviews",maxLines : 3,style: TextStyle(color: Colors.white,fontSize: 22,fontFamily: 'Regular'),),
                       );
                     } else if (snapshot.hasError) {
                       return Text("${snapshot.error}");
@@ -363,8 +366,24 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

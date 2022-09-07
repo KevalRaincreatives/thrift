@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 const sh_colorPrimary = Color(0xff008b61);
 const sh_colorPrimary2 = Color(0xff26B6F2);
+const sh_colorPrimary3 = Color(0xff65c2f4);
+
 const sh_text_back = Color(0xffE3F4F9);
 const sh_colorPrimaryDark = Color(0xFFFFE63B);
 const sh_colorAccent = Color(0xFF247847);
@@ -29,6 +31,7 @@ const sh_new_app_background=Color(0xFFFAF7F0);
 const sh_app_txt_color=Color(0xff26B6F2);
 
 const sh_btn_color=Color(0xFFD0E8F8);
+const sh_btn_color2=Color(0xFFe1f0fb);
 const sh_app_background = Color(0xFFC1E5FE);
 const sh_background_color = Color(0xFFFCFDFD);
 const sh_editText_background = Color(0xFFF1F1F1);
@@ -94,8 +97,8 @@ const Color subTitleTextColor = const Color(0xff797878);
 const Color skyBlue = Color(0xff2890c8);
  const Color lightBlue = Color(0xff5c3dff);
 
-
- const Color orange = Color(0xffE65829);
+const myorange2 = Color(0xffFFA500);
+ const myorange = Color(0xffE65829);
 const Color shs_orange = Color(0xffE65829);
  const Color red = Color(0xffF72804);
 

@@ -7,6 +7,10 @@ import 'package:thrift/screens/OrderSuccessScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class PaymentScreen extends StatefulWidget {
   static String tag='/PaymentScreen';
@@ -52,7 +56,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         title: Text(
           "Pay",
           style:
-          TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
+          TextStyle(color: sh_white, fontFamily: 'TitleCursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
@@ -196,8 +200,24 @@ launchScreen(context, OrderSuccessScreen.tag);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

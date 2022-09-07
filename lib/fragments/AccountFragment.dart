@@ -142,19 +142,19 @@ class _AccountFragmentState extends State<AccountFragment> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -168,7 +168,7 @@ class _AccountFragmentState extends State<AccountFragment> {
         backgroundColor: sh_colorPrimary2,
         title: Text(
           "My Account",
-          style: TextStyle(color: sh_white,fontFamily: 'Cursive',fontSize: 40),
+          style: TextStyle(color: sh_white,fontFamily: 'TitleCursive',fontSize: 40),
         ),
         leading: InkWell(
           onTap: () {
@@ -250,7 +250,7 @@ class _AccountFragmentState extends State<AccountFragment> {
                                   style: TextStyle(
                                       color: sh_colorPrimary2,
                                       fontSize: 20,
-                                      fontFamily: 'Bold'),),
+                                      fontFamily: fontSemibold),),
                               ),
                             )),
                         InkWell(
@@ -263,7 +263,7 @@ class _AccountFragmentState extends State<AccountFragment> {
                             child: Text("My Orders", style: TextStyle(
                                 color: sh_colorPrimary2,
                                 fontSize: 20,
-                                fontFamily: 'Bold'),),
+                                fontFamily: fontSemibold),),
                           ),
                         ),
                         InkWell(
@@ -280,7 +280,7 @@ class _AccountFragmentState extends State<AccountFragment> {
                             child: Text("My Addresses",
                               style: TextStyle(color: sh_colorPrimary2,
                                   fontSize: 20,
-                                  fontFamily: 'Bold'),),
+                                  fontFamily: fontSemibold),),
                           ),
                         ),
                         InkWell(
@@ -310,7 +310,7 @@ class _AccountFragmentState extends State<AccountFragment> {
                             child: Text("Sign Out", style: TextStyle(
                                 color: sh_colorPrimary2,
                                 fontSize: 20,
-                                fontFamily: 'Bold'),),
+                                fontFamily: fontSemibold),),
                           ),
                         ),
                       ],
@@ -331,7 +331,7 @@ class _AccountFragmentState extends State<AccountFragment> {
           right: 0.0,
           child:
           Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(30,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -339,16 +339,16 @@ class _AccountFragmentState extends State<AccountFragment> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        // Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.fromLTRB(1.0,0,6,0),
+                    //   child: IconButton(onPressed: () {
+                    //     // Navigator.pop(context);
+                    //   }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                    // ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("My Account",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("My Account",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -381,7 +381,7 @@ class _AccountFragmentState extends State<AccountFragment> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
                 // GestureDetector(

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/screens/AddressListScreen.dart';
 import 'package:thrift/screens/BecameSellerScreen.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -50,10 +51,12 @@ import 'package:thrift/screens/VendorOrderDetailScreen.dart';
 import 'package:thrift/screens/VendorOrderListScreen.dart';
 import 'package:thrift/screens/VerificationScreen.dart';
 import 'package:thrift/screens/WebPaymentScreen.dart';
+import 'package:thrift/utils/ConnectivityService.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/T3Dialog.dart';
 import 'package:sizer/sizer.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 
 Future<void>  main() async {
@@ -125,21 +128,12 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    precacheImage(AssetImage(sh_app_logo), context);
+    precacheImage(AssetImage  (sh_app_logo), context);
     return Sizer(
         builder: (context, orientation, deviceType) {
           return MaterialApp(
             title: 'Cassie by Casuarina',
             theme: ThemeData(
-              // This is the theme of your application.
-              //
-              // Try running your application with "flutter run". You'll see the
-              // application has a blue toolbar. Then, without quitting the app, try
-              // changing the primarySwatch below to Colors.green and then invoke
-              // "hot reload" (press "r" in the console where you ran "flutter run",
-              // or simply save your changes to "hot reload" in a Flutter IDE).
-              // Notice that the counter didn't reset back to zero; the application
-              // is not restarted.
               primarySwatch: Colors.lightBlue,
               unselectedWidgetColor: sh_app_background,
               disabledColor: sh_colorPrimary2,
@@ -147,6 +141,18 @@ class MyApp extends StatelessWidget {
             initialRoute: SplashScreen.tag,
             // navigatorObservers: [MyRouteObserver()],
             builder: EasyLoading.init(),
+            // builder: (context, child) {
+            //   return StreamBuilder<bool>(
+            //       stream: ConnectivityService().connectionChangeController.stream,
+            //       builder: (context, snapshot) {
+            //         final conenctivityResult = snapshot.data;
+            //         if (conenctivityResult == ConnectivityResult.none || conenctivityResult == null) return FAQScreen();
+            //
+            //           EasyLoading.init();
+            //           return FAQScreen();
+            //       }
+            //   );
+            // },
             routes: {
               LoginScreen.tag: (BuildContext contex) => LoginScreen(),
               SignUpScreen.tag: (BuildContext contex) => SignUpScreen(),

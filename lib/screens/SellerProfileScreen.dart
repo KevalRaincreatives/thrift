@@ -10,13 +10,16 @@ import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/model/ProductListSellerModel.dart';
 import 'package:thrift/model/ReviewModel.dart';
-import 'package:thrift/screens/CartScreen2.dart';
+import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/ProductDetailScreen.dart';
 import 'package:thrift/screens/SellerReviewScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class SellerProfileScreen extends StatefulWidget {
   static String tag = '/SellerProfileScreen';
@@ -151,19 +154,19 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -174,7 +177,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     Imagevw4(int index) {
       if (productListModel!.products![index]!.data!.images!.length < 1) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: Image.asset(
             sh_no_img,
             fit: BoxFit.cover,
@@ -186,7 +189,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
         );
       } else {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: Image.network(
             productListModel!.products![index]!.data!.images![0]!.src!,
             fit: BoxFit.cover ,
@@ -274,7 +277,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
           child: Container(
             height: height,
             width: width,
-            margin: EdgeInsets.fromLTRB(16,0,16,0),
+            margin: EdgeInsets.fromLTRB(26,0,26,0),
             child: Column(
               children: [
                 FutureBuilder<String?>(
@@ -337,7 +340,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                             RatingBar.builder(
                               initialRating: double.parse(reviewModel!.average.toString()),
                               minRating: 1,
-                              itemSize: 18,
+                              itemSize: 16,
                               ignoreGestures: true,
                               direction: Axis.horizontal,
                               allowHalfRating: true,
@@ -406,21 +409,24 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text("Listing",style: TextStyle(color: sh_colorPrimary2,fontSize: 16,fontFamily: "Bold"),),
+                    Text("Listing",style: TextStyle(color: sh_colorPrimary2,fontSize: 16,fontFamily: fontSemibold),),
                   ],
                 ),
                 SizedBox(height: 16,),
-                Row(
-                  children: [
-                    Container(
-
-                      child: SvgPicture.asset(sh_menu_filter,color: sh_colorPrimary2,),
-                      height :40,
-                      width: 40,),
-                    Text("Newest to Oldest",style: TextStyle(color: sh_colorPrimary2,fontSize: 14),)
-                  ],
-                ),
-                SizedBox(height: 16,),
+      Row(
+      children: [
+      Image.asset(
+      sh_menu_filter,
+      color: sh_colorPrimary2,
+      height: 22,
+      width: 16,
+      fit: BoxFit.fill,
+      ),
+      SizedBox(width: 12,),
+      Text("Newest to Oldest",style: TextStyle(color: sh_colorPrimary2,fontSize: 13),)
+      ],
+      ),
+                SizedBox(height: 6,),
                 FutureBuilder<ProductListSellerModel?>(
                   future: fetchAlbum(),
                   builder: (context, snapshot) {
@@ -432,7 +438,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                             childAspectRatio: 0.75,
                             crossAxisCount: 2,
                             crossAxisSpacing: 30.0,
-                            mainAxisSpacing: 15.0,
+                            mainAxisSpacing: 10.0,
 
                             children: List.generate(
                               productListModel!.products!.length,
@@ -471,19 +477,16 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                                 child: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: <Widget>[
-                                                    Hero(
-                                                      tag: 'Pro_name',
-                                                      child: Text(
-                                                        productListModel!.products![index]!.data!.name!,
-                                                        maxLines: 1,
-                                                        style: TextStyle(
-                                                            color: sh_black,
-                                                            fontFamily: fontBold,
-                                                            fontSize: textSizeMedium),
-                                                      ),
+                                                    Text(
+                                                      productListModel!.products![index]!.data!.name!,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                          color: sh_black,
+                                                          fontFamily: fontBold,
+                                                          fontSize: textSizeMedium),
                                                     ),
                                                     SizedBox(
-                                                      height: 6,
+                                                      height: 2,
                                                     ),
 
 
@@ -576,7 +579,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -585,19 +588,19 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
                       child: FutureBuilder<String?>(
                         future: fetchadd(),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
-                            return Text(profile_name!,style: TextStyle(color: Colors.white,fontSize: 20,fontFamily: 'Regular'));
+                            return Text(profile_name!,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'));
                           } else if (snapshot.hasError) {
                             return Text("${snapshot.error}");
                           }
@@ -640,7 +643,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -652,8 +655,24 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
