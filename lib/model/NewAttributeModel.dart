@@ -20,6 +20,7 @@ class NewAttributeModel {
   bool? variation;
   List<String?>? options;
   String? required;
+  String? type;
 
   NewAttributeModel({
     this.name,
@@ -27,7 +28,8 @@ class NewAttributeModel {
     this.visible,
     this.variation,
     this.options,
-    this.required
+    this.required,
+    this.type
   });
   NewAttributeModel.fromJson(Map<String, dynamic> json) {
     name = json['name']?.toString();
@@ -43,6 +45,7 @@ class NewAttributeModel {
       options = arr0;
     }
     required=json['required'];
+    type=json['type'];
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -59,6 +62,7 @@ class NewAttributeModel {
       data['options'] = arr0;
     }
     data['required']=required;
+    data['type']=type;
     return data;
   }
 }

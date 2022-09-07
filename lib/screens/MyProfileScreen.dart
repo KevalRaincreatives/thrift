@@ -15,6 +15,10 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:thrift/utils/ShStrings.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class MyProfileScreen extends StatefulWidget {
   static String tag='/MyProfileScreen';
@@ -275,209 +279,228 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             fontFamily: fontBold),
         iconTheme: IconThemeData(color: sh_textColorPrimary),
       ),
-      body: Container(
-        height: height,
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: <Widget>[
-                      SizedBox(height: 20,),
-                      Stack(
-                        alignment: Alignment.bottomRight,
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: Container(
+            height: height,
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
                         children: <Widget>[
-                            CircleAvatar(
-                              backgroundImage: AssetImage(sh_no_img),
-                              radius: 50,
-                            ),
-                          Container(
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: sh_white,
-                            ),
-                            width: 30,
-                            height: 30,
-                            child: Container(
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.all(spacing_standard),
-                              child: Icon(
-                                Icons.edit,
-                                size: 20,
+                          SizedBox(height: 20,),
+                          Stack(
+                            alignment: Alignment.bottomRight,
+                            children: <Widget>[
+                              CircleAvatar(
+                                backgroundImage: AssetImage(sh_no_img),
+                                radius: 50,
                               ),
+                              Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: sh_white,
+                                ),
+                                width: 30,
+                                height: 30,
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  padding: EdgeInsets.all(spacing_standard),
+                                  child: Icon(
+                                    Icons.edit,
+                                    size: 20,
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                          Container(
+                            margin: EdgeInsets.all(spacing_standard_new),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: editTextStyle(sh_hint_first_name, firstNameCont, node,"Please Enter First Name",sh_white,sh_view_color),
+                                    ),
+                                    SizedBox(
+                                      width: spacing_standard_new,
+                                    ),
+                                    Expanded(
+                                      child: editTextStyle(sh_hint_last_name, lastNameCont, node,"Please Enter Last Name",sh_white,sh_view_color),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: spacing_standard_new,
+                                ),
+                                // editTextStylePhone(sh_hint_mobile_no, phoneCont, node, context),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+                                  child: Stack(
+                                    children: [
+                                      TextFormField(
+                                        readOnly: true,
+                                        maxLines: 1,
+                                        controller: phoneCont,
+                                        onEditingComplete: () => node.nextFocus(),
+                                        style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
+
+                                        decoration: InputDecoration(
+                                          contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
+                                          hintText: sh_hint_mobile_no,
+                                          filled: true,
+                                          fillColor: sh_white,
+                                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(40), borderSide:  BorderSide(color: sh_view_color, width: 1.0)),
+                                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(40), borderSide:  BorderSide(color: sh_view_color, width: 1.0)),
+                                        ),
+                                      ),
+                                      InkWell(
+                                        onTap: () async{
+                                          launchScreen(context, NewNumberScreen.tag);
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(0, 14, 14, 0),
+                                          child: Container(
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              "Change",
+                                              style: TextStyle(
+                                                  color: sh_app_blue,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily: 'Regular'),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: spacing_standard_new,
+                                ),
+                                editTextStyle(sh_hint_email, emailCont, node,"Please Enter Email",sh_white,sh_view_color),
+                                SizedBox(
+                                  height: spacing_standard_new,
+                                ),
+                                InkWell(
+                                  onTap: () async{
+                                    if (_formKey.currentState!.validate()) {
+                                      // TODO submit
+                                      FocusScope.of(context)
+                                          .requestFocus(FocusNode());
+                                      getUpdate();
+
+                                    }
+                                  },
+                                  child: Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    padding: EdgeInsets.only(top: spacing_middle, bottom: spacing_middle),
+                                    decoration: boxDecoration(bgColor: sh_colorPrimary, radius: 50, showShadow: true),
+                                    child: text(sh_lbl_save_profile, textColor: sh_white, isCentered: true,fontFamily: 'Bold'),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: spacing_standard_new,
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 50,
+                                  // height: double.infinity,
+                                  child: MaterialButton(
+                                    padding: EdgeInsets.all(spacing_standard),
+                                    child: text(sh_lbl_change_pswd,
+                                        fontSize: textSizeNormal,
+                                        fontFamily: fontMedium,
+                                        textColor: sh_colorPrimary),
+                                    textColor: sh_white,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: new BorderRadius.circular(40.0),
+                                        side: BorderSide(color: sh_colorPrimary, width: 1)),
+                                    color: sh_white,
+                                    onPressed: () async{
+                                      launchScreen(context, ChangePasswordScreen.tag);},
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: spacing_standard_new,
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 50,
+                                  // height: double.infinity,
+                                  child: MaterialButton(
+                                    padding: EdgeInsets.all(spacing_standard),
+                                    child: text("Beacme a Seller",
+                                        fontSize: textSizeNormal,
+                                        fontFamily: fontMedium,
+                                        textColor: sh_colorPrimary),
+                                    textColor: sh_white,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: new BorderRadius.circular(40.0),
+                                        side: BorderSide(color: sh_colorPrimary, width: 1)),
+                                    color: sh_white,
+                                    onPressed: () async{
+                                      BecameSeller();
+                                    },
+                                  ),
+                                ),
+
+                                // SizedBox(
+                                //   width: double.infinity,
+                                //   height: 50,
+                                //   // height: double.infinity,
+                                //   child: MaterialButton(
+                                //     padding: EdgeInsets.all(spacing_standard),
+                                //     child: text("Logout",
+                                //         fontSize: textSizeNormal,
+                                //         fontFamily: fontMedium,
+                                //         textColor: appBtnColor),
+                                //     textColor: sh_white,
+                                //     shape: RoundedRectangleBorder(
+                                //         borderRadius: new BorderRadius.circular(40.0),
+                                //         side: BorderSide(color: appBtnColor!, width: 1)),
+                                //     color: sh_white,
+                                //     onPressed: () async
+                                //     {
+                                //       SendAppData();
+                                //       getLogout();},
+                                //   ),
+                                // )
+                              ],
                             ),
                           )
                         ],
                       ),
-                      Container(
-                        margin: EdgeInsets.all(spacing_standard_new),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: editTextStyle(sh_hint_first_name, firstNameCont, node,"Please Enter First Name",sh_white,sh_view_color),
-                                ),
-                                SizedBox(
-                                  width: spacing_standard_new,
-                                ),
-                                Expanded(
-                                  child: editTextStyle(sh_hint_last_name, lastNameCont, node,"Please Enter Last Name",sh_white,sh_view_color),
-                                )
-                              ],
-                            ),
-                            SizedBox(
-                              height: spacing_standard_new,
-                            ),
-                            // editTextStylePhone(sh_hint_mobile_no, phoneCont, node, context),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                              child: Stack(
-                                children: [
-                                  TextFormField(
-                                    readOnly: true,
-                                    maxLines: 1,
-                                    controller: phoneCont,
-                                    onEditingComplete: () => node.nextFocus(),
-                                    style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
-
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
-                                      hintText: sh_hint_mobile_no,
-                                      filled: true,
-                                      fillColor: sh_white,
-                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(40), borderSide:  BorderSide(color: sh_view_color, width: 1.0)),
-                                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(40), borderSide:  BorderSide(color: sh_view_color, width: 1.0)),
-                                    ),
-                                  ),
-                                  InkWell(
-                                    onTap: () async{
-                                      launchScreen(context, NewNumberScreen.tag);
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(0, 14, 14, 0),
-                                      child: Container(
-                                        alignment: Alignment.centerRight,
-                                        child: Text(
-                                          "Change",
-                                          style: TextStyle(
-                                              color: sh_app_blue,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: 'Regular'),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              height: spacing_standard_new,
-                            ),
-                            editTextStyle(sh_hint_email, emailCont, node,"Please Enter Email",sh_white,sh_view_color),
-                            SizedBox(
-                              height: spacing_standard_new,
-                            ),
-                            InkWell(
-                              onTap: () async{
-                                if (_formKey.currentState!.validate()) {
-                                  // TODO submit
-                                  FocusScope.of(context)
-                                      .requestFocus(FocusNode());
-                                  getUpdate();
-
-                                }
-                              },
-                              child: Container(
-                                width: MediaQuery.of(context).size.width,
-                                padding: EdgeInsets.only(top: spacing_middle, bottom: spacing_middle),
-                                decoration: boxDecoration(bgColor: sh_colorPrimary, radius: 50, showShadow: true),
-                                child: text(sh_lbl_save_profile, textColor: sh_white, isCentered: true,fontFamily: 'Bold'),
-                              ),
-                            ),
-                            SizedBox(
-                              height: spacing_standard_new,
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 50,
-                              // height: double.infinity,
-                              child: MaterialButton(
-                                padding: EdgeInsets.all(spacing_standard),
-                                child: text(sh_lbl_change_pswd,
-                                    fontSize: textSizeNormal,
-                                    fontFamily: fontMedium,
-                                    textColor: sh_colorPrimary),
-                                textColor: sh_white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: new BorderRadius.circular(40.0),
-                                    side: BorderSide(color: sh_colorPrimary, width: 1)),
-                                color: sh_white,
-                                onPressed: () async{
-                                  launchScreen(context, ChangePasswordScreen.tag);},
-                              ),
-                            ),
-                            SizedBox(
-                              height: spacing_standard_new,
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 50,
-                              // height: double.infinity,
-                              child: MaterialButton(
-                                padding: EdgeInsets.all(spacing_standard),
-                                child: text("Beacme a Seller",
-                                    fontSize: textSizeNormal,
-                                    fontFamily: fontMedium,
-                                    textColor: sh_colorPrimary),
-                                textColor: sh_white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: new BorderRadius.circular(40.0),
-                                    side: BorderSide(color: sh_colorPrimary, width: 1)),
-                                color: sh_white,
-                                onPressed: () async{
-                                  BecameSeller();
-                                  },
-                              ),
-                            ),
-
-                            // SizedBox(
-                            //   width: double.infinity,
-                            //   height: 50,
-                            //   // height: double.infinity,
-                            //   child: MaterialButton(
-                            //     padding: EdgeInsets.all(spacing_standard),
-                            //     child: text("Logout",
-                            //         fontSize: textSizeNormal,
-                            //         fontFamily: fontMedium,
-                            //         textColor: appBtnColor),
-                            //     textColor: sh_white,
-                            //     shape: RoundedRectangleBorder(
-                            //         borderRadius: new BorderRadius.circular(40.0),
-                            //         side: BorderSide(color: appBtnColor!, width: 1)),
-                            //     color: sh_white,
-                            //     onPressed: () async
-                            //     {
-                            //       SendAppData();
-                            //       getLogout();},
-                            //   ),
-                            // )
-                          ],
-                        ),
-                      )
-                    ],
+                    ),
                   ),
-                ),
+                )
+              ],
+            ),
+          ),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
               ),
-            )
-          ],
+            ),
+          ),
         ),
       ),
+
     );
   }
 }

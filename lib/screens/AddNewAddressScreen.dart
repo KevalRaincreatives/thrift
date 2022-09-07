@@ -13,12 +13,16 @@ import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/screens/AddressListScreen.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DefaultAddressScreen.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+
 
 class AddNewAddressScreen extends StatefulWidget {
   static String tag='/AddNewAddressScreen';
@@ -305,25 +309,49 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
 
       final jsonResponse = json.decode(response.body);
 
+
       countryNewModel = new CountryParishModel.fromJson(jsonResponse);
-      for (var i = 0; i < countryNewModel!.data!.countries!.length; i++) {
-        if (countryNewModel!.data!.countries![i]!.country == countryname) {
-          selectedValue = countryNewModel!.data!.countries![i];
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? user_country = prefs.getString('user_selected_country');
 
-          if (countryNewModel!.data!.countries![i]!.parishes!.length > 0) {
-            _visible_drop = true;
-            _visible_text = false;
-          } else {
-            _visible_drop = false;
-            _visible_text = true;
-          }
+      if (widget.addressModel != null) {
+        for (var i = 0; i < countryNewModel!.data!.countries!.length; i++) {
+          if (countryNewModel!.data!.countries![i]!.country == countryname) {
+            selectedValue = countryNewModel!.data!.countries![i];
 
-          for (var j = 0;
-          j < countryNewModel!.data!.countries![i]!.parishes!.length;
-          j++) {
-            if (countryNewModel!.data!.countries![i]!.parishes![j]!.name == statename) {
-              selectedStateValue = countryNewModel!.data!.countries![i]!.parishes![j];
+            if (countryNewModel!.data!.countries![i]!.parishes!.length > 0) {
+              _visible_drop = true;
+              _visible_text = false;
+            } else {
+              _visible_drop = false;
+              _visible_text = true;
             }
+
+            for (var j = 0;
+            j < countryNewModel!.data!.countries![i]!.parishes!.length;
+            j++) {
+              if (countryNewModel!.data!.countries![i]!.parishes![j]!.name ==
+                  statename) {
+                selectedStateValue =
+                countryNewModel!.data!.countries![i]!.parishes![j];
+              }
+            }
+          }
+        }
+      }else{
+        for (var i = 0; i < countryNewModel!.data!.countries!.length; i++) {
+          if (countryNewModel!.data!.countries![i]!.country == user_country) {
+            selectedValue = countryNewModel!.data!.countries![i];
+
+            if (countryNewModel!.data!.countries![i]!.parishes!.length > 0) {
+              _visible_drop = true;
+              _visible_text = false;
+            } else {
+              _visible_drop = false;
+              _visible_text = true;
+            }
+
+
           }
         }
       }
@@ -454,29 +482,30 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
               style: TextStyle(
                   color: sh_textColorPrimary,
                   fontFamily: fontRegular,
-                  fontSize: textSizeNormal),
+                  fontSize: textSizeMedium),
             ),
             value: item,
           );
         }).toList(),
         hint: Text('Select Country'),
         value: selectedValue,
-        onChanged: (CountryParishModelDataCountries? newVal) {
-          setState(() {
-            selectedValue = newVal;
-            countryname = newVal!.country!;
-
-            parish_size = newVal.parishes!.length;
-            if (newVal.parishes!.length > 0) {
-              selectedStateValue = newVal.parishes![0];
-              _visible_drop = true;
-              _visible_text = false;
-            } else {
-              _visible_drop = false;
-              _visible_text = true;
-            }
-          });
-        },
+        onChanged: null,
+        // onChanged: (CountryParishModelDataCountries? newVal) {
+        //   setState(() {
+        //     selectedValue = newVal;
+        //     countryname = newVal!.country!;
+        //
+        //     parish_size = newVal.parishes!.length;
+        //     if (newVal.parishes!.length > 0) {
+        //       selectedStateValue = newVal.parishes![0];
+        //       _visible_drop = true;
+        //       _visible_text = false;
+        //     } else {
+        //       _visible_drop = false;
+        //       _visible_text = true;
+        //     }
+        //   });
+        // },
       );
     }
 
@@ -492,7 +521,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                 style: TextStyle(
                     color: sh_textColorPrimary,
                     fontFamily: fontRegular,
-                    fontSize: textSizeNormal),
+                    fontSize: textSizeMedium),
               ),
               value: item,
             );
@@ -616,19 +645,19 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -687,7 +716,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           child: Container(
               width: double.infinity,
               child: SingleChildScrollView(child: body()),
-              margin: EdgeInsets.all(16)),
+              margin: EdgeInsets.fromLTRB(26,10,26,10)),
         ),
         // Positioned to take only AppBar size
         Positioned(
@@ -695,7 +724,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -704,17 +733,17 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
                       child: Text(   widget.addressModel == null
                           ? sh_lbl_add_address
-                          : sh_lbl_edit_address,style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                          : sh_lbl_edit_address,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -747,7 +776,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -758,7 +787,25 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
     }
 
     return Scaffold(
-      body: SafeArea(child: setUserForm()),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

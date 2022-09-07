@@ -54,31 +54,27 @@ class _LandingScreenState extends State<LandingScreen> {
             Column(
             children: [
               Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: Container(
 
                   )),
-              Expanded(
-                  flex: 3,
-                  child: Container(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
-                    Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14))
-                      ],
-                    ),
-                  )),
               // Expanded(
-              //     flex: 1,
+              //     flex: 2,
               //     child: Container(
-              //       child: Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 16),),
+              //       child: Column(
+              //         mainAxisAlignment: MainAxisAlignment.end,
+              //         children: [
+              //       //     Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
+              //       // Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14))
+              //         ],
+              //       ),
               //     )),
+
               Expanded(
-                  flex: 3,
+                  flex: 5,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
-                    child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
+                    child: Image.asset(sh_app_logo,width: width*.6,fit: BoxFit.fill,),
                   )),
               Expanded(
                   flex: 4,

@@ -2,11 +2,16 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/screens/OrderSuccessScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
+
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebPaymentScreen extends StatefulWidget {
@@ -21,6 +26,11 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
   String? weburl;
   final Completer<WebViewController> _controller =
   Completer<WebViewController>();
+
+  // InAppWebViewController? _webViewController;
+  // String url = "";
+  double progress = 0;
+
 
   Future<String?> fetchType() async {
     try {
@@ -37,7 +47,18 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
   @override
   void initState() {
     super.initState();
+    startTime();
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+  }
+
+  startTime() async {
+    EasyLoading.show(status: 'Please wait...');
+    var _duration = Duration(seconds: 5);
+    return Timer(_duration, navigationPage);
+  }
+
+  void navigationPage() async{
+    EasyLoading.dismiss();
   }
 
 
@@ -74,12 +95,13 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
           width: width,
           color: sh_white,
           margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
+          padding: EdgeInsets.fromLTRB(10,0,10,0),
           child: FutureBuilder<String?>(
               future: fetchType(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   return Builder(builder: (BuildContext context) {
-                    // return Container();
+
                     return WebView(
                       initialUrl: weburl,
                       javascriptMode: JavascriptMode.unrestricted,
@@ -104,8 +126,45 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
 
                         print('Page finished loading: $url');
                       },
+                      navigationDelegate: (NavigationRequest request) {
+                        // if (request.url == get.url) {
+                        //   return NavigationDecision.navigate;
+                        // }
+                        return NavigationDecision.navigate;
+                      },
                       gestureNavigationEnabled: true,
                     );
+      //               return InAppWebView(
+      //                 initialUrlRequest: URLRequest(url: Uri.parse(weburl!)),
+      //                 initialOptions: InAppWebViewGroupOptions(
+      //                   crossPlatform:
+      //                   InAppWebViewOptions(useShouldOverrideUrlLoading: true),
+      //                 ),
+      //                 onWebViewCreated: (InAppWebViewController controller) {
+      //                   _webViewController = controller;
+      //                 },
+      //                 onLoadStart: (InAppWebViewController controller, Uri? url) {
+      // if(url.toString().contains("order-received")){
+      //       launchScreen(context, OrderSuccessScreen.tag);
+      //     }
+      //                   // setState(() {
+      //                   //   this.weburl = url.toString();
+      //                   // });
+      //                 },
+      //                 onLoadStop: (InAppWebViewController controller, Uri? url) async {
+      //                   // setState(() {
+      //                   //   this.weburl = url.toString();
+      //                   // });
+      //                 },
+      //                 onConsoleMessage: (controller, consoleMessage) {
+      //                   print(consoleMessage);
+      //                 },
+      //                 // onProgressChanged: (InAppWebViewController controller, int progress) {
+      //                 //   setState(() {
+      //                 //     this.progress = progress / 100;
+      //                 //   });
+      //                 // },
+      //               );
                   });
                 }
                 // By default, show a loading spinner.
@@ -118,7 +177,7 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -127,15 +186,15 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Payment",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("Payment",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -150,7 +209,25 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
 
     return Scaffold(
 
-      body: SafeArea(child: setUserForm()),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -159,7 +236,7 @@ JavascriptChannel _toasterJavascriptChannel(BuildContext context) {
       name: 'Toaster',
       onMessageReceived: (JavascriptMessage message) {
         // ignore: deprecated_member_use
-        Scaffold.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message.message)),
         );
       });

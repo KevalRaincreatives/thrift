@@ -12,6 +12,10 @@ import 'package:thrift/utils/ShConstant.dart';
 import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 
 class ProductlistScreen extends StatefulWidget {
@@ -107,19 +111,19 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -130,7 +134,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
     Imagevw4(int index) {
       if (productListModel[index].images!.length < 1) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: Image.asset(
             sh_no_img,
             fit: BoxFit.cover,
@@ -142,7 +146,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
         );
       } else {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: Image.network(
             productListModel[index].images![0]!.src!,
             fit: BoxFit.cover ,
@@ -300,98 +304,116 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
         Container(
           height: height,
           width: width,
-          margin: EdgeInsets.fromLTRB(0, app_height, 0, 0),
-          padding: EdgeInsets.fromLTRB(0,40, 10, 0),
+
+          margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
+          padding: EdgeInsets.fromLTRB(0,0, 10, 0),
           child: SingleChildScrollView(
 
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
+            child: Container(
+              color: sh_white,
+              // margin: EdgeInsets.fromLTRB(0, 60, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
 
-                  padding: const EdgeInsets.fromLTRB(12.0,8,8,12),
-                  child: FutureBuilder<String?>(
-                    future: fetchDataMain,
+                    padding: const EdgeInsets.fromLTRB(12.0,8,8,12),
+                    child: FutureBuilder<String?>(
+                      future: fetchDataMain,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return  TextName(appBarTitleText);
+                        }
+                        return Center(child: CircularProgressIndicator());
+                      },
+                    ),
+                  ),
+                  FutureBuilder<List<ProductListModel>?>(
+                    future: fetchAlbumMain,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        return  TextName(appBarTitleText);
+      if(productListModel.length > 0) {
+        return Wrap(
+          runSpacing: runSpacing,
+          spacing: spacing,
+          alignment: WrapAlignment.center,
+          children: List.generate(productListModel.length, (index) {
+              return InkWell(
+                onTap: () async {
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  prefs.setString(
+                      'pro_id', productListModel[index].id.toString());
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ProductDetailScreen()));
+                },
+                child: Container(
+                  width: w * .9,
+                  decoration: boxDecoration4(showShadow: false),
+                  margin: EdgeInsets.only(left: 12, bottom: 12),
+                  // padding: EdgeInsets.fromLTRB(spacing_standard,spacing_standard,spacing_standard,spacing_control_half),
+                  padding:
+                  EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      NewImagevw(index),
+                      SizedBox(
+                        height: 6,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 0, right: spacing_standard),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              productListModel[index].name!,
+                              maxLines: 1,
+                              style: TextStyle(
+                                  color: sh_black,
+                                  fontFamily: fontBold,
+                                  fontSize: textSizeMedium),
+                            ),
+                            SizedBox(
+                              height: 2,
+                            ),
+                            MyPrice(index),
+                            SizedBox(
+                              height: 4,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              );
+          }),
+        );
+      }else{
+        return Container(
+          height: height-350,
+          alignment: Alignment.center,
+          child: Center(
+              child: Text(
+                'No Product Found',
+                style: TextStyle(
+                    fontSize: 20,
+                    color: sh_colorPrimary2,
+                    fontWeight: FontWeight.bold),
+              ),
+          ),
+        );
+      }
+
                       }
                       return Center(child: CircularProgressIndicator());
                     },
                   ),
-                ),
-                FutureBuilder<List<ProductListModel>?>(
-                  future: fetchAlbumMain,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Wrap(
-                        runSpacing: runSpacing,
-                        spacing: spacing,
-                        alignment: WrapAlignment.center,
-                        children: List.generate(productListModel.length, (index) {
-                          return InkWell(
-                            onTap: () async{
-                              SharedPreferences prefs = await SharedPreferences.getInstance();
-                              prefs.setString('pro_id', productListModel[index].id.toString());
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => ProductDetailScreen()));
-                            },
-                            child: Container(
-                              width: w*.9,
-                              decoration: boxDecoration4(showShadow: false),
-                              margin: EdgeInsets.only(left: 12, bottom: 12),
-                              // padding: EdgeInsets.fromLTRB(spacing_standard,spacing_standard,spacing_standard,spacing_control_half),
-                              padding:
-                              EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: <Widget>[
-                                  NewImagevw(index),
-                                  SizedBox(
-                                    height: 6,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: spacing_standard, right: spacing_standard),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Hero(
-                                          tag: 'Pro_name',
-                                          child: Text(
-                                            productListModel[index].name!,
-                                            maxLines: 1,
-                                            style: TextStyle(
-                                                color: sh_black,
-                                                fontFamily: fontBold,
-                                                fontSize: textSizeMedium),
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          height: 6,
-                                        ),
-                                        MyPrice(index),
-                                        SizedBox(
-                                          height: 4,
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          );
-
-                        }),
-                      );
-
-                    }
-                    return Center(child: CircularProgressIndicator());
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -401,7 +423,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -410,15 +432,15 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Products",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("Products",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -451,7 +473,6 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -465,6 +486,24 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
 
     return Scaffold(
 
-        body: SafeArea(child: setUserForm()));
+        body: StreamProvider<NetworkStatus>(
+          initialData: NetworkStatus.Online,
+          create: (context) =>
+          NetworkStatusService().networkStatusController.stream,
+          child: NetworkAwareWidget(
+            onlineChild: SafeArea(child: setUserForm()),
+            offlineChild: Container(
+              child: Center(
+                child: Text(
+                  "No internet connection!",
+                  style: TextStyle(
+                      color: Colors.grey[400],
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20.0),
+                ),
+              ),
+            ),
+          ),
+        ));
   }
 }

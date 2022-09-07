@@ -14,6 +14,10 @@ import 'package:thrift/screens/VerificationScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class NewSignUpScreen extends StatefulWidget {
   static String tag='/NewSignUpScreen';
@@ -257,9 +261,9 @@ class _NewSignUpScreenState extends State<NewSignUpScreen> {
       children: <Widget>[
         CountryPickerUtils.getDefaultFlagImage(country),
         SizedBox(width: 8.0),
-        Text("+${country.phoneCode}",style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),),
+        Text("+${country.phoneCode}",style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),),
         SizedBox(width: 8.0),
-        Flexible(child: Text(country.name,style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),))
+        Flexible(child: Text(country.name,style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),))
       ],
     );
 
@@ -272,7 +276,7 @@ class _NewSignUpScreenState extends State<NewSignUpScreen> {
               searchCursorColor: Colors.pinkAccent,
               searchInputDecoration: InputDecoration(hintText: 'Search...',hintStyle: TextStyle(color: sh_app_txt_color)),
               isSearchable: true,
-              title: Text('Select your phone code',style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),),
+              title: Text('Select your phone code',style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),),
               onValuePicked: (Country country) =>
                   setState(() =>
                   _selectedDialogCountry = country),
@@ -285,366 +289,385 @@ class _NewSignUpScreenState extends State<NewSignUpScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Container(
-              height: 200,
-              width: width,
-              child: Image.asset(sh_upper,fit: BoxFit.fill)
-            // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-          ),
-          Container(
-            height: height,
-            width: width,
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    SizedBox(height: 16,),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: Stack(
+            children: [
+              Container(
+                  height: 200,
+                  width: width,
+                  child: Image.asset(sh_upper,fit: BoxFit.fill)
+                // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+              ),
+              Container(
+                height: height,
+                width: width,
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: IconButton(onPressed: () {
-                            Navigator.pop(context);
-                          }, icon: Icon(Icons.keyboard_arrow_left,color: Colors.white,size: 36,)),
+                        SizedBox(height: 36,),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(6.0),
+                              child: IconButton(onPressed: () {
+                                Navigator.pop(context);
+                              }, icon: Icon(Icons.keyboard_arrow_left,color: Colors.white,size: 36,)),
+                            ),
+
+                            Center(child: Text("Getting Started",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive',fontWeight: FontWeight.normal),))
+                          ],
                         ),
-
-                        Center(child: Text("Getting Started",style: TextStyle(color: Colors.white,fontSize: 40,fontFamily: 'Cursive',fontWeight: FontWeight.normal),))
-                      ],
-                    ),
-                    SizedBox(height: 50,),
-                    Container(
-                      width: width*.7,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            controller: firstNameCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter First name';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-
-                              contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
-                              hintText: "First name",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              // labelText: "First name",
-                              // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              filled: true,
-                              fillColor: sh_btn_color,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 16,),
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            controller: lastNameCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter Last name';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
-                              hintText: "Last name",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              // labelText: "Last name",
-                              // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              filled: true,
-                              fillColor: sh_btn_color,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 16,),
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            controller: userNameCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter User name';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
-                              hintText: "User name",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              // labelText: "Last name",
-                              // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              filled: true,
-                              fillColor: sh_btn_color,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 16,),
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            controller: emailCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter Email';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
-                              hintText: "Email",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              // labelText: "Email",
-                              // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              filled: true,
-                              fillColor: sh_btn_color,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 16,),
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            keyboardType: TextInputType.number,
-                            controller: _phoneNumberController,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter Number';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
-                              hintText: "Mobile Number",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              // labelText: "Mobile Number",
-                              // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              filled: true,
-                              fillColor: sh_btn_color,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 16,),
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            obscureText: !this._showOldPassword,
-                            controller: passwordCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter Password';
-                              }
-
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
-                              hintText: "Password",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              // labelText: "Password",
-                              // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  Icons.remove_red_eye,
-                                  color: this._showOldPassword ? sh_colorPrimary2 : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() => this._showOldPassword = !this._showOldPassword);
+                        SizedBox(height: 50,),
+                        Container(
+                          width: width*.7,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                controller: firstNameCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter First name';
+                                  }
+                                  return null;
                                 },
-                              ),
-                              filled: true,
-                              fillColor: sh_btn_color,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 16,),
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            obscureText: !this._showPassword,
-                            controller: confrmpasswordCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter Password';
-                              }
-                              if(text != passwordCont.text) {
-                                return 'Password Do Not Match';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
-                              hintText: "Confirm Password",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  Icons.remove_red_eye,
-                                  color: this._showPassword ? sh_colorPrimary2 : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() => this._showPassword = !this._showPassword);
-                                },
-                              ),
-                              // labelText: "Confirm Password",
-                              // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              filled: true,
-                              fillColor: sh_btn_color,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(22),
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 16,),
-                          Container(
-                            decoration: boxDecoration(
-                                bgColor: sh_btn_color, radius: 22, showShadow: true),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Flexible(
-                                  child: ListTile(
-                                    onTap: _openCountryPickerDialog,
-                                    title: _buildDialogItem(_selectedDialogCountry),
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+
+                                  contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
+                                  hintText: "First name",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  // labelText: "First name",
+                                  // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
+                                  filled: true,
+                                  fillColor: sh_btn_color,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
                                   ),
                                 ),
-                                Icon(Icons.arrow_drop_down,color: sh_app_txt_color,)
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 6,),
-                          Text("*COUNTRY* is required to allow us to match you with listings in your country. If you travel to another country, it can always be changed in settings. ",style: TextStyle(color: sh_textColorPrimary,fontSize: 11),),
-                          SizedBox(height: 16,),
-                          InkWell(
-                            onTap: () async {
-    if (_formKey.currentState!.validate()) {
-      // TODO submit
-      FocusScope.of(context)
-          .requestFocus(FocusNode());
-      getCheck();
-    }
-                            },
-                            child: Container(
-                              width: MediaQuery.of(context).size.width*.7,
-                              padding: EdgeInsets.only(
-                                  top: 6, bottom: 10),
-                              decoration: boxDecoration(
-                                  bgColor: sh_btn_color, radius: 10, showShadow: true),
-                              child: text("Continue",
-                                  fontSize: 24.0,
-                                  textColor: sh_app_txt_color,
-                                  isCentered: true,
-                                  fontFamily: 'Bold'),
-                            ),
-                          ),
-                          SizedBox(height: 20,),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              text("Already have an account?", textColor: sh_textColorSecondary,fontSize: 13.0),
-                              Container(
-                                margin: EdgeInsets.only(left: 4),
-                                child: GestureDetector(
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                              ),
+                              SizedBox(height: 16,),
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                controller: lastNameCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter Last name';
+                                  }
+                                  return null;
+                                },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
+                                  hintText: "Last name",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  // labelText: "Last name",
+                                  // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
+                                  filled: true,
+                                  fillColor: sh_btn_color,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                              ),
+                              SizedBox(height: 16,),
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                controller: userNameCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter User name';
+                                  }
+                                  return null;
+                                },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
+                                  hintText: "User name",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  // labelText: "Last name",
+                                  // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
+                                  filled: true,
+                                  fillColor: sh_btn_color,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                              ),
+                              SizedBox(height: 16,),
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                controller: emailCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter Email';
+                                  }
+                                  return null;
+                                },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
+                                  hintText: "Email",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  // labelText: "Email",
+                                  // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
+                                  filled: true,
+                                  fillColor: sh_btn_color,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                              ),
+                              SizedBox(height: 16,),
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                keyboardType: TextInputType.number,
+                                controller: _phoneNumberController,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter Number';
+                                  }
+                                  return null;
+                                },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
+                                  hintText: "Mobile Number",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  // labelText: "Mobile Number",
+                                  // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
+                                  filled: true,
+                                  fillColor: sh_btn_color,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                              ),
+                              SizedBox(height: 16,),
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                obscureText: !this._showOldPassword,
+                                controller: passwordCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter Password';
+                                  }
 
-                                    child: Text("Log In",
-                                        style: TextStyle(
-                                            fontSize: textSizeMedium,
-                                            decoration: TextDecoration.underline,
-                                            color: sh_app_txt_color,
-                                            fontFamily: 'Bold'
-                                        )),
-                                    onTap: () {
-                                      launchScreen(context, LoginScreen.tag);
-                                    }),
-                              )
+                                  return null;
+                                },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
+                                  hintText: "Password",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  // labelText: "Password",
+                                  // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      Icons.remove_red_eye,
+                                      color: this._showOldPassword ? sh_colorPrimary2 : Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      setState(() => this._showOldPassword = !this._showOldPassword);
+                                    },
+                                  ),
+                                  filled: true,
+                                  fillColor: sh_btn_color,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                              ),
+                              SizedBox(height: 16,),
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                obscureText: !this._showPassword,
+                                controller: confrmpasswordCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter Password';
+                                  }
+                                  if(text != passwordCont.text) {
+                                    return 'Password Do Not Match';
+                                  }
+                                  return null;
+                                },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(16, 8, 4, 8),
+                                  hintText: "Confirm Password",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      Icons.remove_red_eye,
+                                      color: this._showPassword ? sh_colorPrimary2 : Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      setState(() => this._showPassword = !this._showPassword);
+                                    },
+                                  ),
+                                  // labelText: "Confirm Password",
+                                  // labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
+                                  filled: true,
+                                  fillColor: sh_btn_color,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(22),
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 0.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                              ),
+                              SizedBox(height: 16,),
+                              Container(
+                                decoration: boxDecoration(
+                                    bgColor: sh_btn_color, radius: 22, showShadow: true),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Flexible(
+                                      child: ListTile(
+                                        onTap: _openCountryPickerDialog,
+                                        title: _buildDialogItem(_selectedDialogCountry),
+                                      ),
+                                    ),
+                                    Icon(Icons.arrow_drop_down,color: sh_app_txt_color,)
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 6,),
+                              Text("*COUNTRY* is required to allow us to match you with listings in your country. If you travel to another country, it can always be changed in settings. ",style: TextStyle(color: sh_textColorPrimary,fontSize: 11),),
+                              SizedBox(height: 16,),
+                              InkWell(
+                                onTap: () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    // TODO submit
+                                    FocusScope.of(context)
+                                        .requestFocus(FocusNode());
+                                    getCheck();
+                                  }
+                                },
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width*.7,
+                                  padding: EdgeInsets.only(
+                                      top: 6, bottom: 10),
+                                  decoration: boxDecoration(
+                                      bgColor: sh_btn_color, radius: 10, showShadow: true),
+                                  child: text("Continue",
+                                      fontSize: 24.0,
+                                      textColor: sh_app_txt_color,
+                                      isCentered: true,
+                                      fontFamily: 'Bold'),
+                                ),
+                              ),
+                              SizedBox(height: 20,),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  text("Already have an account?", textColor: sh_textColorSecondary,fontSize: 13.0),
+                                  Container(
+                                    margin: EdgeInsets.only(left: 4),
+                                    child: GestureDetector(
+
+                                        child: Text("Log In",
+                                            style: TextStyle(
+                                                fontSize: textSizeMedium,
+                                                decoration: TextDecoration.underline,
+                                                color: sh_app_txt_color,
+                                                fontFamily: 'Bold'
+                                            )),
+                                        onTap: () {
+                                          launchScreen(context, LoginScreen.tag);
+                                        }),
+                                  )
+                                ],
+                              ),
+                              SizedBox(height: 30,),
                             ],
                           ),
-                          SizedBox(height: 30,),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
+              )
+            ],
+          ),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
               ),
             ),
-          )
-        ],
+          ),
+        ),
       ),
+
     );
   }
 }

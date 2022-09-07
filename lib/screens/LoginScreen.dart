@@ -23,6 +23,10 @@ import 'package:thrift/utils/T6Strings.dart';
 import 'package:thrift/utils/T6Widget.dart';
 import 'package:http/retry.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class LoginScreen extends StatefulWidget {
   static String tag='/LoginScreen';
@@ -298,6 +302,7 @@ SaveToken();
         prefs.setString('is_store_owner', cat_model!.data!.is_store_owner.toString());
         prefs.setString('user_country', cat_model!.data!.country!);
         prefs.setString('user_selected_country', cat_model!.data!.country!);
+        prefs.setString('vendor_country', cat_model!.data!.country!);
 
 
         prefs.setString('profile_name',cat_model!.data!.userNicename!);
@@ -340,198 +345,204 @@ SaveToken();
     final node = FocusScope.of(context);
     return Scaffold(
       // resizeToAvoidBottomInset: false,
-      body: Container(
-        height: height,
-        width: width,
-        color: Colors.white,
-        child: Stack(
-          children: [
-            Container(
-              height: height*.55,
-              child: Stack(
-                  fit: StackFit.expand,
-                  children:[
-                    // Image.asset(sh_upper,fit: BoxFit.cover,height: height,),
-                    Container(
-                        height: height,
-                        constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
-                        width: double.infinity,
-                        child: Image.asset(sh_upper,fit: BoxFit.fill,height: height,width: width,)
-                      // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-                    ),
-                    // Image.asset(sh_splsh2,fit: BoxFit.none,height: height,),
-            ] ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: Container(
+            height: height,
+            width: width,
+            color: Colors.white,
+            child: Stack(
               children: [
-                SingleChildScrollView(
-                  child: Column(
-
-                    children: [
-                      Container(height: height*.13,),
-
-                      Container(
-                        child: Column(
-                          children: [
-                            Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
-                            Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14))
-                          ],
+                Container(
+                  height: height*.55,
+                  child: Stack(
+                      fit: StackFit.expand,
+                      children:[
+                        // Image.asset(sh_upper,fit: BoxFit.cover,height: height,),
+                        Container(
+                            height: height,
+                            constraints: BoxConstraints.expand(height: MediaQuery.of(context).size.height),
+                            width: double.infinity,
+                            child: Image.asset(sh_upper,fit: BoxFit.fill,height: height,width: width,)
+                          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
                         ),
-                      ),
-
+                        // Image.asset(sh_splsh2,fit: BoxFit.none,height: height,),
+                      ] ),
+                ),
+                Container(
+                  height: height*.5,
+                  width: width,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(8.0,4,8,28),
-                        child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
+                        padding: const EdgeInsets.fromLTRB(8.0,4,8,30),
+                        child: Image.asset(sh_app_logo,width: width*.6,fit: BoxFit.fill,),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            Center(
-              child: SingleChildScrollView(
-                child: Column(
+                Center(
+                  child: SingleChildScrollView(
+                    child: Column(
 
-                  children: [
-                    Container(height: height*.5,),
-                    Container(
-                      width: width*.7,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            controller: emailCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter Username';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
-                              hintText: "Email/Username",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              labelText: "Email/Username",
-                              labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
-                              ),
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
-                              ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 26,),
-                          TextFormField(
-                            onEditingComplete: () =>
-                                node.nextFocus(),
-                            obscureText: !this._showPassword,
-                            controller: passwordCont,
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Please Enter Password';
-                              }
-                              return null;
-                            },
-                            cursorColor: sh_app_txt_color,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
-                              hintText: "Password",
-                              hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  Icons.remove_red_eye,
-                                  color: this._showPassword ? sh_colorPrimary2 : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() => this._showPassword = !this._showPassword);
+                      children: [
+                        Container(height: height*.5,),
+                        Container(
+                          width: width*.7,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                controller: emailCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter Username';
+                                  }
+                                  return null;
                                 },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
+                                  hintText: "Email/Username",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  labelText: "Email/Username",
+                                  labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
                               ),
-                              labelText: "Password",
-                              labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
+                              SizedBox(height: 26,),
+                              TextFormField(
+                                onEditingComplete: () =>
+                                    node.nextFocus(),
+                                obscureText: !this._showPassword,
+                                controller: passwordCont,
+                                validator: (text) {
+                                  if (text == null || text.isEmpty) {
+                                    return 'Please Enter Password';
+                                  }
+                                  return null;
+                                },
+                                cursorColor: sh_app_txt_color,
+                                decoration: InputDecoration(
+                                  contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
+                                  hintText: "Password",
+                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      Icons.remove_red_eye,
+                                      color: this._showPassword ? sh_colorPrimary2 : Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      setState(() => this._showPassword = !this._showPassword);
+                                    },
+                                  ),
+                                  labelText: "Password",
+                                  labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
+                                  ),
+                                ),
+                                maxLines: 1,
+                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
                               ),
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
+                              SizedBox(height: 12,),
+                              InkWell(
+                                  onTap: () async{
+                                    launchScreen(context,
+                                        ForgotPasswordScreen.tag);
+                                  },
+                                  child: text("Forgot your password?", textColor: sh_textColorPrimary,fontSize: 14.0,fontFamily: 'Regular')),
+                              SizedBox(height: 22,),
+                              InkWell(
+                                onTap: () async {
+                                  getLogin();
+                                  // if (_formKey.currentState!.validate()) {
+                                  //   // TODO submit
+                                  //   FocusScope.of(context).requestFocus(FocusNode());
+                                  // toast(selectedReportList.join(" , "));
+                                  // for (var i = 0; i < selectedReportList.length; i++) {
+                                  //   addProCatModel.add(new AddProCategoryModel(id: selectedReportList[i]));
+                                  // }
+                                  // toast(itemsModel.length.toString());
+                                  // AddProduct();
+                                  // }
+                                },
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width*.7,
+                                  padding: EdgeInsets.only(
+                                      top: 6, bottom: 10),
+                                  decoration: boxDecoration(
+                                      bgColor: sh_btn_color, radius: 10, showShadow: true),
+                                  child: text("Log In",
+                                      fontSize: 24.0,
+                                      textColor: sh_app_txt_color,
+                                      isCentered: true,
+                                      fontFamily: 'Bold'),
+                                ),
                               ),
-                            ),
-                            maxLines: 1,
-                            style: TextStyle(color: sh_app_txt_color,fontFamily: 'Bold'),
-                          ),
-                          SizedBox(height: 12,),
-                          InkWell(
-                              onTap: () async{
-                                launchScreen(context,
-                                    ForgotPasswordScreen.tag);
-                              },
-                              child: text("Forgot your password?", textColor: sh_textColorPrimary,fontSize: 14.0,fontFamily: 'Regular')),
-                          SizedBox(height: 22,),
-                          InkWell(
-                            onTap: () async {
-                              getLogin();
-                              // if (_formKey.currentState!.validate()) {
-                              //   // TODO submit
-                              //   FocusScope.of(context).requestFocus(FocusNode());
-                              // toast(selectedReportList.join(" , "));
-                              // for (var i = 0; i < selectedReportList.length; i++) {
-                              //   addProCatModel.add(new AddProCategoryModel(id: selectedReportList[i]));
-                              // }
-                              // toast(itemsModel.length.toString());
-                              // AddProduct();
-                              // }
-                            },
-                            child: Container(
-                              width: MediaQuery.of(context).size.width*.7,
-                              padding: EdgeInsets.only(
-                                  top: 6, bottom: 10),
-                              decoration: boxDecoration(
-                                  bgColor: sh_btn_color, radius: 10, showShadow: true),
-                              child: text("Log In",
-                                  fontSize: 24.0,
-                                  textColor: sh_app_txt_color,
-                                  isCentered: true,
-                                  fontFamily: 'Bold'),
-                            ),
-                          ),
-                          SizedBox(height: 20,),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              text("Don't have an account?", textColor: sh_textColorSecondary,fontSize: 14.0),
-                              Container(
-                                margin: EdgeInsets.only(left: 4),
-                                child: GestureDetector(
+                              SizedBox(height: 20,),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  text("Don't have an account?", textColor: sh_textColorSecondary,fontSize: 14.0),
+                                  Container(
+                                    margin: EdgeInsets.only(left: 4),
+                                    child: GestureDetector(
 
-                                    child: Text("Sign Up",
-                                        style: TextStyle(
-                                            fontSize: textSizeLargeMedium,
-                                            decoration: TextDecoration.underline,
-                                            color: sh_app_txt_color,
-                                            fontFamily: 'Bold'
-                                        )),
-                                    onTap: () {
-                                      launchScreen(context, NewSignUpScreen.tag);
-                                    }),
-                              )
+                                        child: Text("Sign Up",
+                                            style: TextStyle(
+                                                fontSize: textSizeLargeMedium,
+                                                decoration: TextDecoration.underline,
+                                                color: sh_app_txt_color,
+                                                fontFamily: 'Bold'
+                                            )),
+                                        onTap: () {
+                                          launchScreen(context, NewSignUpScreen.tag);
+                                        }),
+                                  )
+                                ],
+                              ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                )
+              ],
+            ),
+          ),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
               ),
-            )
-          ],
+            ),
+          ),
         ),
       ),
+
     );
   }
 }

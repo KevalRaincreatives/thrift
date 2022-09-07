@@ -13,6 +13,7 @@ import 'package:thrift/database/CartPro.dart';
 import 'package:thrift/database/database_hepler.dart';
 import 'package:thrift/model/AddCartModel.dart';
 import 'package:thrift/model/CartModel.dart';
+import 'package:thrift/model/EstPriceModel.dart';
 import 'package:thrift/model/GetVariantModel.dart';
 import 'package:thrift/model/MyVariant.dart';
 import 'package:thrift/model/ProductDetailModel.dart';
@@ -25,9 +26,14 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:badges/badges.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class ProductDetailScreen extends StatefulWidget {
   static String tag = '/ProductDetailScreen';
+
   // ProductListModel? product;
 
   const ProductDetailScreen({Key? key}) : super(key: key);
@@ -83,19 +89,51 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   CartModel? cat_model;
   Future<ProductDetailModel?>? fetchDetailMain;
   Future<ProductSellerModel?>? fetchSellerMain;
+  Future<EstPriceModel?>? fetchEstPrice2;
+  EstPriceModel? estPriceModel;
 
   @override
   void initState() {
     _controller = PageController();
-    fetchDetailMain=fetchDetail();
-    fetchSellerMain=fetchSeller();
+    fetchEstPrice2 = fetchEstPrice();
+    fetchDetailMain = fetchDetail();
+    fetchSellerMain = fetchSeller();
     super.initState();
 //    mListings2 = getPopular();
   }
 
-  Future<bool> _onWillPop()  async{
+  Future<bool> _onWillPop() async {
     Navigator.pop(context);
     return false;
+  }
+
+  Future<EstPriceModel?> fetchEstPrice() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // String UserId = prefs.getString('UserId');
+      String? token = prefs.getString('token');
+      String? pro_id = prefs.getString('pro_id');
+
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      var response = await http.get(
+          Uri.parse(
+              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_estimated_retail_price?product_id=$pro_id'),
+          headers: headers);
+      final jsonResponse = json.decode(response.body);
+      print('not json prpr$jsonResponse');
+      estPriceModel = new EstPriceModel.fromJson(jsonResponse);
+
+      return estPriceModel;
+    } catch (e) {
+      // EasyLoading.dismiss();
+//      return orderListModel;
+      print('caught error $e');
+    }
   }
 
   Future<List<ProductListModel>?> fetchAlbum() async {
@@ -136,44 +174,46 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       final jsonResponse = json.decode(response.body);
       print('not json prpr$jsonResponse');
       productSellerModel = new ProductSellerModel.fromJson(jsonResponse);
-      prefs.setString("seller_pic", productSellerModel!.seller!.profile_picture!);
+      prefs.setString(
+          "seller_pic", productSellerModel!.seller!.profile_picture!);
       return productSellerModel;
     } catch (e) {
       print('caught error $e');
     }
   }
-  bool? ct_changel=true;
+
+  bool? ct_changel = true;
 
   Future<ProductDetailModel?> fetchDetail() async {
-      try {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? pro_id = prefs.getString('pro_id');
-        // toast(pro_id);
-        print(
-            "https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id");
-        var response = await http.get(Uri.parse(
-            'https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id'));
-        final jsonResponse = json.decode(response.body);
-        print('not json prpr$jsonResponse');
-        pro_det_model = new ProductDetailModel.fromJson(jsonResponse);
-        if (pro_det_model!.attributes!.length > 0) {
-          if (pro_det_model!.attributes![0]!.variation == true) {
-            if (pro_det_model!.attributes![0]!.name == 'Size') {
-              _isSizeVisible = true;
-            } else if (pro_det_model!.attributes![0]!.name == 'Color') {
-              _isColorVisible = true;
-            }
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? pro_id = prefs.getString('pro_id');
+      // toast(pro_id);
+      print(
+          "https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id");
+      var response = await http.get(Uri.parse(
+          'https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id'));
+      final jsonResponse = json.decode(response.body);
+      print('not json prpr$jsonResponse');
+      pro_det_model = new ProductDetailModel.fromJson(jsonResponse);
+      if (pro_det_model!.attributes!.length > 0) {
+        if (pro_det_model!.attributes![0]!.variation == true) {
+          if (pro_det_model!.attributes![0]!.name == 'Size') {
+            _isSizeVisible = true;
+          } else if (pro_det_model!.attributes![0]!.name == 'Color') {
+            _isColorVisible = true;
           }
         }
-        ct_changel=false;
-
-        // if(pro_det_model.type=='variable'){
-        //   fetchVariant();
-        // }
-        return pro_det_model;
-      } catch (e) {
-        print('caught error $e');
       }
+      ct_changel = false;
+
+      // if(pro_det_model.type=='variable'){
+      //   fetchVariant();
+      // }
+      return pro_det_model;
+    } catch (e) {
+      print('caught error $e');
+    }
   }
 
   Future<GetVariantModel?> fetchVariant(String myurl) async {
@@ -348,7 +388,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             TextButton(
               child: Text("View Cart"),
-              onPressed: () async{
+              onPressed: () async {
                 Navigator.of(context).pop(ConfirmAction.CANCEL);
 //                    launchScreen(context, ShCartScreen.tag);
                 SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -356,11 +396,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 prefs.setInt("payment_index", -2);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          CartScreen()),).then((value) {   setState(() {
-                  // refresh state
-                });});
+                  MaterialPageRoute(builder: (context) => CartScreen()),
+                ).then((value) {
+                  setState(() {
+                    // refresh state
+                  });
+                });
               },
             )
           ],
@@ -540,20 +581,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       if (cat_model!.cart == null) {
         prefs.setInt("cart_count", 0);
-        cart_count==0;
-      }else if (cat_model!.cart!.length == 0) {
+        cart_count == 0;
+      } else if (cat_model!.cart!.length == 0) {
         prefs.setInt("cart_count", 0);
-        cart_count==0;
-      }else{
-
+        cart_count == 0;
+      } else {
         prefs.setInt("cart_count", cat_model!.cart!.length);
-        cart_count==cat_model!.cart!.length;
+        cart_count == cat_model!.cart!.length;
       }
-ct_changel=true;
+      ct_changel = true;
       _incrementCounter();
-
-
-
 
       return cat_model;
     } catch (e) {
@@ -562,15 +599,14 @@ ct_changel=true;
     }
   }
 
-
-
   int? cart_count;
+
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
 
@@ -581,7 +617,7 @@ ct_changel=true;
   }
 
   _incrementCounter() {
-    if(ct_changel!) {
+    if (ct_changel!) {
       setState(() {
         ct_changel = false;
         // cart_count = cart_count! + 1;
@@ -595,14 +631,15 @@ ct_changel=true;
     var width = MediaQuery.of(context).size.width;
 
     void _openCustomDialog3(int index) {
-
-      PageController? _controller2=PageController(initialPage: index, keepPage: true, viewportFraction: 1);
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
-
+      PageController? _controller2 = PageController(
+          initialPage: index, keepPage: true, viewportFraction: 1);
+      showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
           context: context,
           pageBuilder: (context, animation1, animation2) => Scaffold(
               backgroundColor: Colors.black87,
-              body: SafeArea(child: Stack(
+              body: SafeArea(
+                  child: Stack(
                 children: [
                   PageView.builder(
                     controller: _controller2,
@@ -620,12 +657,13 @@ ct_changel=true;
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                               child: PhotoView(
-                                  imageProvider: NetworkImage(pro_det_model!.images![index]!.src!,
-                                  ))
-                            // Image.network(
-                            //     pro_det_model!.images![index]!.src!,
-                            //     fit: BoxFit.cover),
-                          ),
+                                  imageProvider: NetworkImage(
+                                pro_det_model!.images![index]!.src!,
+                              ))
+                              // Image.network(
+                              //     pro_det_model!.images![index]!.src!,
+                              //     fit: BoxFit.cover),
+                              ),
                         ),
                       );
                     },
@@ -659,84 +697,83 @@ ct_changel=true;
                         Navigator.of(context, rootNavigator: true).pop();
                       },
                       child: _icon(Icons.close,
-                          color: sh_white, size: 15, padding: 12, isOutLine: false),
+                          color: sh_white,
+                          size: 15,
+                          padding: 12,
+                          isOutLine: false),
                     ),
                   )
                 ],
               ))
               //Put your screen design here!
-          )
-      );
+              ));
     }
 
     Imagevw4() {
-        if (pro_det_model!.images!.length < 1) {
-          return
-              //   Image.asset(
-              //   sh_no_img,
-              //   fit: BoxFit.fill,
-              //   height: width * 0.34,
-              // );
-              Image.asset(sh_no_img,
-                  width: width, height: 250, fit: BoxFit.fill);
-        }
-        else {
-          return Stack(
-            children: [
-              PageView.builder(
-                controller: _controller,
-                itemCount: pro_det_model!.images!.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      _openCustomDialog3(index);
-                    },
-                    child: Container(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          semanticContainer: true,
-                          clipBehavior: Clip.antiAliasWithSaveLayer,
-                          elevation: 0,
-                          margin: EdgeInsets.all(0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          child: FadeInImage.assetNetwork(
-                              placeholder: 'images/tenor.gif',
-                              image: pro_det_model!.images![index]!.src!,
-                              fit: BoxFit.fitWidth),
+      if (pro_det_model!.images!.length < 1) {
+        return
+            //   Image.asset(
+            //   sh_no_img,
+            //   fit: BoxFit.fill,
+            //   height: width * 0.34,
+            // );
+            Image.asset(sh_no_img, width: width, height: 250, fit: BoxFit.fill);
+      } else {
+        return Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: pro_det_model!.images!.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    _openCustomDialog3(index);
+                  },
+                  child: Container(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(0,8,0,8),
+                      child: Card(
+                        semanticContainer: true,
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        elevation: 0,
+                        margin: EdgeInsets.all(0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18.0),
                         ),
+                        child: FadeInImage.assetNetwork(
+                            placeholder: 'images/tenor.gif',
+                            image: pro_det_model!.images![index]!.src!,
+                            fit: BoxFit.fitWidth),
                       ),
                     ),
-                  );
-                },
-              ),
-              new Positioned(
-                bottom: 0.0,
-                left: 0.0,
-                right: 0.0,
-                child: new Container(
-                  padding: const EdgeInsets.all(20.0),
-                  child: new Center(
-                    child: new DotsIndicator(
-                      controller: _controller,
-                      itemCount: pro_det_model!.images!.length,
-                      onPageSelected: (int page) {
-                        _controller!.animateToPage(
-                          page,
-                          duration: _kDuration,
-                          curve: _kCurve,
-                        );
-                      },
-                    ),
+                  ),
+                );
+              },
+            ),
+            new Positioned(
+              bottom: 0.0,
+              left: 0.0,
+              right: 0.0,
+              child: new Container(
+                padding: const EdgeInsets.fromLTRB(20.0,20,20,26),
+                child: new Center(
+                  child: new DotsIndicator(
+                    controller: _controller,
+                    itemCount: pro_det_model!.images!.length,
+                    onPageSelected: (int page) {
+                      _controller!.animateToPage(
+                        page,
+                        duration: _kDuration,
+                        curve: _kCurve,
+                      );
+                    },
                   ),
                 ),
               ),
-            ],
-          );
-        }
-
+            ),
+          ],
+        );
+      }
     }
 
     MyPriceSuccess() {
@@ -754,7 +791,7 @@ ct_changel=true;
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "\$" + myprice+ " "+pro_det_model!.currency!,
+            "\$" + myprice + " " + pro_det_model!.currency!,
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontBold,
@@ -776,67 +813,65 @@ ct_changel=true;
     }
 
     Imagevwsuccess() {
-        if (_isVisible_success) {
-          if (pro_det_model!.images!.length < 1) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12.0),
-                  child: Image.asset(sh_no_img,
-                      width: width * .4, height: width * .4, fit: BoxFit.fill),
+      if (_isVisible_success) {
+        if (pro_det_model!.images!.length < 1) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: Image.asset(sh_no_img,
+                    width: width * .4, height: width * .4, fit: BoxFit.fill),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Text(
+                pro_det_model!.name!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    color: sh_colorPrimary2,
+                    fontFamily: fontBold,
+                    fontSize: textSizeMedium),
+              ),
+              SizedBox(
+                height: 4,
+              ),
+              MyPriceSuccess(),
+              // SizedBox(
+              //   height: 4,
+              // ),
+              // Text(
+              //   pro_det_model!.slug!,
+              //   maxLines: 2,
+              //   style: TextStyle(
+              //       color: sh_textColorSecondary,
+              //       fontFamily: "SemiBold",
+              //       fontSize: textSizeSMedium),
+              // )
+            ],
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: Image.network(
+                  pro_det_model!.images![0]!.src!,
+                  fit: BoxFit.cover,
+                  width: width * .4,
+                  height: width * .4,
                 ),
-                SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  pro_det_model!.name!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: sh_colorPrimary2,
-                      fontFamily: fontBold,
-                      fontSize: textSizeMedium),
-                ),
-                SizedBox(
-                  height: 4,
-                ),
-                MyPriceSuccess(),
-                SizedBox(
-                  height: 4,
-                ),
-                Text(
-                  pro_det_model!.slug!,
-                  maxLines: 2,
-                  style: TextStyle(
-                      color: sh_textColorSecondary,
-                      fontFamily: "SemiBold",
-                      fontSize: textSizeSMedium),
-                )
-              ],
-            );
-          }
-          else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12.0),
-                  child: Image.network(
-                    pro_det_model!.images![0]!.src!,
-                    fit: BoxFit.cover,
-                    width: width * .4,
-                    height: width * .4,
-                  ),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Wrap(
-                  children: [Column(
-
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Wrap(
+                children: [
+                  Column(
                     children: [
                       Text(
                         pro_det_model!.name!,
@@ -851,27 +886,27 @@ ct_changel=true;
                         height: 4,
                       ),
                       MyPriceSuccess(),
-                      SizedBox(
-                        height: 4,
-                      ),
-                      Text(
-                        pro_det_model!.slug!,
-                        maxLines: 2,
-                        style: TextStyle(
-                            color: sh_textColorSecondary,
-                            fontFamily: "SemiBold",
-                            fontSize: textSizeSMedium),
-                      )
+                      // SizedBox(
+                      //   height: 4,
+                      // ),
+                      // Text(
+                      //   pro_det_model!.slug!,
+                      //   maxLines: 2,
+                      //   style: TextStyle(
+                      //       color: sh_textColorSecondary,
+                      //       fontFamily: "SemiBold",
+                      //       fontSize: textSizeSMedium),
+                      // )
                     ],
-                  )],
-                ),
-
-              ],
-            );
-          }
-        } else {
-          return Container();
+                  )
+                ],
+              ),
+            ],
+          );
         }
+      } else {
+        return Container();
+      }
     }
 
     Widget _productImage() {
@@ -886,7 +921,6 @@ ct_changel=true;
               ],
             ),
           ),
-
         ],
       );
     }
@@ -905,23 +939,34 @@ ct_changel=true;
       return Row(
         children: [
           Text(
-            "\$" + myprice+ " "+pro_det_model!.currency!,
+            "\$" + myprice + " " + pro_det_model!.currency!,
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontBold,
-                fontSize: textSizeLargeMedium),
+                fontSize: textSizeMedium),
           ),
-          // SizedBox(
-          //   width: 5,
-          // ),
-          // Text(
-          //   "\$" + myprice,
-          //   style: TextStyle(
-          //       color: sh_red,
-          //       fontFamily: fontBold,
-          //       fontSize: textSizeSMedium,
-          //       decoration: TextDecoration.lineThrough),
-          // )
+        ],
+      );
+    }
+
+    EstPrice() {
+      var myprice2, myprice;
+      if (estPriceModel!.estimatedRetailPrice == '') {
+        myprice = "0.00";
+      } else {
+        myprice2 = double.parse(estPriceModel!.estimatedRetailPrice!);
+        myprice = myprice2.toStringAsFixed(2);
+      }
+
+      return Row(
+        children: [
+          Text(
+            "\$" + myprice + " " + pro_det_model!.currency!,
+            style: TextStyle(
+                color: sh_black,
+                fontFamily: fontMedium,
+                fontSize: 14),
+          ),
         ],
       );
     }
@@ -983,100 +1028,95 @@ ct_changel=true;
               }),
         );
       } else {
-        int? my_index=-1;
+        int? my_index = -1;
         for (var i = 0; i < pro_det_model!.metaData!.length; i++) {
-          if(pro_det_model!.metaData![i]!.key=="attrs_val"){
-            my_index=i;
+          if (pro_det_model!.metaData![i]!.key == "attrs_val") {
+            my_index = i;
           }
         }
 
-        if(my_index==-1){
+        if (my_index == -1) {
           return ListView.builder(
               itemCount: pro_det_model!.metaData!.length,
               physics: NeverScrollableScrollPhysics(),
               // itemExtent: 50.0,
               shrinkWrap: true,
               itemBuilder: (BuildContext context, int index) {
-
-
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       pro_det_model!.metaData![index]!.key!,
                       style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'Bold',
+                          fontSize: 14,
+                          fontFamily: fontSemibold,
                           color: sh_colorPrimary2),
                     ),
                     SizedBox(height: 4),
                     Text(
                       pro_det_model!.metaData![index]!.value!,
                       style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'SemiBold',
+                          fontSize: 14,
+                          fontFamily: fontMedium,
                           color: sh_black),
                     ),
                     SizedBox(height: 20),
-
                   ],
                 );
               });
-        }else{
+        } else {
           return ListView.builder(
               itemCount: pro_det_model!.metaData![my_index!]!.value!.length,
               physics: NeverScrollableScrollPhysics(),
               // itemExtent: 50.0,
               shrinkWrap: true,
               itemBuilder: (BuildContext context, int index) {
-
-
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       pro_det_model!.metaData![my_index!]!.value![index]!.key!,
                       style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'Bold',
+                          fontSize: 14,
+                          fontFamily: fontSemibold,
                           color: sh_colorPrimary2),
                     ),
                     SizedBox(height: 4),
                     Text(
                       pro_det_model!.metaData![my_index]!.value![index]!.value!,
                       style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'SemiBold',
+                          fontSize: 14,
+                          fontFamily: fontMedium,
                           color: sh_black),
                     ),
                     SizedBox(height: 20),
-
                   ],
                 );
               });
         }
-
       }
     }
 
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }
-      else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(
+            cart_count.toString(),
+            style: TextStyle(color: sh_white,fontSize: 8),
+          ),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -1084,8 +1124,8 @@ ct_changel=true;
       }
     }
 
-    RefreshCount(){
-     return FutureBuilder<String?>(
+    RefreshCount() {
+      return FutureBuilder<String?>(
         future: fetchtotal(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
@@ -1097,199 +1137,205 @@ ct_changel=true;
           return CircularProgressIndicator();
         },
       );
-
     }
 
     SuccesVisiblity() {
-      if(_isVisible_success){
-       return  Visibility(
-           visible: _isVisible_success,
-           child: Container(
-             height: height,
-             width: width,
-             margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
-             padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-             color: sh_white,
-             child: Column(
-               crossAxisAlignment: CrossAxisAlignment.center,
-               children: [
-                 Row(
-                   mainAxisAlignment: MainAxisAlignment.center,
-                   children: [
-                     Icon(
-                       Icons.check_circle_outline,
-                       color: sh_colorPrimary2,
-                       size: 30,
-                     ),
-                     SizedBox(
-                       width: 8,
-                     ),
-                     Text(
-                       "Added To Cart!",
-                       style: TextStyle(
-                           color: sh_colorPrimary2,
-                           fontSize: 24,
-                           fontFamily: "Bold"),
-                     )
-                   ],
-                 ),
-                 SizedBox(
-                   height: 20,
-                 ),
-                 Imagevwsuccess(),
-
-                 SizedBox(
-                   height: 20,
-                 ),
-                 Container(
-                   height: 0.5,
-                   color: sh_app_txt_color,
-                 ),
-                 SizedBox(
-                   height: 12,
-                 ),
-                 FutureBuilder<CartModel?>(
-                     future: fetchCart(),
-                     builder: (context, snapshot) {
-                       if (snapshot.hasData) {
-
-                         var myprice2 =double.parse(cat_model!.total.toString());
-                         var myprice = myprice2.toStringAsFixed(2);
-                         return Column(
-                           children: [
-                             Row(
-                               children: [
-                                 Text(
-                                   "You have ",
-                                   style: TextStyle(
-                                       color: sh_colorPrimary2,
-                                       fontSize: 15,
-                                       fontFamily: "Bold"),
-                                 ),
-                                 Text(
-                                   cat_model!.cart!.length.toString()+" Item ",
-                                   style: TextStyle(
-                                       color: sh_black, fontSize: 15, fontFamily: "Bold"),
-                                 ),
-                                 Text(
-                                   "in your cart",
-                                   style: TextStyle(
-                                       color: sh_colorPrimary2,
-                                       fontSize: 15,
-                                       fontFamily: "Bold"),
-                                 ),
-                               ],
-                             ),
-                             SizedBox(
-                               height: 6,
-                             ),
-                             Row(
-                               children: [
-                                 Text(
-                                   "Cart Total: ",
-                                   style: TextStyle(
-                                       color: sh_colorPrimary2,
-                                       fontSize: 15,
-                                       fontFamily: "Bold"),
-                                 ),
-                                 Text(
-                                   "\$"+myprice+ " "+pro_det_model!.currency!,
-                                   style: TextStyle(
-                                       color: sh_black, fontSize: 15, fontFamily: "Bold"),
-                                 ),
-                               ],
-                             ),
-                           ],
-                         );
-                       } else if (snapshot.hasError) {
+      if (_isVisible_success) {
+        return Visibility(
+            visible: _isVisible_success,
+            child: Container(
+              height: height,
+              width: width,
+              margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+              color: sh_white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: sh_colorPrimary2,
+                        size: 30,
+                      ),
+                      SizedBox(
+                        width: 8,
+                      ),
+                      Text(
+                        "Added To Cart!",
+                        style: TextStyle(
+                            color: sh_colorPrimary2,
+                            fontSize: 24,
+                            fontFamily: fontSemibold),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Imagevwsuccess(),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Container(
+                    height: 0.5,
+                    color: sh_app_txt_color,
+                  ),
+                  SizedBox(
+                    height: 12,
+                  ),
+                  FutureBuilder<CartModel?>(
+                      future: fetchCart(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var myprice2 =
+                              double.parse(cat_model!.total.toString());
+                          var myprice = myprice2.toStringAsFixed(2);
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    "You have ",
+                                    style: TextStyle(
+                                        color: sh_colorPrimary2,
+                                        fontSize: 15,
+                                        fontFamily: fontSemibold),
+                                  ),
+                                  Text(
+                                    cat_model!.cart!.length.toString() +
+                                        " Item ",
+                                    style: TextStyle(
+                                        color: sh_black,
+                                        fontSize: 15,
+                                        fontFamily: fontSemibold),
+                                  ),
+                                  Text(
+                                    "in your cart",
+                                    style: TextStyle(
+                                        color: sh_colorPrimary2,
+                                        fontSize: 15,
+                                        fontFamily: fontSemibold),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                height: 6,
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    "Cart Total: ",
+                                    style: TextStyle(
+                                        color: sh_colorPrimary2,
+                                        fontSize: 15,
+                                        fontFamily: fontSemibold),
+                                  ),
+                                  Text(
+                                    "\$" +
+                                        myprice +
+                                        " " +
+                                        pro_det_model!.currency!,
+                                    style: TextStyle(
+                                        color: sh_black,
+                                        fontSize: 15,
+                                        fontFamily: fontSemibold),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        } else if (snapshot.hasError) {
 //                    return Text("${snapshot.error}");
-                         return Center(
-                             child: Container(
-                               alignment: Alignment.center,
-                               child: Text(
-                                 'Your Cart is currently empty',
-                                 style: TextStyle(
-                                     fontSize: 16,
-                                     color: sh_textColorPrimary,
-                                     fontWeight: FontWeight.bold),
-                               ),
-                             ));
-                       }
-                       // By default, show a loading spinner.
-                       return Center(child: CircularProgressIndicator());
-                     }),
-
-                 SizedBox(
-                   height: 40,
-                 ),
-                 Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   children: [
-                     InkWell(
-                       onTap: () async {
-
-                         Navigator.pop(context);
-                       },
-                       child: Container(
-                         padding: EdgeInsets.all(spacing_standard),
-                         decoration: boxDecoration(
-                             bgColor: sh_btn_color,
-                             radius: 6,
-                             showShadow: true),
-                         child: text("Continue Shopping",
-                             textColor: sh_colorPrimary2,
-                             isCentered: true,
-                             fontSize: 12.0,
-                             fontFamily: 'Bold'),
-                       ),
-                     ),
-                     InkWell(
-                       onTap: () async {
-                         Navigator.of(context).pop(ConfirmAction.CANCEL);
-                         SharedPreferences prefs = await SharedPreferences.getInstance();
-                         prefs.setInt("shiping_index", -2);
-                         prefs.setInt("payment_index", -2);
-                         // launchScreen(context, CartScreen.tag);
-                         Navigator.push(
-                           context,
-                           MaterialPageRoute(
-                               builder: (context) =>
-                                   CartScreen()),).then((value) {   setState(() {
-                           // refresh state
-                         });});
-                         //   Navigator.pushReplacement(
-                         // context,
-                         // MaterialPageRoute(
-                         //   builder: (context) => CartScreen(),
-                         // ),
-                         // );
-                       },
-                       child: Container(
-                         padding: EdgeInsets.all(spacing_standard),
-                         decoration: boxDecoration(
-                             bgColor: sh_colorPrimary2,
-                             radius: 6,
-                             showShadow: true),
-                         child: text("Cart/Checkout",
-                             textColor: sh_white,
-                             isCentered: true,
-                             fontSize: 12.0,
-                             fontFamily: 'Bold'),
-                       ),
-                     ),
-                   ],
-                 )
-               ],
-             ),
-           ));
-      }else{
+                          return Center(
+                              child: Container(
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Your Cart is currently empty',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: sh_textColorPrimary,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ));
+                        }
+                        // By default, show a loading spinner.
+                        return Center(child: CircularProgressIndicator());
+                      }),
+                  SizedBox(
+                    height: 40,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      InkWell(
+                        onTap: () async {
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(spacing_standard),
+                          decoration: boxDecoration(
+                              bgColor: sh_btn_color,
+                              radius: 6,
+                              showShadow: true),
+                          child: text("Continue Shopping",
+                              textColor: sh_colorPrimary2,
+                              isCentered: true,
+                              fontSize: 12.0,
+                              fontFamily: 'Bold'),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () async {
+                          Navigator.of(context).pop(ConfirmAction.CANCEL);
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          // launchScreen(context, CartScreen.tag);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CartScreen()),
+                          ).then((value) {
+                            setState(() {
+                              // refresh state
+                            });
+                          });
+                          //   Navigator.pushReplacement(
+                          // context,
+                          // MaterialPageRoute(
+                          //   builder: (context) => CartScreen(),
+                          // ),
+                          // );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(spacing_standard),
+                          decoration: boxDecoration(
+                              bgColor: sh_colorPrimary2,
+                              radius: 6,
+                              showShadow: true),
+                          child: text("Cart/Checkout",
+                              textColor: sh_white,
+                              isCentered: true,
+                              fontSize: 12.0,
+                              fontFamily: 'Bold'),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ));
+      } else {
         return Container();
       }
-
     }
 
-
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: sh_colorPrimary2));
+    SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(statusBarColor: sh_colorPrimary2));
 
     Widget setUserForm() {
       AppBar appBar = AppBar(
@@ -1305,22 +1351,25 @@ ct_changel=true;
             children: [
               GestureDetector(
                 onTap: () async {
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
                   prefs.setInt("shiping_index", -2);
                   prefs.setInt("payment_index", -2);
                   // launchScreen(context, CartScreen.tag);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            CartScreen()),).then((value) {   setState(() {
-                    // refresh state
-                  });});
+                    MaterialPageRoute(builder: (context) => CartScreen()),
+                  ).then((value) {
+                    setState(() {
+                      // refresh state
+                    });
+                  });
                 },
                 child: RefreshCount(),
-
               ),
-              SizedBox(width: 16,)
+              SizedBox(
+                width: 16,
+              )
             ],
           ),
         ],
@@ -1355,7 +1404,7 @@ ct_changel=true;
                           if (snapshot.hasData) {
                             return Container(
                               width: width,
-                              padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                              padding: EdgeInsets.fromLTRB(26, 0, 26, 0),
                               child: Stack(
                                 children: <Widget>[
                                   Column(
@@ -1368,13 +1417,7 @@ ct_changel=true;
                                       SizedBox(
                                         height: 8,
                                       ),
-                                      Container(
-                                        height: 0.5,
-                                        color: sh_textColorSecondary,
-                                      ),
-                                      SizedBox(
-                                        height: 8,
-                                      ),
+
                                       Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -1386,33 +1429,75 @@ ct_changel=true;
                                             style: TextStyle(
                                                 color: sh_colorPrimary2,
                                                 fontFamily: fontBold,
-                                                fontSize: textSizeNormal),
+                                                fontSize: textSizeLargeMedium),
                                           ),
                                           SizedBox(
-                                            height: 8,
+                                            height: 2,
                                           ),
                                           MyPrice(),
 
+                                          // SizedBox(
+                                          //   height: 2,
+                                          // ),
+                                          //
+                                          //
+                                          // Text(
+                                          //   pro_det_model!.slug!,
+                                          //   maxLines: 2,
+                                          //   style: TextStyle(
+                                          //       color: sh_textColorSecondary,
+                                          //       fontFamily: fontMedium,
+                                          //       fontSize: textSizeSMedium),
+                                          // ),
                                           SizedBox(
-                                            height: 6,
+                                            height: 14,
                                           ),
-                                          Text(
-                                            pro_det_model!.slug!,
-                                            maxLines: 2,
-                                            style: TextStyle(
-                                                color: sh_textColorSecondary,
-                                                fontFamily: "SemiBold",
-                                                fontSize: textSizeMedium),
-                                          ),
-                                          SizedBox(
-                                            height: 6,
+                                          FutureBuilder<EstPriceModel?>(
+                                            future: fetchEstPrice2,
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData) {
+                                                if (estPriceModel!
+                                                    .estimatedRetailPrice!
+                                                    .length >
+                                                    0) {
+                                                  return Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        'Estimated Retail Price',
+                                                        style: TextStyle(
+                                                            fontSize: 14,
+                                                            fontFamily:
+                                                            fontSemibold,
+                                                            color:
+                                                            sh_colorPrimary2),
+                                                      ),
+                                                      SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      EstPrice(),
+                                                      SizedBox(
+                                                        height: 6,
+                                                      ),
+                                                    ],
+                                                  );
+                                                }else{
+                                                  return Container();
+                                                }
+                                              } else if (snapshot.hasError) {
+                                                return Text(
+                                                    "${snapshot.error}");
+                                              }
+                                              // By default, show a loading spinner.
+                                              return Container();
+                                            },
                                           ),
                                           // CheckVariant()
                                         ],
                                       ),
 
                                       SizedBox(
-                                        height: 18,
+                                        height: 12,
                                       ),
                                       CheckVariant(),
 
@@ -1422,7 +1507,7 @@ ct_changel=true;
                                       // ),
                                       // _availableColor(),
                                       SizedBox(
-                                        height: 20,
+                                        height: 8,
                                       ),
                                       Column(
                                         crossAxisAlignment:
@@ -1433,8 +1518,8 @@ ct_changel=true;
                                             maxLines: 2,
                                             style: TextStyle(
                                                 color: sh_colorPrimary2,
-                                                fontFamily: fontBold,
-                                                fontSize: textSizeLargeMedium),
+                                                fontFamily: fontSemibold,
+                                                fontSize: textSizeMedium),
                                           ),
                                           SizedBox(
                                             height: 4,
@@ -1442,7 +1527,7 @@ ct_changel=true;
                                           Html(
                                             data: pro_det_model!.description,
                                             style: {
-                                              "body": Style(color: sh_black),
+                                              "body": Style(color: sh_black,fontFamily: "Regular"),
                                             },
                                           ),
                                         ],
@@ -1464,24 +1549,44 @@ ct_changel=true;
                                           if (snapshot.hasData) {
                                             return Container(
                                               child: InkWell(
-                                                onTap: () async{
-                                                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                                                  prefs.setString("seller_id", productSellerModel!.seller!.sellerId.toString());
-                                                  prefs.setString("seller_name", productSellerModel!.seller!.firstName![0].toString()+" "+productSellerModel!.seller!.lastName![0].toString());
-                                                  launchScreen(context, SellerProfileScreen.tag);
+                                                onTap: () async {
+                                                  SharedPreferences prefs =
+                                                      await SharedPreferences
+                                                          .getInstance();
+                                                  prefs.setString(
+                                                      "seller_id",
+                                                      productSellerModel!
+                                                          .seller!.sellerId
+                                                          .toString());
+                                                  prefs.setString(
+                                                      "seller_name",
+                                                      productSellerModel!
+                                                              .seller!
+                                                              .firstName![0]
+                                                              .toString() +
+                                                          " " +
+                                                          productSellerModel!
+                                                              .seller!
+                                                              .lastName![0]
+                                                              .toString());
+                                                  launchScreen(context,
+                                                      SellerProfileScreen.tag);
                                                 },
                                                 child: Column(
                                                   children: [
                                                     Row(
                                                       mainAxisAlignment:
-                                                      MainAxisAlignment.spaceBetween,
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
                                                       children: [
                                                         Text(
                                                           "Seller",
                                                           maxLines: 2,
                                                           style: TextStyle(
-                                                              color: sh_colorPrimary2,
-                                                              fontFamily: fontBold,
+                                                              color:
+                                                                  sh_colorPrimary2,
+                                                              fontFamily:
+                                                              fontSemibold,
                                                               fontSize: 16),
                                                         ),
                                                         Row(
@@ -1490,8 +1595,10 @@ ct_changel=true;
                                                               "View Profile",
                                                               maxLines: 2,
                                                               style: TextStyle(
-                                                                  color: sh_black,
-                                                                  fontFamily: "Bold",
+                                                                  color:
+                                                                      sh_black,
+                                                                  fontFamily:
+                                                                  fontSemibold,
                                                                   fontSize: 14),
                                                             ),
                                                           ],
@@ -1504,20 +1611,28 @@ ct_changel=true;
                                                     Row(
                                                       children: [
                                                         Padding(
-                                                            padding: const EdgeInsets.all(2.0),
-                                                            child: productSellerModel!.seller!.profile_picture == null
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(2.0),
+                                                            child: productSellerModel!
+                                                                        .seller!
+                                                                        .profile_picture ==
+                                                                    null
                                                                 ? CircleAvatar(
-                                                              // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                              backgroundImage: NetworkImage(
-                                                                  "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"
-                                                                  ),
-                                                              radius: 22,
-                                                            )
+                                                                    // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                                    backgroundImage:
+                                                                        NetworkImage(
+                                                                            "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"),
+                                                                    radius: 22,
+                                                                  )
                                                                 : CircleAvatar(
-                                                              // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                              backgroundImage: NetworkImage(productSellerModel!.seller!.profile_picture!),
-                                                              radius: 22,
-                                                            )),
+                                                                    // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                                    backgroundImage:
+                                                                        NetworkImage(productSellerModel!
+                                                                            .seller!
+                                                                            .profile_picture!),
+                                                                    radius: 22,
+                                                                  )),
                                                         // Icon(
                                                         //   Icons.circle,
                                                         //   color: sh_grey,
@@ -1527,11 +1642,22 @@ ct_changel=true;
                                                           width: 10,
                                                         ),
                                                         Text(
-                                                            productSellerModel!.seller!.firstName![0]!.toString()+" "+productSellerModel!.seller!.lastName![0]!.toString(),
+                                                          productSellerModel!
+                                                                  .seller!
+                                                                  .firstName![
+                                                                      0]!
+                                                                  .toString() +
+                                                              " " +
+                                                              productSellerModel!
+                                                                  .seller!
+                                                                  .lastName![0]!
+                                                                  .toString(),
                                                           maxLines: 2,
                                                           style: TextStyle(
-                                                              color: sh_colorPrimary2,
-                                                              fontFamily: fontBold,
+                                                              color:
+                                                                  sh_colorPrimary2,
+                                                              fontFamily:
+                                                              fontSemibold,
                                                               fontSize: 14),
                                                         ),
                                                       ],
@@ -1547,8 +1673,6 @@ ct_changel=true;
                                           return CircularProgressIndicator();
                                         },
                                       ),
-
-
 
                                       SizedBox(
                                         height: 36,
@@ -1652,7 +1776,7 @@ ct_changel=true;
                             direction: ShimmerDirection.ltr,
                             child: Container(
                               width: width,
-                              padding: EdgeInsets.fromLTRB(12,12,12,12),
+                              padding: EdgeInsets.fromLTRB(12, 12, 12, 12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -1660,81 +1784,89 @@ ct_changel=true;
                                     height: 250,
                                     child: Column(
                                       children: <Widget>[
-                                        Container(                                            width: double.infinity,
+                                        Container(
+                                          width: double.infinity,
                                           height: 200.0,
-
-                                          color: Colors.white,),
+                                          color: Colors.white,
+                                        ),
                                         // Scrollindic()
                                       ],
                                     ),
                                   ),
                                   Container(
                                       child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              18.0, 0, 12, 12),
-                                          child:                             Container(
-                                            width: width*.40,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                  SizedBox(height: 4,),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 0, 12, 12),
+                                      child: Container(
+                                        width: width * .40,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
                                   Container(
                                       child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              18.0, 12, 12, 12),
-                                          child:                             Container(
-                                            width: width*.30,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                  SizedBox(height: 4,),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .30,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
                                   Container(
                                       child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              18.0, 12, 12, 12),
-                                          child:                             Container(
-                                            width: width*.35,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                  SizedBox(height: 10,),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .35,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
                                   Container(
                                       child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              18.0, 12, 12, 12),
-                                          child:                             Container(
-                                            width: width*.20,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                  SizedBox(height: 4,),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .20,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
                                   Container(
                                       child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              18.0, 12, 12, 12),
-                                          child:                             Container(
-                                            width: width,
-                                            height: 62.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width,
+                                        height: 62.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
                                 ],
                               ),
-
                             ),
                           );
                         },
@@ -1759,7 +1891,7 @@ ct_changel=true;
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,18,0,0),
+            padding: const EdgeInsets.fromLTRB(10, 18, 16, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1768,15 +1900,26 @@ ct_changel=true;
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      padding: const EdgeInsets.fromLTRB(1.0, 0, 6, 0),
+                      child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                            size: 30,
+                          )),
                     ),
-
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Product Details",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6.0,6,6),
+                      child: Text(
+                        "Product Details",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontFamily: 'TitleCursive'),
+                      ),
                     )
                   ],
                 ),
@@ -1784,17 +1927,19 @@ ct_changel=true;
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         // launchScreen(context, CartScreen.tag);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        ).then((value) {
+                          setState(() {
+                            // refresh state
+                          });
+                        });
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),
@@ -1808,9 +1953,10 @@ ct_changel=true;
                           return CircularProgressIndicator();
                         },
                       ),
-
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(
+                    //   width: 16,
+                    // )
                   ],
                 ),
               ],
@@ -1822,8 +1968,25 @@ ct_changel=true;
 
     return Scaffold(
       body: WillPopScope(
-          onWillPop: _onWillPop,
-          child: SafeArea(child: setUserForm())),
+          onWillPop: _onWillPop, child: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      )),
     );
   }
 }
@@ -1999,14 +2162,14 @@ class Similar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  text(model!.slug,
-                      fontFamily: fontMedium,
-                      textColor: sh_textColorSecondary,
-                      fontSize: textSizeSmall),
-                  // Descrptntext(index),
-                  SizedBox(
-                    height: 4,
-                  ),
+                  // text(model!.slug,
+                  //     fontFamily: fontMedium,
+                  //     textColor: sh_textColorSecondary,
+                  //     fontSize: textSizeSmall),
+                  // // Descrptntext(index),
+                  // SizedBox(
+                  //   height: 4,
+                  // ),
                   Text(
                     model!.name!,
                     maxLines: 2,

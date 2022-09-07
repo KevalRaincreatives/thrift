@@ -7,6 +7,10 @@ import 'package:thrift/screens/OrderSuccessScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class PaymentScreen extends StatefulWidget {
   static String tag='/PaymentScreen';
@@ -52,7 +56,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         title: Text(
           "Pay",
           style:
-          TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
+          TextStyle(color: sh_white, fontFamily: 'TitleCursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
@@ -151,31 +155,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     onCreditCardModelChange: onCreditCardModelChange,
                   ),
                       SizedBox(height: 20,),
-                      RaisedButton(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Container(
-                          margin: const EdgeInsets.all(8),
-                          child: const Text(
-                            'Validate',
-                            style: TextStyle(
-                              color: sh_colorPrimary2,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                        color: sh_btn_color,
-                        onPressed: () {
-                          if (formKey.currentState!.validate()) {
-                            print('valid!');
-                            _showValidDialog(context,"Valid","Your card successfully valid !!!");
-launchScreen(context, OrderSuccessScreen.tag);
-                          } else {
-                            print('invalid!');
-                          }
-                        },
-                      )
+//                       RaisedButton(
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(8.0),
+//                         ),
+//                         child: Container(
+//                           margin: const EdgeInsets.all(8),
+//                           child: const Text(
+//                             'Validate',
+//                             style: TextStyle(
+//                               color: sh_colorPrimary2,
+//                               fontSize: 18,
+//                             ),
+//                           ),
+//                         ),
+//                         color: sh_btn_color,
+//                         onPressed: () {
+//                           if (formKey.currentState!.validate()) {
+//                             print('valid!');
+//                             _showValidDialog(context,"Valid","Your card successfully valid !!!");
+// launchScreen(context, OrderSuccessScreen.tag);
+//                           } else {
+//                             print('invalid!');
+//                           }
+//                         },
+//                       )
                     ],
                   ),
                   SizedBox(height: 300,)
@@ -196,8 +200,24 @@ launchScreen(context, OrderSuccessScreen.tag);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -210,14 +230,14 @@ launchScreen(context, OrderSuccessScreen.tag);
           title: Text(title),
           content: Text(content),
           actions: [
-            FlatButton(
-                child: Text(
-                  "Ok",
-                  style: TextStyle(fontSize: 18,color: Colors.cyan),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                }),
+            // FlatButton(
+            //     child: Text(
+            //       "Ok",
+            //       style: TextStyle(fontSize: 18,color: Colors.cyan),
+            //     ),
+            //     onPressed: () {
+            //       Navigator.of(context).pop();
+            //     }),
           ],
         );
       },

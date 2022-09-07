@@ -88,12 +88,12 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen> {
     }
   }
 
-  void setError(dynamic error) {
-    _scaffoldKey.currentState!.showSnackBar(SnackBar(content: Text(error.toString())));
-    setState(() {
-      _error = error.toString();
-    });
-  }
+  // void setError(dynamic error) {
+  //   _scaffoldKey.currentState!.showSnackBar(SnackBar(content: Text(error.toString())));
+  //   setState(() {
+  //     _error = error.toString();
+  //   });
+  // }
 
   fetchData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

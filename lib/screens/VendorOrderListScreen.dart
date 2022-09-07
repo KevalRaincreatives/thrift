@@ -14,6 +14,9 @@ import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:badges/badges.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class VendorOrderListScreen extends StatefulWidget {
   static String tag='/VendorOrderListScreen';
@@ -66,12 +69,23 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
   }
 
   Future<bool> _onWillPop() async{
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-          builder: (BuildContext context) => DashboardScreen(selectedTab: 0,)),
-      ModalRoute.withName('/DashboardScreen'),
-    );
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? is_store_owner = prefs.getString('is_store_owner');
+    if(is_store_owner=='1') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => DashboardScreen(selectedTab: 3,)),
+        ModalRoute.withName('/DashboardScreen'),
+      );
+    }else{
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => DashboardScreen(selectedTab: 2,)),
+        ModalRoute.withName('/DashboardScreen'),
+      );
+    }
     return false;
   }
 
@@ -402,19 +416,30 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DashboardScreen(selectedTab: 2),
-                          ),
-                        );
+                      child: IconButton(onPressed: () async{
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        String? is_store_owner = prefs.getString('is_store_owner');
+                        if(is_store_owner=='1') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DashboardScreen(selectedTab: 3),
+                            ),
+                          );
+                        }else{
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DashboardScreen(selectedTab: 2),
+                            ),
+                          );
+                        }
                       }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
                     ),
 
                     Padding(
                       padding: const EdgeInsets.all(6.0),
-                      child: Text(sh_lbl_my_sales,style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      child: Text(sh_lbl_my_sales,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -462,7 +487,25 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
 
       body: WillPopScope(
           onWillPop: _onWillPop,
-          child: SafeArea(child: setUserForm())),
+          child: StreamProvider<NetworkStatus>(
+            initialData: NetworkStatus.Online,
+            create: (context) =>
+            NetworkStatusService().networkStatusController.stream,
+            child: NetworkAwareWidget(
+              onlineChild: SafeArea(child: setUserForm()),
+              offlineChild: Container(
+                child: Center(
+                  child: Text(
+                    "No internet connection!",
+                    style: TextStyle(
+                        color: Colors.grey[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20.0),
+                  ),
+                ),
+              ),
+            ),
+          ),),
     );
 
 

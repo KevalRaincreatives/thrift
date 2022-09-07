@@ -105,14 +105,14 @@ class _MySalesFragmentState extends State<MySalesFragment> {
           dd +
               "\n Order Placed",
           maxLine: 2,
-          fontSize: textSizeMedium,
+          fontSize: textSizeSMedium2,
           textColor: sh_textColorPrimary);
 
 
     }
 
     CartPrice(int index){
-      var myprice2 =double.parse(orderListModel!.data![index]!.total.toString());
+      var myprice2 =double.parse(orderListModel!.data![index]!.subTotal.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
       if(price_decimal_sep==',') {
@@ -123,8 +123,8 @@ class _MySalesFragmentState extends State<MySalesFragment> {
       return                           text7("Total : \$" +
           myprice3 +" "+orderListModel!.currency!,
           textColor: sh_app_txt_color,
-          fontFamily: 'Bold',
-          fontSize: textSizeNormal);
+          fontFamily: fontBold,
+          fontSize: textSizeMedium);
     }
 
     listView() {
@@ -162,11 +162,13 @@ class _MySalesFragmentState extends State<MySalesFragment> {
                             VendorOrderDetailScreen()));
               },
               child: Container(
-                margin: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                padding: EdgeInsets.all(10.0),
-                decoration: boxDecoration(
-                  radius: 12,
-                  showShadow: true,
+                margin: EdgeInsets.fromLTRB(26, 20, 26, 0),
+                padding: EdgeInsets.fromLTRB(16,10.0,16,10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: sh_colorPrimary2),
+                  color: sh_white,
+                  borderRadius: BorderRadius.circular(10.0),
+                  // boxShadow: true
                 ),
                 child: IntrinsicHeight(
                   child: Row(
@@ -179,13 +181,13 @@ class _MySalesFragmentState extends State<MySalesFragment> {
                             text7("ID :#" +
                                 orderListModel!.data![index]!.ID.toString(),
                                 textColor: sh_textColorPrimary,
-                                fontFamily: 'Bold',
-                                fontSize: textSizeLargeMedium),
-                            SizedBox(height: 4),
+                                fontFamily: fontSemibold,
+                                fontSize: textSizeMedium),
+                            // SizedBox(height: 2),
                             text7(orderListModel!.data![index]!.products![0]!.name!,
                                 textColor: sh_app_txt_color,
-                                fontFamily: 'Bold',
-                                fontSize: textSizeNormal),
+                                fontFamily: fontSemibold,
+                                fontSize: textSizeMedium),
                             CartPrice(index),
                             // text7("Total : $currency_symbol" +
                             //     orderListModel!.data![index]!.total.toString(),
@@ -236,19 +238,19 @@ class _MySalesFragmentState extends State<MySalesFragment> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -381,7 +383,7 @@ class _MySalesFragmentState extends State<MySalesFragment> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(30,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -389,16 +391,16 @@ class _MySalesFragmentState extends State<MySalesFragment> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        // Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.fromLTRB(6.0,0,6,0),
+                    //   child: IconButton(onPressed: () {
+                    //     // Navigator.pop(context);
+                    //   }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                    // ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text(sh_lbl_my_sales,style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text(sh_lbl_my_sales,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -431,7 +433,7 @@ class _MySalesFragmentState extends State<MySalesFragment> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],

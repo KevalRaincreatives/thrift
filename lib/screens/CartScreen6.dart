@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -63,7 +62,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   double posx = 100.0;
   double posy = 100.0;
   bool isSwitched = true;
-  bool isSwitchedVisible = true;
   int val = 1;
   int val2 = 1;
   AddressListModel? _addressModel;
@@ -161,11 +159,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       String? token = prefs.getString('token');
       String? user_country = prefs.getString('user_selected_country');
 //      print
-      if(user_country=='Barbados'){
-        isSwitchedVisible=true;
-      }else{
-        isSwitchedVisible=false;
-      }
 
       Map<String, String> headers = {
         'Content-Type': 'application/json',
@@ -1892,7 +1885,7 @@ toast(myprice+"1");
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Not able to ship to your location. Your store & shipping address are in different countries.',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  title: Center(child: Text('Address is not Valid',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -2382,90 +2375,39 @@ toast(myprice+"1");
                             fontSize: 14,
                             fontFamily: fontBold),
                       ),
-                      Visibility(
-                        visible: isSwitchedVisible,
-                        child: Row(
-                          children: [
-                            Text(
-                              "No",
-                              style: TextStyle(
-                                  color: sh_colorPrimary2,
-                                  fontSize: 14,
-                                  fontFamily: fontBold),
-                            ),
-                            Switch(
-                              value: isSwitched,
-                              onChanged: (value)  {
-
-                                setState(() {
-                                  isSwitched = value;
-                                  print(isSwitched);
-                                  if(value==false) {
-                                    selectedShipingIndex = -1;
-                                  }else{
-                                    selectedShipingIndex = 0;
-                                    GetShip(newShipmentModel!.methods![selectedShipingIndex!]!.id!.toString());
-                                  }
-
-                                });
-                              },
-                              activeTrackColor: sh_btn_color,
-                              activeColor: sh_colorPrimary2,
-                            ),
-                            Text(
-                              "Yes",
-                              style: TextStyle(
-                                  color: sh_colorPrimary2,
-                                  fontSize: 14,
-                                  fontFamily: fontBold),
-                            ),
-                          ],
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            "No",
+                            style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: 14,
+                                fontFamily: fontBold),
+                          ),
+                          Switch(
+                            value: isSwitched,
+                            onChanged: (value) {
+                              setState(() {
+                                isSwitched = value;
+                                print(isSwitched);
+                              });
+                            },
+                            activeTrackColor: sh_btn_color,
+                            activeColor: sh_colorPrimary2,
+                          ),
+                          Text(
+                            "Yes",
+                            style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: 14,
+                                fontFamily: fontBold),
+                          ),
+                        ],
                       )
                     ],
                   ),
-                  Visibility(
-                    visible: !isSwitchedVisible,
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: spacing_middle,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Visibility(
-                    visible: !isSwitched,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      // mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: sh_colorPrimary2),
-                            color: sh_white,
-                            borderRadius: BorderRadius.circular(10.0),
-                            // boxShadow: true
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(
-                                "Collect your order from our office.",
-                                style: TextStyle(
-                                    color: sh_colorPrimary2,
-                                    fontSize: 13,
-                                    fontFamily: fontRegular),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 8,)
-                      ],
-                    ),
+                  SizedBox(
+                    height: spacing_control_half,
                   ),
                   Visibility(
                     visible: isSwitched,

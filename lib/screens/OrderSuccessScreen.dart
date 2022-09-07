@@ -2,13 +2,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:thrift/screens/CartScreen2.dart';
+import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
 import 'package:thrift/screens/OrderListScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class OrderSuccessScreen extends StatefulWidget {
   static String tag='/OrderSuccessScreen';
@@ -330,7 +334,7 @@ launchScreen(context, DashboardScreen.tag);
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -339,15 +343,15 @@ launchScreen(context, DashboardScreen.tag);
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         launchScreen(context, DashboardScreen.tag);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Success",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("Success",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -380,8 +384,24 @@ launchScreen(context, DashboardScreen.tag);
       resizeToAvoidBottomInset: false,
       body: WillPopScope(
         onWillPop: _onWillPop,
-        child: SafeArea(
-          child: setUserForm(),
+        child: StreamProvider<NetworkStatus>(
+          initialData: NetworkStatus.Online,
+          create: (context) =>
+          NetworkStatusService().networkStatusController.stream,
+          child: NetworkAwareWidget(
+            onlineChild: SafeArea(child: setUserForm()),
+            offlineChild: Container(
+              child: Center(
+                child: Text(
+                  "No internet connection!",
+                  style: TextStyle(
+                      color: Colors.grey[400],
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20.0),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

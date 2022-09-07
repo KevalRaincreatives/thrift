@@ -12,6 +12,10 @@ import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class BankDetailScreen extends StatefulWidget {
   static String tag = '/BankDetailScreen';
@@ -502,8 +506,8 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
                         "Banking Information",
                         style: TextStyle(
                             color: Colors.white,
-                            fontSize: 45,
-                            fontFamily: 'Cursive'),
+                            fontSize: 25,
+                            fontFamily: 'TitleCursive'),
                       ),
                     )
                   ],
@@ -516,7 +520,25 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
     }
 
     return Scaffold(
-      body: SafeArea(child: setUserForm()),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

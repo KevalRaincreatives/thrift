@@ -15,6 +15,9 @@ import 'package:thrift/screens/DashboardScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class TermsConditionScreen extends StatefulWidget {
   static String tag='/TermsConditionScreen';
@@ -34,6 +37,7 @@ SignUpNewModel? signup_model;
 SignUpErrorNewModel? signup_error_model;
 ShLoginModel? cat_model;
 ShLoginErrorNewModel? err_model;
+bool singleTap = true;
 
   Future<TermsModel?> fetchDetails() async {
 //    Dialogs.showLoadingDialog(context, _keyLoader);
@@ -178,7 +182,7 @@ Future<ShLoginModel?> getLogin() async {
       prefs.setString('is_store_owner', cat_model!.data!.is_store_owner.toString());
       prefs.setString('user_country', cat_model!.data!.country!);
       prefs.setString('user_selected_country', cat_model!.data!.country!);
-
+      prefs.setString('vendor_country', cat_model!.data!.country!);
 
       prefs.setString('profile_name',cat_model!.data!.userNicename!);
       prefs.setString('OrderUserName', cat_model!.data!.displayName!);
@@ -294,12 +298,14 @@ Future<SignUpNewModel?> getSetting() async {
       // launchScreen(context, T2Dialog.tag);
     }else{
       EasyLoading.dismiss();
+      singleTap = true;
       signup_error_model= new SignUpErrorNewModel.fromJson(jsonResponse);
       toast(signup_error_model!.msg);
     }
 
     return null;
   } catch (e) {
+    singleTap = true;
     EasyLoading.dismiss();
 //      Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
     print('caught error $e');
@@ -404,7 +410,14 @@ Future<SignUpNewModel?> getSetting() async {
                   child: InkWell(
                 onTap: () async {
                   if(val==2){
-getSetting();
+                    if (singleTap) {
+                      // Do something here
+                      getSetting();
+                      setState(() {
+                        singleTap = false; // update bool
+                      });
+                    }
+
                   }else{
                     toast("Please agree to the terms & conditions");
                   }
@@ -457,7 +470,7 @@ getSetting();
 
                     Padding(
                       padding: const EdgeInsets.all(6.0),
-                      child: Text("Terms & Conditions",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      child: Text("Terms & Conditions",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -470,7 +483,25 @@ getSetting();
 
     return Scaffold(
 
-      body: SafeArea(child: setUserForm()),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

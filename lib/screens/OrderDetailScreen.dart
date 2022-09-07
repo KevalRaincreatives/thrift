@@ -14,6 +14,10 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:intl/intl.dart';
 import 'package:badges/badges.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class OrderDetailScreen extends StatefulWidget {
   static String tag = '/OrderDetailScreen';
@@ -189,7 +193,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Rate this product',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  title: Center(child: Text('Did you receive this product?\nPlease provide review of the product',style: TextStyle(color: sh_colorPrimary2,fontSize: 15,fontFamily: 'SemiBold'),textAlign: TextAlign.center,)),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
@@ -326,8 +330,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           itemBuilder: (context, index) {
             return Container(
               // margin: EdgeInsets.only(bottom: spacing_standard_new),
-              margin: EdgeInsets.fromLTRB(spacing_standard_new, 0,
-                  spacing_standard_new, spacing_standard_new),
+              margin: EdgeInsets.fromLTRB(26, 0,
+                  26, spacing_standard_new),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -356,9 +360,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           orderDetailModel!.data!.products![index]!.name!,
                           style: TextStyle(color: sh_colorPrimary2, fontSize: 16),
                         ),
-                        SizedBox(
-                          height: 4,
-                        ),
                         CartPrice(index),
                         // text(
                         //   "\$" + orderDetailModel!.data!.products![index]!.total!,
@@ -370,6 +371,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           padding: EdgeInsets.fromLTRB(
                               spacing_standard, 1, spacing_standard, 1),
                           decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6.0),
                               border:
                               Border.all(color: sh_view_color, width: 1)),
                           child: Row(
@@ -380,7 +382,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                       orderDetailModel!.data!.products![index]!.quantity
                                           .toString(),
                                   textColor: sh_textColorPrimary,
-                                  fontSize: textSizeSMedium)
+                                  fontSize: textSizeSmall)
                             ],
                           ),
                         ),
@@ -393,14 +395,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             _openCustomDialogSold(orderDetailModel!.data!.products![index]!.id!.toString());
                           },
                           child: Container(
-                            padding: EdgeInsets.all(6.0),
+                            padding: EdgeInsets.fromLTRB(8.0,4,8,4),
                             decoration: boxDecoration(
-                                bgColor: sh_colorPrimary2, radius: 6, showShadow: true),
-                            child: text("Rate this product now",
+                                bgColor: sh_btn_color, radius: 6, showShadow: true),
+                            child: text("Mark as received and review",
                                 fontSize: 13.0,
-                                textColor: sh_white,
+                                textColor: sh_colorPrimary2,
                                 isCentered: true,
-                                fontFamily: 'Regular'),
+                                fontFamily: fontMedium),
                           ),
                         )
 
@@ -471,9 +473,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           //     textColor: sh_textColorPrimary,
           //     fontFamily: fontBold,
           //     fontSize: textSizeSMedium),
-          text(sh_lbl_sub_total),
+          text(sh_lbl_sub_total,
+              textColor: sh_textColorPrimary,
+              fontSize: textSizeMedium,
+              fontFamily: fontSemibold),
           text("\$"+myprice+" "+orderDetailModel!.data!.currency!,
-              textColor: sh_colorPrimary2, fontFamily: fontMedium),
+              textColor: sh_colorPrimary2, fontFamily: fontMedium,fontSize: textSizeMedium),
         ],
       );
     }
@@ -499,10 +504,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           //     fontSize: textSizeSMedium,
           //     fontFamily: fontBold,
           //     textColor: sh_textColorPrimary),
-          text(sh_lbl_shipping_charge),
+          text(sh_lbl_shipping_charge,
+              textColor: sh_textColorPrimary,
+              fontSize: textSizeMedium,
+              fontFamily: fontSemibold),
           text(
               "\$"+myprice+" "+orderDetailModel!.data!.currency!,
-              textColor: sh_colorPrimary2, fontFamily: fontMedium),
+              textColor: sh_colorPrimary2, fontFamily: fontMedium,fontSize: textSizeMedium),
         ],
       );
     }
@@ -528,11 +536,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           //     textColor: sh_colorPrimary,
           //     fontFamily: fontBold,
           //     fontSize: textSizeLargeMedium),
-          text(sh_lbl_total_amount),
+          text(sh_lbl_total_amount,
+              textColor: sh_textColorPrimary,
+              fontSize: textSizeMedium,
+              fontFamily: fontSemibold),
           text("\$"+myprice+" "+orderDetailModel!.data!.currency!,
               textColor: sh_colorPrimary2,
               fontFamily: fontBold,
-              fontSize: textSizeLargeMedium),
+              fontSize: textSizeMedium),
         ],
       );
     }
@@ -541,11 +552,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     paymentDetail() {
       return Container(
         margin: EdgeInsets.only(
-            left: spacing_standard_new,
-            right: spacing_standard_new,
+            left: 26,
+            right: 26,
             top: spacing_standard_new),
         decoration:
-        BoxDecoration(border: Border.all(color: sh_view_color, width: 1.0)),
+        BoxDecoration(
+        borderRadius: BorderRadius.circular(6),border: Border.all(color: sh_view_color, width: 1.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -554,8 +566,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   spacing_middle, spacing_standard_new, spacing_middle),
               child: text(sh_lbl_payment_details,
                   textColor: sh_textColorPrimary,
-                  fontSize: textSizeLargeMedium,
-                  fontFamily: 'Bold'),
+                  fontSize: textSizeMedium,
+                  fontFamily: fontSemibold),
             ),
             Divider(
               height: 1,
@@ -629,7 +641,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
       String date2 = outputFormat.toString();
       return text(date2,
-          textColor: sh_textColorPrimary, fontFamily: fontMedium);
+          textColor: sh_textColorPrimary, fontFamily: fontMedium,fontSize: textSizeMedium);
     }
 
     TotalAmount(){
@@ -652,11 +664,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           //     textColor: sh_colorPrimary,
           //     fontFamily: fontBold,
           //     fontSize: textSizeLargeMedium),
-          text(sh_lbl_total_amount),
+          text(sh_lbl_total_amount,
+              textColor: sh_textColorPrimary,
+              fontSize: textSizeMedium,
+              fontFamily: fontSemibold),
           text("\$"+myprice3+" "+orderDetailModel!.data!.currency!,
               textColor: sh_colorPrimary2,
               fontFamily: fontBold,
-              fontSize: textSizeLargeMedium),
+              fontSize: textSizeMedium),
         ],
       );
     }
@@ -665,20 +680,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     orderDetail() {
       return Container(
         margin: EdgeInsets.only(
-            left: spacing_standard_new,
-            right: spacing_standard_new),
+            left: 26,
+            right: 26),
         decoration:
-        BoxDecoration(border: Border.all(color: sh_view_color, width: 1.0)),
+        BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: sh_view_color, width: 1.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.fromLTRB(spacing_standard_new,
                   spacing_middle, spacing_standard_new, spacing_middle),
-              child: text(sh_lbl_shipping_details,
+              child: text(sh_lbl_order_details,
                   textColor: sh_textColorPrimary,
-                  fontSize: textSizeLargeMedium,
-                  fontFamily: 'Bold'),
+                  fontSize: textSizeMedium,
+                  fontFamily: fontSemibold),
             ),
             Divider(
               height: 1,
@@ -691,23 +708,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      text(sh_lbl_order_id),
+                      text(sh_lbl_order_id,
+                          textColor: sh_textColorPrimary,
+                          fontSize: textSizeMedium,
+                          fontFamily: fontSemibold),
                       text("#" + orderDetailModel!.data!.orderId.toString(),
                           textColor: sh_textColorPrimary,
+                          fontSize: textSizeMedium,
                           fontFamily: fontMedium),
                     ],
                   ),
                   SizedBox(
-                    height: spacing_standard,
+                    height: spacing_control_half,
                   ),
                   Row(
                     children: <Widget>[
-                      text(sh_lbl_order_date),
+                      text(sh_lbl_order_date,
+                          textColor: sh_textColorPrimary,
+                          fontSize: textSizeMedium,
+                          fontFamily: fontSemibold),
                       OrdDate()
                     ],
                   ),
                   SizedBox(
-                    height: spacing_standard,
+                    height: spacing_control_half,
                   ),
                   TotalAmount(),
                   // Row(
@@ -730,11 +754,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     shippingDetail() {
       return Container(
         margin: EdgeInsets.only(
-            left: spacing_standard_new,
-            right: spacing_standard_new,
+            left: 26,
+            right: 26,
             top: spacing_standard_new),
         decoration:
-        BoxDecoration(border: Border.all(color: sh_view_color, width: 1.0)),
+        BoxDecoration(
+          borderRadius: BorderRadius.circular(6)
+        ,border: Border.all(color: sh_view_color, width: 1.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -743,8 +769,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   spacing_middle, spacing_standard_new, spacing_middle),
               child: text(sh_lbl_shipping_details,
                   textColor: sh_textColorPrimary,
-                  fontSize: textSizeLargeMedium,
-                  fontFamily: 'Bold'),
+                  fontSize: textSizeMedium,
+                  fontFamily: fontSemibold),
             ),
             Divider(
               height: 1,
@@ -762,7 +788,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           orderDetailModel!.data!.shippingAddress!.lastName!,
                       textColor: sh_textColorPrimary,
                       fontFamily: fontMedium,
-                      fontSize: textSizeLargeMedium),
+                      fontSize: textSizeMedium),
                   text(orderDetailModel!.data!.shippingAddress!.address,
                       textColor: sh_textColorPrimary, fontSize: textSizeMedium),
                   text(
@@ -770,7 +796,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           "," +
                           orderDetailModel!.data!.shippingAddress!.postcode!,
                       textColor: sh_textColorPrimary,
-                      fontSize: textSizeMedium),
+                      fontSize: textSizeSMedium),
                   text(
                       orderDetailModel!.data!.shippingAddress!.state! +
                           "," +
@@ -789,20 +815,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Container(
             child: Image.asset(
               sh_new_cart,
-              height: 50,
-              width: 50,
+              height: 44,
+              width: 44,
               color: sh_white,
             ),
           ),
@@ -865,9 +891,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
-                              SizedBox(
-                                height: 16,
-                              ),
+                              // SizedBox(
+                              //   height: 16,
+                              // ),
                               ProductList(),
                               orderDetail(),
                               shippingDetail(),
@@ -881,91 +907,90 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       } else if (snapshot.hasError) {
                         return Text("${snapshot.error}");
                       }
+                      // return CircularProgressIndicator();
                       // By default, show a loading spinner.
-                      return Expanded(
-                        child: Shimmer.fromColors(
-                          baseColor: Colors.grey[300]!,
-                          highlightColor: Colors.grey[100]!,
-                          enabled: true,
-                          child: Container(
-                            padding: EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Container(
-                                      width: 60.0,
-                                      height: 60.0,
-                                      color: Colors.white,
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        enabled: true,
+                        child: Container(
+                          padding: EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                    width: 60.0,
+                                    height: 60.0,
+                                    color: Colors.white,
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Container(
+                                          width: double.infinity,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                                        ),
+                                        Container(
+                                          width: double.infinity,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                                        ),
+                                        Container(
+                                          width: 40.0,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                      ],
                                     ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                    ),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Container(
-                                            width: double.infinity,
-                                            height: 8.0,
-                                            color: Colors.white,
-                                          ),
-                                          const Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                                          ),
-                                          Container(
-                                            width: double.infinity,
-                                            height: 8.0,
-                                            color: Colors.white,
-                                          ),
-                                          const Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                                          ),
-                                          Container(
-                                            width: 40.0,
-                                            height: 8.0,
-                                            color: Colors.white,
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                SizedBox(height: 20,),
-                                Container(
-                                  width: width*.3,
-                                  height: 8.0,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(height: 10,),
-                                Container(
-                                  width: double.infinity,
-                                  height: 40.0,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(height: 18,),
-                                Container(
-                                  width: width*.3,
-                                  height: 8.0,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(height: 10,),
-                                Container(
-                                  width: double.infinity,
-                                  height: 80.0,
-                                  color: Colors.white,
-                                ),
+                                  )
+                                ],
+                              ),
+                              SizedBox(height: 20,),
+                              Container(
+                                width: width*.3,
+                                height: 8.0,
+                                color: Colors.white,
+                              ),
+                              SizedBox(height: 10,),
+                              Container(
+                                width: double.infinity,
+                                height: 40.0,
+                                color: Colors.white,
+                              ),
+                              SizedBox(height: 18,),
+                              Container(
+                                width: width*.3,
+                                height: 8.0,
+                                color: Colors.white,
+                              ),
+                              SizedBox(height: 10,),
+                              Container(
+                                width: double.infinity,
+                                height: 80.0,
+                                color: Colors.white,
+                              ),
 
-                                SizedBox(height: 20,),
-                                Container(
-                                  width: double.infinity,
-                                  height: 100.0,
-                                  color: Colors.white,
-                                ),
-                              ],),
-                          ),
+                              SizedBox(height: 20,),
+                              Container(
+                                width: double.infinity,
+                                height: 100.0,
+                                color: Colors.white,
+                              ),
+                            ],),
                         ),
                       );
                     }),
@@ -979,7 +1004,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -988,15 +1013,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Order Details",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("Order Details",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -1029,7 +1054,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -1041,7 +1066,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     return Scaffold(
       
-      body: SafeArea(child: setUserForm()),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
 
   }

@@ -25,7 +25,7 @@ class _PaymentOptionScreenState extends State<PaymentOptionScreen> {
         backgroundColor: sh_colorPrimary2,
         title: Text(
           "Payment Options",
-          style: TextStyle(color: sh_white,fontFamily: 'Cursive',fontSize: 40),
+          style: TextStyle(color: sh_white,fontFamily: 'TitleCursive',fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[

@@ -14,7 +14,7 @@ import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/model/ProductListSellerModel.dart';
 import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/model/ReviewModel.dart';
-import 'package:thrift/screens/CartScreen2.dart';
+import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/ProductDetailScreen.dart';
 import 'package:thrift/screens/ProductUpdateScreen.dart';
 import 'package:thrift/screens/ProfileScreen.dart';
@@ -25,6 +25,9 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:badges/badges.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class ItemModel {
   String title;
@@ -415,19 +418,19 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -440,11 +443,11 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
         return Stack(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(16.0),
               child: Image.asset(
                 sh_no_img,
                 fit: BoxFit.cover,
-                height: width * 0.28,
+                height: width * 0.26,
 
 
               ),
@@ -471,7 +474,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                     padding: EdgeInsets.all(6.0),
                     decoration: boxDecoration(
                         bgColor: Colors.black.withOpacity(0.4), radius: 4, showShadow: true),
-                    child: text("EDIT",
+                    child: text(productListModel!.products![index]!.data!.stockStatus=="instock" ? "EDIT" : "VIEW" ,
                         textColor: sh_white,
                         fontSize: 12.0,
                         isCentered: true,
@@ -501,24 +504,25 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 alignment: Alignment.center,
                 child: InkWell(
                   onTap: () async{
-                    SharedPreferences prefs =
-                        await SharedPreferences
-                        .getInstance();
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
                     prefs.setString(
                         'seller_pro_id',
                         productListModel!.products![index]!.data!.id
                             .toString());
                     // launchScreen(context, ProductUpdateScreen.tag);
                     // Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
+                    // SharedPreferences prefs = await SharedPreferences.getInstance();
+                    prefs.setString('pro_id', productListModel!.products![index]!.data!.id.toString());
+
                     Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => ProductUpdateScreen()),
+                      MaterialPageRoute(builder: (context) => productListModel!.products![index]!.data!.stockStatus=="instock" ? ProductUpdateScreen() : ProductDetailScreen()),
                     ).then((_) => setState(() {}));
                   },
                   child: Container(
                     padding: EdgeInsets.all(6.0),
                     decoration: boxDecoration(
                         bgColor: Colors.black.withOpacity(0.4), radius: 4, showShadow: true),
-                    child: text("EDIT",
+                    child: text(productListModel!.products![index]!.data!.stockStatus=="instock" ? "EDIT" : "VIEW" ,
                         textColor: sh_white,
                         fontSize: 12.0,
                         isCentered: true,
@@ -551,7 +555,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
             "\$" + myprice,
             style: TextStyle(
                 color: sh_black,
-                fontFamily: fontBold,
+                fontFamily: fontSemibold,
                 fontSize: textSizeSMedium),
           ),
 
@@ -764,6 +768,130 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
           });
     }
 
+    CheckSoldReserve(int index){
+      if(productListModel!.products![index]!.data!.status!="publish"&&productListModel!.products![index]!.data!.stockStatus!="instock"){
+        return Text(
+          "Reserved,Sold",
+          style: TextStyle(
+              color: sh_colorPrimary2,
+              fontSize: 14,
+              fontFamily: fontBold),
+        );
+      }else{
+        if(productListModel!.products![index]!.data!.status!="publish"){
+          return Text(
+            "Reserved",
+            style: TextStyle(
+                color: sh_colorPrimary2,
+                fontSize: 14,
+                fontFamily: fontBold),
+          );
+      }else if(productListModel!.products![index]!.data!.stockStatus!="instock"){
+          return Text(
+            "Sold",
+            style: TextStyle(
+                color: sh_colorPrimary2,
+                fontSize: 14,
+                fontFamily: fontBold),
+          );
+        } else{
+          return Container();
+        }
+        }
+    }
+
+    CheckSoldReserve2(int index){
+      if(productListModel!.products![index]!.data!.status!="publish"&&productListModel!.products![index]!.data!.stockStatus!="instock"){
+        return Row(
+          children: [
+            Container(
+              height: 16,
+              width: 16,
+              // padding: EdgeInsets.all(4.0),
+              decoration: boxDecoration(
+                  bgColor: myorange2, radius: 4, showShadow: true),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Center(
+                    child: text("R",
+                        fontSize: 9.0,
+                        textColor: sh_white,
+                        isCentered: true,
+                        fontFamily: fontBold),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 6,),
+            Container(
+              height: 16,
+              width: 16,
+              // padding: EdgeInsets.all(4.0),
+              decoration: boxDecoration(
+                  bgColor: sh_red, radius: 4, showShadow: true),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Center(
+                    child: text("S",
+                        fontSize: 9.0,
+                        textColor: sh_white,
+                        isCentered: true,
+                        fontFamily: fontBold),
+                  ),
+                ],
+              ),
+            )
+          ],
+        );
+      }else{
+        if(productListModel!.products![index]!.data!.status!="publish"){
+          return Container(
+            height: 16,
+            width: 16,
+            // padding: EdgeInsets.all(4.0),
+            decoration: boxDecoration(
+                bgColor: myorange2, radius: 4, showShadow: true),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: text("R",
+                      fontSize: 9.0,
+                      textColor: sh_white,
+                      isCentered: true,
+                      fontFamily: fontBold),
+                ),
+              ],
+            ),
+          );
+        }else if(productListModel!.products![index]!.data!.stockStatus!="instock"){
+          return Container(
+            height: 16,
+            width: 16,
+            // padding: EdgeInsets.all(4.0),
+            decoration: boxDecoration(
+                bgColor: sh_red, radius: 4, showShadow: true),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: text("S",
+                      fontSize: 9.0,
+                      textColor: sh_white,
+                      isCentered: true,
+                      fontFamily: fontBold),
+                ),
+              ],
+            ),
+          );
+        } else{
+          return Container();
+        }
+      }
+    }
+
     CheckReserve(int index){
       if(productListModel!.products![index]!.data!.status=="publish"){
         return InkWell(
@@ -779,7 +907,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 fontSize: 12.0,
                 textColor: sh_colorPrimary2,
                 isCentered: true,
-                fontFamily: 'Bold'),
+                fontFamily: fontSemibold),
           ),
         );
       }else{
@@ -796,7 +924,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 fontSize: 12.0,
                 textColor: sh_colorPrimary2,
                 isCentered: true,
-                fontFamily: 'Bold'),
+                fontFamily: fontSemibold),
           ),
         );
       }
@@ -817,7 +945,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 fontSize: 12.0,
                 textColor: sh_colorPrimary2,
                 isCentered: true,
-                fontFamily: 'Bold'),
+                fontFamily: fontSemibold),
           ),
         );
       }else{
@@ -834,7 +962,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 fontSize: 12.0,
                 textColor: sh_white,
                 isCentered: true,
-                fontFamily: 'Bold'),
+                fontFamily: fontSemibold),
           ),
         );
       }
@@ -889,7 +1017,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
           child: Container(
             height: height,
             width: width,
-            margin: EdgeInsets.fromLTRB(16,0,16,0),
+            margin: EdgeInsets.fromLTRB(26,0,26,0),
             child: Column(
               children: [
                 FutureBuilder<ViewProModel?>(
@@ -900,7 +1028,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                         alignment: Alignment.bottomRight,
                         children: <Widget>[
                           Padding(
-                            padding: const EdgeInsets.all(spacing_standard_new),
+                            padding: const EdgeInsets.all(spacing_standard),
                             child: Card(
                               semanticContainer: true,
                               clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -957,9 +1085,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                     );
                   },
                 ),
-                SizedBox(
-                  height: 10,
-                ),
                 FutureBuilder<ProfileModel?>(
                     future: fetchProfile(),
                     builder: (context, snapshot) {
@@ -971,20 +1096,17 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                               MaterialPageRoute(builder: (context) => ProfileScreen()),
                             ).then((_) => setState(() {}));
                           },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                profileModel!.data!.firstName!+" "+profileModel!.data!.lastName!,
-                                style: TextStyle(
-                                    color: sh_colorPrimary2,
-                                    fontSize: 16,
-                                    fontFamily: "Bold"),
-                              ),
-                              SizedBox(width: 8,),
-                              Icon(Icons.edit,color: sh_colorPrimary2,size: 15,)
-                            ],
-                          ),
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(6,4,6,4.0),
+                            decoration: boxDecoration(
+                                bgColor: sh_btn_color2, radius: 6, showShadow: true),
+                            child: text(profileModel!.data!.firstName!+" "+profileModel!.data!.lastName!,
+                                fontSize: 13.0,
+                                textColor: sh_colorPrimary2,
+                                isCentered: true,
+                                fontFamily: fontBold),
+                          )
+
                         );
                       } else if (snapshot.hasError) {
 //                    return Text("${snapshot.error}");
@@ -1012,13 +1134,13 @@ onTap: () {
                               "User Rating",
                               style: TextStyle(
                                   color: sh_colorPrimary2,
-                                  fontSize: 14,
-                                  fontFamily: "Bold"),
+                                  fontSize: 13,
+                                  fontFamily: fontMedium),
                             ),
                             RatingBar.builder(
                               initialRating: double.parse(reviewModel!.average.toString()),
                               minRating: 1,
-                              itemSize: 18,
+                              itemSize: 16,
                               ignoreGestures: true,
                               direction: Axis.horizontal,
                               allowHalfRating: true,
@@ -1089,19 +1211,22 @@ onTap: () {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text("Listing",style: TextStyle(color: sh_colorPrimary2,fontSize: 16,fontFamily: "Bold"),),
+                    Text("Listing",style: TextStyle(color: sh_colorPrimary2,fontSize: 16,fontFamily: fontSemibold),),
                   ],
                 ),
                 SizedBox(height: 16,),
                 CustomPopupMenu(
                   child: Row(
                     children: [
-                      Container(
-
-                        child: SvgPicture.asset(sh_menu_filter,color: sh_colorPrimary2,),
-                        height :40,
-                        width: 40,),
-                      Text(filter_str!,style: TextStyle(color: sh_colorPrimary2,fontSize: 14),)
+                      Image.asset(
+                        sh_menu_filter,
+                        color: sh_colorPrimary2,
+                        height: 22,
+                        width: 16,
+                        fit: BoxFit.fill,
+                      ),
+                      SizedBox(width: 12,),
+                      Text(filter_str!,style: TextStyle(color: sh_colorPrimary2,fontSize: 13),)
                     ],
                   ),
                   menuBuilder: () => ClipRRect(
@@ -1157,7 +1282,7 @@ onTap: () {
                   verticalMargin: -10,
                   controller: _controller,
                 ),
-                SizedBox(height: 16,),
+                SizedBox(height: 6,),
                 FutureBuilder<ProductListSellerModel?>(
                   future: fetchAlbum(),
                   builder: (context, snapshot) {
@@ -1196,14 +1321,22 @@ onTap: () {
                                               style: TextStyle(
                                                   color: sh_colorPrimary2,
                                                   fontSize: 16,
-                                                  fontFamily: 'Bold'),
+                                                  fontFamily: fontSemibold),
                                             ),
                                             SizedBox(
                                               height: 4,
                                             ),
-                                            MyPrice(index),
+                                            Row(children: [
+                                              MyPrice(index),
+                                              SizedBox(width: 6,),
+                                              CheckSoldReserve2(index),
+                                            ],),
                                             // text(currency! + cat_model!.cart![positions]!.productPrice!,
                                             //     textColor: sh_app_black, fontFamily: 'Bold'),
+                                            // SizedBox(
+                                            //   height: 4,
+                                            // ),
+                                            // CheckSoldReserve(index),
                                             SizedBox(
                                               height: 9,
                                             ),
@@ -1226,7 +1359,7 @@ onTap: () {
                                                         fontSize: 12.0,
                                                         textColor: sh_colorPrimary2,
                                                         isCentered: true,
-                                                        fontFamily: 'Bold'),
+                                                        fontFamily: fontSemibold),
                                                   ),
                                                 ),
                                               ],
@@ -1237,7 +1370,6 @@ onTap: () {
                                     ],
                                   ),
                                   SizedBox(height: 10,),
-                                  Container(height: 1,color: sh_view_color,)
                                 ],
                               ),
                             );
@@ -1316,7 +1448,7 @@ onTap: () {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1325,19 +1457,19 @@ onTap: () {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
                       child: FutureBuilder<String?>(
                         future: fetchadd(),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
-                            return Text(profile_name!,style: TextStyle(color: Colors.white,fontSize: 20,fontFamily: 'Regular'));
+                            return Text(profile_name!,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'));
                           } else if (snapshot.hasError) {
                             return Text("${snapshot.error}");
                           }
@@ -1379,7 +1511,7 @@ onTap: () {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -1391,8 +1523,24 @@ onTap: () {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
 

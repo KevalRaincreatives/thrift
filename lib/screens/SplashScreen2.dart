@@ -345,17 +345,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             children: [
               // Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),
               // Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),
-              // DelayedAnimation(delay: delayedAmount+600, child: Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),),
-              // DelayedAnimation(delay: delayedAmount+800, child: Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),),
-              // DelayedAnimation(delay: delayedAmount+1000,
-              //     child: Padding(
-              //       padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
-              //       child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
-              //     ))
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
-                  child: Image.asset(sh_app_logo,width: width*.6,fit: BoxFit.fill,),
-                )
+              DelayedAnimation(delay: delayedAmount+600, child: Text("Cassie",style: TextStyle(color: sh_white,fontFamily: "Cursive",fontSize: 90),),),
+              DelayedAnimation(delay: delayedAmount+800, child: Text("BY",style: TextStyle(color: sh_white,fontFamily: "Bold",fontSize: 14)),),
+              DelayedAnimation(delay: delayedAmount+1000,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
+                    child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
+                  ))
+              //   Padding(
+              //     padding: const EdgeInsets.fromLTRB(8.0,8,8,0),
+              //     child: Image.asset(sh_app_logo,width: width*.35,fit: BoxFit.fill,),
+              //   )
             ],
           ),),
           offlineChild: Container(

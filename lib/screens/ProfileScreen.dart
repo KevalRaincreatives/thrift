@@ -23,6 +23,9 @@ import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 class ProfileScreen extends StatefulWidget {
   static String tag='/ProfileScreen';
   const ProfileScreen({Key? key}) : super(key: key);
@@ -63,8 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Route route = MaterialPageRoute(
         builder: (context) => LoginScreen());
     Navigator.pushReplacement(context, route);
-
-
   }
 
   Future<ProfileModel?> fetchDetails() async {
@@ -462,19 +463,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -539,7 +540,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Form(
                     key: _formKey,
                     child: Container(
-                      width: width*.7,
+                      width: width*.8,
+                      margin: EdgeInsets.fromLTRB(26, 0, 26, 0),
                       child: Column(
                         children: [
                           Center(
@@ -767,7 +769,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 16,),
+                          SizedBox(height: 26,),
                           FutureBuilder<String?>(
                             future: fetchaddMain,
                             builder: (context, snapshot) {
@@ -780,11 +782,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     if (snapshot.hasData) {
                                       return InkWell(
                                         child: Container(
-                                          width: MediaQuery.of(context).size.width*.7,
+                                          width: MediaQuery.of(context).size.width,
                                           padding: EdgeInsets.only(
-                                              top: 6, bottom: 6,left: 4,right: 4),
-                                          decoration: boxDecoration(
-                                              bgColor: lightGrey, radius: 4, showShadow: true),
+                                              top: 10, bottom: 10,left: 14,right: 14),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: sh_colorPrimary2),
+                                            color: sh_white,
+                                            borderRadius: BorderRadius.circular(10.0),
+                                            // boxShadow: true
+                                          ),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
@@ -792,6 +798,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
                                                   text("Banking Information",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+
 
                                                   InkWell(
                                                     onTap: () async{
@@ -821,16 +828,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   )
                                                 ],
                                               ),
-                                              SizedBox(height: 4,),
+                                              SizedBox(height: 10,),
                                               text("Name of account",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
                                               text(viewProModel!.nameOfAccount==null||viewProModel!.nameOfAccount=="" ? "Empty" :viewProModel!.nameOfAccount,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
-                                              SizedBox(height: 4,),
+                                              SizedBox(height: 8,),
                                               text("Account number",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
                                               text(viewProModel!.accountNumber==null||viewProModel!.accountNumber=="" ? "Empty" :viewProModel!.accountNumber,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
-                                              SizedBox(height: 4,),
+                                              SizedBox(height: 8,),
                                               text("Name of Bank",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
                                               text(viewProModel!.nameOfBank==null||viewProModel!.nameOfBank=="" ? "Empty" :viewProModel!.nameOfBank,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
-                                              SizedBox(height: 4,),
+                                              SizedBox(height: 8,),
                                               text("Other Details",fontSize: 13.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
                                               text(viewProModel!.otherDetails==null||viewProModel!.otherDetails=="" ? "Empty" :viewProModel!.otherDetails,fontSize: 14.0, textColor: sh_app_black,fontFamily: "Bold"),
                                             ],),
@@ -860,7 +867,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               }
                             },
                             child: Container(
-                              width: MediaQuery.of(context).size.width*.7,
+                              width: MediaQuery.of(context).size.width,
                               padding: EdgeInsets.only(
                                   top: 6, bottom: 10),
                               decoration: boxDecoration(
@@ -878,7 +885,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               launchScreen(context, ChangePasswordScreen.tag);
                             },
                             child: Container(
-                              width: MediaQuery.of(context).size.width*.7,
+                              width: MediaQuery.of(context).size.width,
                               padding: EdgeInsets.only(
                                   top: 6, bottom: 10),
                               decoration: boxDecoration(
@@ -956,7 +963,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(16,18,18,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -965,15 +972,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("My Account",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("My Account",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -1006,7 +1013,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -1018,7 +1025,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      body: SafeArea(child: setUserForm()),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

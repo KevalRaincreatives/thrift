@@ -25,6 +25,7 @@ import 'package:thrift/screens/ProductDetailScreen.dart';
 import 'package:thrift/screens/ProductlistScreen.dart';
 import 'package:thrift/screens/SearchScreen.dart';
 import 'package:thrift/screens/TermsConditionScreen.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
@@ -34,6 +35,8 @@ import 'package:badges/badges.dart';
 import 'package:thrift/utils/custom_pop_up_menu.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
 
 class ItemModel {
   String title;
@@ -49,6 +52,7 @@ class HomeFragment extends StatefulWidget {
 }
 
 class _HomeFragmentState extends State<HomeFragment> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   late List<ItemModel> menuItems;
   CustomPopupMenuController _controller = CustomPopupMenuController();
 
@@ -118,16 +122,18 @@ class _HomeFragmentState extends State<HomeFragment> {
             headers: headers);
 
         final jsonResponse = json.decode(response.body);
-        print('not json $jsonResponse');
+        print('not json image$jsonResponse');
 
         advModel = new AdvModel.fromJson(jsonResponse);
         // if (new_car == 0) {
 
         prefs.setString("adv_image", "1");
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => CustomDialog(advModel!.data!),
-        );
+        if(advModel!.data!=null) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) => CustomDialog(advModel!.data!),
+          );
+        }
       }
       return advModel;
     } catch (e) {
@@ -142,6 +148,8 @@ class _HomeFragmentState extends State<HomeFragment> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? cat_id = prefs.getString('cat_id');
       String? user_country = prefs.getString('user_selected_country');
+
+      // String? user_country = "Barbados";
       // toast(cat_id);
 
 
@@ -293,7 +301,6 @@ class _HomeFragmentState extends State<HomeFragment> {
             builder: (context) => CreateProductScreen(),
           ),
         ).then((_) => setState(() {}));
-        // Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
       } else if (checkUserModel!.is_store_owner==2) {
         toast("Your Seller Registration is Pending. You will be notified once approved.");
       }
@@ -333,7 +340,7 @@ class _HomeFragmentState extends State<HomeFragment> {
     Imagevw4(int index) {
       if (productListModel[index].images!.length < 1) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: Image.asset(
             sh_no_img,
             fit: BoxFit.cover,
@@ -343,7 +350,7 @@ class _HomeFragmentState extends State<HomeFragment> {
         );
       } else {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(16.0),
           child: Image.network(
             productListModel[index].images![0]!.src!,
             fit: BoxFit.cover,
@@ -466,19 +473,19 @@ class _HomeFragmentState extends State<HomeFragment> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -522,8 +529,8 @@ return FutureBuilder<String?>(
             child: GridView.count(
               childAspectRatio: 0.75,
               crossAxisCount: 2,
-              crossAxisSpacing: 30.0,
-              mainAxisSpacing: 15.0,
+              crossAxisSpacing: 32.0,
+              mainAxisSpacing: 10.0,
               children: List.generate(
                 productListModel.length,
                     (int index) {
@@ -573,7 +580,7 @@ return FutureBuilder<String?>(
                                   padding: const EdgeInsets
                                       .only(
                                       left:
-                                      spacing_standard,
+                                      0,
                                       right:
                                       spacing_standard),
                                   child: Column(
@@ -581,24 +588,21 @@ return FutureBuilder<String?>(
                                     CrossAxisAlignment
                                         .start,
                                     children: <Widget>[
-                                      Hero(
-                                        tag: 'Pro_name',
-                                        child: Text(
-                                          productListModel[
-                                          index]
-                                              .name!,
-                                          maxLines: 1,
-                                          style: TextStyle(
-                                              color:
-                                              sh_black,
-                                              fontFamily:
-                                              fontBold,
-                                              fontSize:
-                                              textSizeMedium),
-                                        ),
+                                      Text(
+                                        productListModel[
+                                        index]
+                                            .name!,
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                            color:
+                                            sh_app_black,
+                                            fontFamily:
+                                            fontBold,
+                                            fontSize:
+                                            textSizeMedium),
                                       ),
                                       SizedBox(
-                                        height: 6,
+                                        height: 4,
                                       ),
                                       MyPrice(index),
                                       SizedBox(
@@ -627,15 +631,25 @@ return FutureBuilder<String?>(
       AppBar appBar = AppBar(
         elevation: 0,
         backgroundColor: sh_colorPrimary2,
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu_rounded),
+              onPressed: () {
+                _scaffoldKey.currentState!.openDrawer();
+              },
+              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+            );
+          },
+        ),
         title: FutureBuilder<String?>(
-
           future: fetchDetailsMain,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return Text(
                 profile_name!,
                 style: TextStyle(
-                    color: sh_white, fontSize: 20, fontFamily: 'Medium'),
+                    color: sh_white, fontSize: 20, fontFamily: 'TitleCursive'),
               );
             }
             return Center(child: CircularProgressIndicator(color: sh_white,));
@@ -669,7 +683,12 @@ return FutureBuilder<String?>(
       );
       double app_height = appBar.preferredSize.height;
       return Stack(children: <Widget>[
-
+        Container(
+          color: sh_colorPrimary2,
+            height: 40,
+            width: width,
+          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+        ),
         // Background with gradient
         Container(
           margin: EdgeInsets.fromLTRB(0, 40, 0, 0),
@@ -678,11 +697,75 @@ return FutureBuilder<String?>(
             child: Image.asset(sh_upper2, fit: BoxFit.fill)
             // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
             ),
+
         Positioned(
           top: 0.0,
           left: 0.0,
           right: 0.0,
-          child: appBar,
+          child: Container(
+            // color: sh_green,
+            padding: const EdgeInsets.fromLTRB(15,spacing_xxLarge,15,0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  // mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    InkWell(
+                      onTap: (){
+                        _scaffoldKey.currentState!.openDrawer();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(0.0,2,0,2),
+                        child: IconButton(onPressed: () {
+                          _scaffoldKey.currentState!.openDrawer();
+                        }, icon: new Image.asset(sh_newmenu,height: 20,width: 20,),
+                            // tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                        ),
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(1.0),
+                      child: FutureBuilder<String?>(
+                        future: fetchDetailsMain,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return Text(
+                              profile_name!,
+                              style: TextStyle(
+                                  color: sh_white, fontSize: 22, fontFamily: 'TitleCursive'),
+                            );
+                          }
+                          return Center(child: CircularProgressIndicator(color: sh_white,));
+                        },
+                      ),
+                    )
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    prefs.setInt("shiping_index", -2);
+                    prefs.setInt("payment_index", -2);
+                    // launchScreen(context, CartScreen.tag);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              CartScreen()),).then((value) {   setState(() {
+                      // refresh state
+                    });});
+                  },
+                  child: MyBadge(),
+
+                ),
+
+              ],
+            ),
+          ),
         ),
         //Above card
         Container(
@@ -715,13 +798,14 @@ return FutureBuilder<String?>(
                     },
                     style: TextStyle(
                         color: sh_colorPrimary2,
-                        fontSize: textSizeMedium,
+                        fontSize: textSizeSMedium,
                         fontFamily: "Bold"),
                     decoration: InputDecoration(
                       filled: true,
                       suffixIcon: Icon(
                         Icons.search,
                         color: sh_colorPrimary2,
+
                       ),
                       fillColor: sh_text_back,
                       contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -741,7 +825,7 @@ return FutureBuilder<String?>(
                   ),
                 ),
                 Container(
-                  height: height - 138,
+                  height: height - 168,
                   width: width,
                   margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
                   padding: EdgeInsets.fromLTRB(26, 0, 26, 0),
@@ -752,18 +836,18 @@ return FutureBuilder<String?>(
                         child: Wrap(
                           children: [Row(
                             children: [
-                              Container(
-                                child: SvgPicture.asset(
-                                  sh_menu_filter,
-                                  color: sh_colorPrimary2,
-                                ),
-                                height: 40,
-                                width: 40,
+                              Image.asset(
+                                sh_menu_filter,
+                                color: sh_colorPrimary2,
+                                height: 22,
+                                width: 16,
+                                fit: BoxFit.fill,
                               ),
+                              SizedBox(width: 12,),
                               Text(
                                 filter_str!,
                                 style: TextStyle(
-                                    color: sh_colorPrimary2, fontSize: 14),
+                                    color: sh_colorPrimary2, fontSize: 13),
                               )
                             ],
                           )],
@@ -825,7 +909,7 @@ return FutureBuilder<String?>(
                         controller: _controller,
                       ),
                       SizedBox(
-                        height: 6,
+                        height: 2,
                       ),
                       FutureBuilder<List<ProductListModel>?>(
                         future: fetchAlbum(),
@@ -878,6 +962,7 @@ return FutureBuilder<String?>(
     }
 
     return Scaffold(
+      key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
       floatingActionButton: Container(
         margin: EdgeInsets.fromLTRB(0, 0, 0, 40),
@@ -920,7 +1005,26 @@ return FutureBuilder<String?>(
         // ),
       ),
 
-      body: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: setUserForm(),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
+      ),
+
       drawer: T2Drawer(),
     );
   }
@@ -1057,7 +1161,7 @@ class T2DrawerState extends State<T2Drawer> {
                                   child: Text(  unescape.convert(categoryListModel[index].name!),
                                       style: TextStyle(
                                           color: sh_colorPrimary2,
-                                          fontSize: 18.sp,
+                                          fontSize: 15.sp,
                                           fontFamily: 'Bold')),
                                 )
                               // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),

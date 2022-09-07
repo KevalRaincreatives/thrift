@@ -13,6 +13,10 @@ import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:badges/badges.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class OrderListScreen extends StatefulWidget {
   static String tag = '/OrderListScreen';
@@ -65,12 +69,31 @@ class _OrderListScreenState extends State<OrderListScreen> {
   }
 
   Future<bool> _onWillPop() async{
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-          builder: (BuildContext context) => DashboardScreen(selectedTab: 0,)),
-      ModalRoute.withName('/DashboardScreen'),
-    );
+    // Navigator.pushAndRemoveUntil(
+    //   context,
+    //   MaterialPageRoute(
+    //       builder: (BuildContext context) => DashboardScreen(selectedTab: 0,)),
+    //   ModalRoute.withName('/DashboardScreen'),
+    // );
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? is_store_owner = prefs.getString('is_store_owner');
+    if(is_store_owner=='1') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => DashboardScreen(selectedTab: 3,)),
+        ModalRoute.withName('/DashboardScreen'),
+      );
+    }else{
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => DashboardScreen(selectedTab: 2,)),
+        ModalRoute.withName('/DashboardScreen'),
+      );
+    }
+
     return false;
   }
 
@@ -117,7 +140,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
           dd +
               "\n Order Placed",
           maxLine: 2,
-          fontSize: textSizeMedium,
+          fontSize: textSizeSMedium2,
           textColor: sh_textColorPrimary);
 
 
@@ -135,8 +158,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
       return                           text7("Total : \$" +
           myprice3 +" "+orderListModel!.currency!,
           textColor: sh_app_txt_color,
-          fontFamily: 'Bold',
-          fontSize: textSizeNormal);
+          fontFamily: fontBold,
+          fontSize: textSizeMedium);
     }
 
     listView() {
@@ -174,11 +197,13 @@ class _OrderListScreenState extends State<OrderListScreen> {
                             OrderDetailScreen()));
               },
               child: Container(
-                margin: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                padding: EdgeInsets.all(10.0),
-                decoration: boxDecoration(
-                  radius: 12,
-                  showShadow: true,
+                margin: EdgeInsets.fromLTRB(26, 20, 26, 0),
+                padding: EdgeInsets.fromLTRB(16,10.0,16,10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: sh_colorPrimary2),
+                  color: sh_white,
+                  borderRadius: BorderRadius.circular(10.0),
+                  // boxShadow: true
                 ),
                 child: IntrinsicHeight(
                   child: Row(
@@ -191,13 +216,13 @@ class _OrderListScreenState extends State<OrderListScreen> {
                             text7("ID :#" +
                                 orderListModel!.data![index]!.ID.toString(),
                                 textColor: sh_textColorPrimary,
-                                fontFamily: 'Bold',
-                                fontSize: textSizeLargeMedium),
-                            SizedBox(height: 4),
-                  text7(orderListModel!.data![index]!.products![0]!.name!,
-                      textColor: sh_app_txt_color,
-                      fontFamily: 'Bold',
-                      fontSize: textSizeNormal),
+                                fontFamily: fontSemibold,
+                                fontSize: textSizeMedium),
+                            // SizedBox(height: 2),
+                            text7(orderListModel!.data![index]!.products![0]!.name!,
+                                textColor: sh_app_txt_color,
+                                fontFamily: fontSemibold,
+                                fontSize: textSizeMedium),
                             CartPrice(index),
                             // text7("Total : $currency_symbol" +
                             //     orderListModel!.data![index]!.total.toString(),
@@ -251,19 +276,19 @@ class _OrderListScreenState extends State<OrderListScreen> {
       if(cart_count==0){
         return Image.asset(
           sh_new_cart,
-          height: 50,
-          width: 50,
+          height: 44,
+          width: 44,
           fit: BoxFit.fill,
           color: sh_white,
         );
       }else{
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white),),
+          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
           child: Image.asset(
             sh_new_cart,
-            height: 50,
-            width: 50,
+            height: 44,
+            width: 44,
             fit: BoxFit.fill,
             color: sh_white,
           ),
@@ -399,7 +424,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,16,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -408,20 +433,32 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DashboardScreen(selectedTab: 2),
-                          ),
-                        );
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
+                      child: IconButton(onPressed: () async{
+
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        String? is_store_owner = prefs.getString('is_store_owner');
+      if(is_store_owner=='1') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(selectedTab: 3),
+          ),
+        );
+      }else{
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(selectedTab: 2),
+          ),
+        );
+      }
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text(sh_lbl_my_orders,style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text(sh_lbl_my_orders,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -454,7 +491,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                       ),
 
                     ),
-                    SizedBox(width: 16,)
+                    // SizedBox(width: 16,)
                   ],
                 ),
               ],
@@ -469,7 +506,25 @@ class _OrderListScreenState extends State<OrderListScreen> {
 
       body: WillPopScope(
           onWillPop: _onWillPop,
-          child: SafeArea(child: setUserForm())),
+          child: StreamProvider<NetworkStatus>(
+            initialData: NetworkStatus.Online,
+            create: (context) =>
+            NetworkStatusService().networkStatusController.stream,
+            child: NetworkAwareWidget(
+              onlineChild: SafeArea(child: setUserForm()),
+              offlineChild: Container(
+                child: Center(
+                  child: Text(
+                    "No internet connection!",
+                    style: TextStyle(
+                        color: Colors.grey[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20.0),
+                  ),
+                ),
+              ),
+            ),
+          )),
     );
 
   }

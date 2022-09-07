@@ -11,6 +11,9 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:http/http.dart' as http;
 import 'package:thrift/utils/ShExtension.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class SearchScreen extends StatefulWidget {
   static String tag='/SearchScreen';
@@ -344,14 +347,31 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
               text("No results found for \"" + searchController.text + "\"",
                   textColor: sh_textColorPrimary,
                   fontFamily: fontMedium,
-                  fontSize: textSizeLarge),
+                  fontSize: textSizeMedium),
               text("Try a diffetent keyword", fontFamily: fontMedium,
-                  fontSize: textSizeMedium)
+                  fontSize: textSizeSMedium)
             ],
           );
         }
       }else{
-        return Container();
+        // toast("value");
+
+        // return Container();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            SizedBox(
+              height: 80,
+            ),
+            text("No results found for \"" + searchController.text + "\"",
+                textColor: sh_textColorPrimary,
+                fontFamily: fontMedium,
+                fontSize: textSizeMedium),
+            text("Try a diffetent keyword", fontFamily: fontMedium,
+                fontSize: textSizeSMedium)
+          ],
+        );
       }
     }
 
@@ -524,7 +544,25 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
         future: fetchaddMain,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return setUserForm();
+            return StreamProvider<NetworkStatus>(
+              initialData: NetworkStatus.Online,
+              create: (context) =>
+              NetworkStatusService().networkStatusController.stream,
+              child: NetworkAwareWidget(
+                onlineChild: SafeArea(child: setUserForm()),
+                offlineChild: Container(
+                  child: Center(
+                    child: Text(
+                      "No internet connection!",
+                      style: TextStyle(
+                          color: Colors.grey[400],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20.0),
+                    ),
+                  ),
+                ),
+              ),
+            );
           } else if (snapshot.hasError) {
             return Text("${snapshot.error}");
           }

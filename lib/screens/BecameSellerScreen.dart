@@ -7,7 +7,7 @@ import 'package:sizer/sizer.dart';
 import 'package:thrift/model/BecameSellerModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
 import 'package:thrift/model/ProfileModel.dart';
-import 'package:thrift/screens/CartScreen2.dart';
+import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
@@ -15,6 +15,10 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class BecameSellerScreen extends StatefulWidget {
   static String tag='/BecameSellerScreen';
@@ -446,7 +450,7 @@ if(becameSellerModel!.success!) {
             child: Form(
               key: _formKey,
               child: Padding(
-                padding: const EdgeInsets.all(spacing_standard_new),
+                padding: const EdgeInsets.fromLTRB(26,spacing_standard_new,26,spacing_standard_new),
                 child: Container(
                   color: sh_white,
                   child: Column(
@@ -466,7 +470,13 @@ if(becameSellerModel!.success!) {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                text(" First Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                Row(
+                                  children: [
+                                    text(" First Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                    text("*", textColor: sh_red, fontFamily: "Bold"),
+                                  ],
+                                ),
+
                                 editTextStyle("First Name", firstNameCont, node,
                                     "Please Enter First Name", sh_white, sh_view_color, 1),
                               ],
@@ -477,45 +487,75 @@ if(becameSellerModel!.success!) {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                text(" Last Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                Row(
+                                  children: [
+                                    text(" Last Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                    text("*", textColor: sh_red, fontFamily: "Bold"),
+                                  ],
+                                ),
                                 editTextStyle("Last Name", lastNameCont, node,
                                     "Please Enter Last Name", sh_white, sh_view_color, 1),
                               ],
                             ),
                           ),
-
                         ],
                       ),
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Email", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      Row(
+                        children: [
+                          text(" Email", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text("*", textColor: sh_red, fontFamily: "Bold"),
+                        ],
+                      ),
+
                       editTextStyle("Enter Email", emailCont, node,
                           "Please Enter Email", sh_white, sh_view_color, 1),
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Phone", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      Row(
+                        children: [
+                          text(" Phone", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text("*", textColor: sh_red, fontFamily: "Bold"),
+                        ],
+                      ),
                       editTextStyle2("Enter Phone", phoneNumberCont, node,
                           "Please Enter Phone", sh_white, sh_view_color, 1),
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Address", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      Row(
+                        children: [
+                          text(" Address", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text("*", textColor: sh_red, fontFamily: "Bold"),
+                        ],
+                      ),
                       editTextStyle("Enter Address", addressCont, node,
                           "Please Enter Address", sh_white, sh_view_color, 1),
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" City", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      Row(
+                        children: [
+                          text(" City", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text("*", textColor: sh_red, fontFamily: "Bold"),
+                        ],
+                      ),
                       editTextStyle("Enter City", cityCont, node,
                           "Please Enter City", sh_white, sh_view_color, 1),
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Postcode", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Enter Postcode", pinCodeCont, node,
-                          "Please Enter Postcode", sh_white, sh_view_color, 1),
+                      Row(
+                        children: [
+                          text(" Zipcode", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text("*", textColor: sh_red, fontFamily: "Bold"),
+                        ],
+                      ),
+                      editTextStyle("Enter Zipcode", pinCodeCont, node,
+                          "Please Enter Zipcode", sh_white, sh_view_color, 1),
                       SizedBox(
                         height: spacing_middle,
                       ),
@@ -540,27 +580,64 @@ if(becameSellerModel!.success!) {
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Name of account", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Name of account", accountNameCont, node,
-                          "Please Enter Name of account", sh_white, sh_view_color, 1),
-                      SizedBox(
-                        height: spacing_middle,
+                      Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: EdgeInsets.only(
+                            top: 10, bottom: 10,left: 14,right: 14),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: sh_colorPrimary2),
+                          color: sh_white,
+                          borderRadius: BorderRadius.circular(10.0),
+                          // boxShadow: true
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                              text("Banking Information",fontSize: 18.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                            ],),
+                            SizedBox(height: 10,),
+                            Row(
+                              children: [
+                                text(" Name of account",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                text("*",fontSize: 15.0, textColor: sh_red, fontFamily: "Bold"),
+                              ],
+                            ),
+                            editTextStyle5("Name of account", accountNameCont, node,
+                                "Please Enter Name of account", sh_white, sh_view_color, 1),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            Row(
+                              children: [
+                                text(" Account number",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                text("*",fontSize: 15.0, textColor: sh_red, fontFamily: "Bold"),
+                              ],
+                            ),
+                            editTextStyle5("Account number", accountNumberCont, node,
+                                "Please Enter Account number", sh_white, sh_view_color, 1),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            Row(
+                              children: [
+                                text(" Name of Bank",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                                text("*",fontSize: 15.0, textColor: sh_red, fontFamily: "Bold"),
+                              ],
+                            ),
+                            editTextStyle5("Name of Bank", bankNameCont, node,
+                                "Please Enter Name of Bank", sh_white, sh_view_color, 1),
+                            SizedBox(
+                              height: spacing_middle,
+                            ),
+                            text(" Other Details",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
+                            editTextStyle3("Other Details", otherCont, node,
+                                "Please Enter Other Details", sh_white, sh_view_color, 4),
+                          ],),
                       ),
-                      text(" Account number", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Account number", accountNumberCont, node,
-                          "Please Enter Account number", sh_white, sh_view_color, 1),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Name of Bank", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle("Name of Bank", bankNameCont, node,
-                          "Please Enter Name of Bank", sh_white, sh_view_color, 1),
-                      SizedBox(
-                        height: spacing_middle,
-                      ),
-                      text(" Other Details", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                      editTextStyle3("Other Details", otherCont, node,
-                          "Please Enter Other Details", sh_white, sh_view_color, 4),
+
 SizedBox(height: 16,),
                       InkWell(
                         onTap: () async {
@@ -596,7 +673,7 @@ SizedBox(height: 16,),
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(0,spacing_middle4,0,0),
+            padding: const EdgeInsets.fromLTRB(10,18,10,0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -605,15 +682,15 @@ SizedBox(height: 16,),
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6.0,2,6,2),
+                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
                       child: IconButton(onPressed: () {
                         Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 36,)),
+                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text("Become a Seller",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      child: Text("Become a Seller",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -647,7 +724,25 @@ SizedBox(height: 16,),
       builder: (context, orientation, deviceType) {
         return Scaffold(
 
-          body: SafeArea(child: setUserForm()),
+          body: StreamProvider<NetworkStatus>(
+            initialData: NetworkStatus.Online,
+            create: (context) =>
+            NetworkStatusService().networkStatusController.stream,
+            child: NetworkAwareWidget(
+              onlineChild: SafeArea(child: setUserForm()),
+              offlineChild: Container(
+                child: Center(
+                  child: Text(
+                    "No internet connection!",
+                    style: TextStyle(
+                        color: Colors.grey[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20.0),
+                  ),
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -677,10 +772,10 @@ Padding editTextStyle(var hintText, var cn, final node, String alert,
         filled: true,
         fillColor: sh_white,
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
       ),
     ),
@@ -698,16 +793,16 @@ Padding editTextStyle3(var hintText, var cn, final node, String alert,
       style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
       cursorColor: sh_app_txt_color,
       decoration: InputDecoration(
-        contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
+        contentPadding: EdgeInsets.fromLTRB(18, 10, 18, 10),
         hintText: hintText,
         hintStyle: TextStyle(color: sh_app_txt_color),
         filled: true,
         fillColor: sh_white,
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
       ),
     ),
@@ -725,7 +820,12 @@ Padding editTextStyle2(var hintText, var cn, final node, String alert,
       onEditingComplete: () => node.nextFocus(),
       style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
       cursorColor: sh_app_txt_color,
-
+      validator: (text) {
+        if (text == null || text.isEmpty) {
+          return alert;
+        }
+        return null;
+      },
       decoration: InputDecoration(
         contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
         hintText: hintText,
@@ -733,10 +833,43 @@ Padding editTextStyle2(var hintText, var cn, final node, String alert,
         filled: true,
         fillColor: sh_white,
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+      ),
+    ),
+  );
+}
+
+Padding editTextStyle5(var hintText, var cn, final node, String alert,
+    Color sh_white, Color sh_view_color, int min_lne) {
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+    child: TextFormField(
+      maxLines: min_lne,
+      controller: cn,
+      onEditingComplete: () => node.nextFocus(),
+      style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
+      validator: (text) {
+        if (text == null || text.isEmpty) {
+          return alert;
+        }
+        return null;
+      },
+      cursorColor: sh_app_txt_color,
+      decoration: InputDecoration(
+        contentPadding: EdgeInsets.fromLTRB(18, 10, 18, 10),
+        hintText: hintText,
+        hintStyle: TextStyle(color: sh_app_txt_color,fontSize: textSizeMedium),
+        filled: true,
+        fillColor: sh_white,
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: sh_view_color, width: 1.0)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: sh_view_color, width: 1.0)),
       ),
     ),

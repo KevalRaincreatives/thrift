@@ -232,7 +232,6 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           completedCount += 1;
         }
       }
-      // toast(addProMetaModel[3].value);
 
       addProMetaModel2
           .add(new AddProMetaModel2(key: "attrs_val", value: addProMetaModel));
@@ -428,7 +427,99 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       }
     }
 
+    CheckVariant() {
+      if (attributeModel!.data!.attributes!.length > 0) {
+        return Container(
+          child: ListView.builder(
+              itemCount: attributeModel!.data!.attributes!.length,
+              physics: NeverScrollableScrollPhysics(),
+              // itemExtent: 50.0,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                // itModel = MyVariant(
+                //     attr_name:  pro_det_model!.attributes![index]!.name!,
+                //     attr_optn:  "");
+                // itemsModel.add(itModel!);
+                // itemsModel.clear();
+                itModel = NewAttributeModel(
+                    name: attributeModel!.data!.attributes![index]!.title!,
+                    position: 0,
+                    variation: true,
+                    visible: true,
+                    options: [],
+                    required:
+                        attributeModel!.data!.attributes![index]!.required!);
+                itemsModel!.add(itModel!);
 
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // Text(
+                    //   "Select "+attributeModel!.data!.attributes![index]!.title!,
+                    //   style: TextStyle(
+                    //       fontSize: 16,
+                    //       fontFamily: 'Bold',
+                    //       color: sh_textColorPrimary),
+                    // ),
+                    Row(
+                      children: [
+                        text(
+                            " Select " +
+                                attributeModel!
+                                    .data!.attributes![index]!.title!,
+                            textColor: sh_app_txt_color,
+                            fontFamily: "Bold"),
+                        text("*",
+                            textColor: attributeModel!
+                                        .data!.attributes![index]!.required ==
+                                    "1"
+                                ? sh_red
+                                : sh_transparent,
+                            fontFamily: "Bold"),
+                      ],
+                    ),
+                    // text(
+                    //     " Select " +
+                    //         attributeModel!.data!.attributes![index]!.title!,
+                    //     textColor: sh_app_txt_color,
+                    //     fontFamily: "Bold"),
+                    PlayerWidget(
+                        pro_det_model: attributeModel!,
+                        index: index,
+                        itemsModel: itemsModel),
+                    SizedBox(height: 10),
+
+                    // DropdownButton(
+                    //   underline: SizedBox(),
+                    //   isExpanded: true,
+                    //   items: pro_det_model!.attributes![index]!.options!
+                    //       .map((item) {
+                    //     return new DropdownMenuItem(
+                    //       child: Text(
+                    //         item.toString(),
+                    //         style: TextStyle(
+                    //             color: sh_textColorPrimary,
+                    //             fontFamily: fontRegular,
+                    //             fontSize: textSizeNormal),
+                    //       ),
+                    //       value: item,
+                    //     );
+                    //   }).toList(),
+                    //   hint: Text('Select'),
+                    //   value: selectedValue,
+                    //   onChanged: (String? newVal) {
+                    //     selectedValue = newVal!;
+                    //     setState(() {});
+                    //   },
+                    // ),
+                  ],
+                );
+              }),
+        );
+      } else {
+        return Container();
+      }
+    }
 
     final node = FocusScope.of(context);
 
@@ -1227,7 +1318,6 @@ class AttrWidget extends StatefulWidget {
   NewAttributeModel? itModel;
   List<NewAttributeModel> itemsModel = [];
 
-
   AttrWidget(this.attributeModel, this.itModel, this.itemsModel);
 
   @override
@@ -1238,7 +1328,6 @@ class AttrWidget extends StatefulWidget {
 
 class _AttrWidgetState extends State<AttrWidget> {
   // String selectedReportList = '';
-  List<TextEditingController>? _textFieldRateControllers=[];
 
   @override
   void initState() {
@@ -1266,22 +1355,17 @@ class _AttrWidgetState extends State<AttrWidget> {
                   visible: true,
                   options: [],
                   required: widget
-                      .attributeModel!.data!.attributes![index]!.required!,
-              type: widget
-                  .attributeModel!.data!.attributes![index]!.type!);
+                      .attributeModel!.data!.attributes![index]!.required!);
 
               widget.itemsModel.add(widget.itModel!);
               // if(attributeModel!.data!.attributes![index]!.title!)
-              _textFieldRateControllers!.add(new TextEditingController());
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Row(
                     children: [
-                      text(widget.attributeModel!.data!.attributes![index]!.type=='text'
-                          ? " Add " +
-                          widget.attributeModel!.data!.attributes![index]!
-                              .title!:
+                      text(
                           " Select " +
                               widget.attributeModel!.data!.attributes![index]!
                                   .title!,
@@ -1299,7 +1383,7 @@ class _AttrWidgetState extends State<AttrWidget> {
                   PlayerWidget(
                       pro_det_model: widget.attributeModel!,
                       index: index,
-                      itemsModel: widget.itemsModel,textFieldRateControllers: _textFieldRateControllers![index]),
+                      itemsModel: widget.itemsModel),
                   SizedBox(height: 10),
                 ],
               );
@@ -1315,9 +1399,8 @@ class PlayerWidget extends StatefulWidget {
   final AttributeModel? pro_det_model;
   final int? index;
   final List<NewAttributeModel>? itemsModel;
-  final TextEditingController? textFieldRateControllers;
 
-  PlayerWidget({Key? key, this.pro_det_model, this.index, this.itemsModel,this.textFieldRateControllers})
+  PlayerWidget({Key? key, this.pro_det_model, this.index, this.itemsModel})
       : super(key: key);
 
   @override
@@ -1337,60 +1420,52 @@ class _PlayerWidgetState extends State<PlayerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // var _value = widget.pro_det_model!.attributes![widget.index!]!.options!.isEmpty
+    //     ? selectedItemValue
+    //     : widget.pro_det_model!.attributes![widget.index!]!.options!.firstWhere((item) => item.toString() == selectedItemValue.toString());
 
+    List<Widget> techChips2(StateSetter setState2) {
+      List<Widget> chips = [];
+      for (int i = 0;
+          i <
+              widget.pro_det_model!.data!.attributes![widget.index!]!.values!
+                  .length;
+          i++) {
+        Widget item = Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5),
+          child: FilterChip(
+            label: Text(widget.pro_det_model!.data!.attributes![widget.index!]!
+                .values![i]!.name!),
+            labelStyle: TextStyle(color: Colors.white),
+            backgroundColor: Colors.grey,
+            selectedColor: Colors.blue.shade800,
+            disabledColor: Colors.blue.shade400,
+            // selected: categoryListModel2[i].selected!,
+            onSelected: (bool value) {
+              // ischange = true;
+              setState2(() {
+                // categoryListModel2[i].selected = value;
+              });
+            },
+          ),
+        );
+        chips.add(item);
+      }
+      return chips;
+    }
 
     return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState2) {
-          if(widget.itemsModel![widget.index!].type=='text'){
-            return TextFormField(
-              maxLines: 1,
-              controller: widget.textFieldRateControllers,
-              autofocus: false,
-              onFieldSubmitted: (value) async {
-                FocusScope.of(context).unfocus();
-                FocusScope.of(context).requestFocus(new FocusNode());
-                widget.itemsModel![widget.index!].options!.clear();
-                widget.itemsModel![widget.index!].options!.add(value);
-              },
-              onChanged:  (text) {
-                widget.itemsModel![widget.index!].options!.clear();
-                widget.itemsModel![widget.index!].options!.add(text);
-              },
-              // onEditingComplete: () => node.nextFocus(),
-              style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
-              // validator: (text) {
-              //   if (text == null || text.isEmpty) {
-              //     return "alert";
-              //   }
-              //   return null;
-              // },
-              cursorColor: sh_app_txt_color,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
-                hintText: "Add "+widget.itemsModel![widget.index!].name!,
-                hintStyle: TextStyle(color: sh_app_txt_color),
-                filled: true,
-                fillColor: sh_white,
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: sh_view_color, width: 1.0)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: sh_view_color, width: 1.0)),
-              ),
-            );
-          }else {
-            return MultiAttributeChip(
-              widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
-              widget.index!,
-              widget.itemsModel,
-              onSelectionChanged: (selectedList) {
-                setState2(() {
-                  selectedReportList = selectedList;
-                });
-              },
-            );
-          }
+      return MultiAttributeChip(
+        widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
+        widget.index!,
+        widget.itemsModel,
+        onSelectionChanged: (selectedList) {
+          setState2(() {
+            selectedReportList = selectedList;
+          });
+        },
+      );
       //   Wrap(
       //   spacing: 8,
       //   direction: Axis.horizontal,
@@ -1470,12 +1545,28 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
   // List<String> selectedChoices = [];
 
   RemoveOther(String names) async {
+    // for (var j = 0; j < widget.itemsModel!.length; j++) {
+    // if(j==widget.index){
+    //   widget.itemsModel![widget.index!].options!.add(names);
+    // }else{
+    //   widget.itemsModel![widget.index!].options!.remove(names);
+    // }
+
+    // }
+
+    // for (var j = 0; j < widget.itemsModel![widget.index!].options!.length; j++) {
+    //   widget.itemsModel![widget.index!].options![j].removeAllWhiteSpace();
+    // }
 
     widget.itemsModel![widget.index!].options!.clear();
 
     widget.itemsModel![widget.index!].options!.add(names);
   }
 
+//   RemoveOther2(String names) async{
+// selectedChoices.clear();
+// selectedChoices.add(names);
+//   }
 
   _buildChoiceList() {
     List<Widget> choices = [];
@@ -1483,8 +1574,7 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
     widget.reportList.forEach((item) {
       choices.add(Container(
         padding: const EdgeInsets.all(2.0),
-        child:
-        ChoiceChip(
+        child: ChoiceChip(
           label: Text(item!.name!),
           labelStyle: TextStyle(
               color: selectedChoices == item.name ? sh_white : sh_black),
@@ -1502,6 +1592,9 @@ class _MultiAttributeChipState extends State<MultiAttributeChip> {
                   ? widget.itemsModel![widget.index!].options!.remove(item.name)
                   : RemoveOther(item.name!);
 
+              // selectedChoices.contains(item.name)
+              //     ? selectedChoices.remove(item.name)
+              //     : RemoveOther2(item.name!);
               widget.onSelectionChanged?.call(selectedChoices);
             });
           },
@@ -1558,7 +1651,10 @@ class _PhotoWidgetState extends State<PhotoWidget> {
           child: index == widget.multimimageModel!.length
               ? IconButton(
               color: sh_app_txt_color,
-              icon: Image.asset(sh_add_image,width: 60,height: 60,fit: BoxFit.fill,color: sh_colorPrimary2,),
+              icon: Icon(
+                Icons.add_circle_outline,
+                size: 60,
+              ),
               onPressed: () async {
                 // final pickedFileList =
                 // await widget.picker!.pickMultiImage();

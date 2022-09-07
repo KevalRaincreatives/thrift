@@ -9,6 +9,10 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
+
 
 class ForgotPasswordScreen extends StatefulWidget {  static String tag='/ForgotPasswordScreen';
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -138,7 +142,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Text(
                   "Please provide your registered email address to reset your password",
                   style: TextStyle(
-                    fontFamily: 'Bold',
+                    fontFamily: 'Medium',
                     color: sh_colorPrimary2,
                     fontSize: 16,
                   ),
@@ -161,7 +165,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     hintText: "Email",
                     hintStyle: TextStyle(color: sh_colorPrimary2,fontFamily: 'Regular'),
                     labelText: "Email",
-                    labelStyle: TextStyle(color: sh_colorPrimary2,fontFamily: 'Bold'),
+                    labelStyle: TextStyle(color: sh_colorPrimary2,fontFamily: 'Regular'),
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: sh_colorPrimary2, width: 1.0),
                     ),
@@ -170,7 +174,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
                   maxLines: 1,
-                  style: TextStyle(color: sh_colorPrimary2,fontFamily: 'Bold'),
+                  style: TextStyle(color: sh_colorPrimary2,fontFamily: 'Regular'),
                 ),
 
                 SizedBox(height: 36,),
@@ -185,7 +189,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     decoration: boxDecoration(
                         bgColor: sh_btn_color, radius: 10, showShadow: true),
                     child: text("CONTINUE",
-                        fontSize: 24.0,
+                        fontSize: 20.0,
                         textColor: sh_colorPrimary2,
                         isCentered: true,
                         fontFamily: 'Bold'),
@@ -220,7 +224,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                     Padding(
                       padding: const EdgeInsets.all(6.0),
-                      child: Text("Forgot Password",style: TextStyle(color: Colors.white,fontSize: 45,fontFamily: 'Cursive'),),
+                      child: Text("Forgot Password",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
                     )
                   ],
                 ),
@@ -235,8 +239,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: setUserForm(),
+      body: StreamProvider<NetworkStatus>(
+        initialData: NetworkStatus.Online,
+        create: (context) =>
+        NetworkStatusService().networkStatusController.stream,
+        child: NetworkAwareWidget(
+          onlineChild: SafeArea(child: setUserForm()),
+          offlineChild: Container(
+            child: Center(
+              child: Text(
+                "No internet connection!",
+                style: TextStyle(
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20.0),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

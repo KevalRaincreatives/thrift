@@ -254,7 +254,17 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
               value: itemsModel[j].options![0].toString()));
         }
       }
- // toast(addProMetaModel[2].value);
+
+      // addProMetaModel.add(new AddProMetaModel(key: "color",value: "Black"));
+      // addProMetaModel.add(new AddProMetaModel(key: "condition",value: "Old"));
+      // addProMetaModel.add(new AddProMetaModel(key: "material",value: "Woolen"));
+      // addProMetaModel.add(new AddProMetaModel(key: "size",value: "L"));
+      // print(addProMetaModel.length.toString());
+      // print(addProMetaModel[2].key.toString()+addProMetaModel[2].value.toString());
+      // print(addProMetaModel[3].key.toString()+addProMetaModel[3].value.toString());
+      // print(addProMetaModel[4].key.toString()+addProMetaModel[4].value.toString());
+      // print(addProMetaModel[5].key.toString()+addProMetaModel[5].value.toString());
+
       addProMetaModel2
           .add(new AddProMetaModel2(key: "attrs_val", value: addProMetaModel));
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -268,6 +278,12 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       };
+
+      // var body2 = json.encode({
+      //
+      //   "key": "attrs_val",
+      //   "value": addProMetaModel
+      // });
 
       var body = json.encode({
         "name": ProductNameCont.text,
@@ -285,6 +301,10 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       });
 
       print(body);
+      // var response = await http.put(
+      //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id'),
+      //     body: body,
+      //     headers: headers);
 
       var response = await http.post(
           Uri.parse(
@@ -786,7 +806,10 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           child: index == multimimageModel.length
               ? IconButton(
               color: sh_app_txt_color,
-              icon: Image.asset(sh_add_image,width: 60,height: 60,fit: BoxFit.fill,color: sh_colorPrimary2,),
+              icon: Icon(
+                Icons.add_box,
+                size: 80,
+              ),
               onPressed: () async {
                 final pickedFileList =
                 await _picker
@@ -1330,7 +1353,24 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                               addProCatModel.add(new AddProCategoryModel(
                                   id: selectedReportList[i]));
                             }
-
+                            // toast(itemsModel.length.toString());
+                            // if (itemsModel[0].options!.length > 0) {
+                            //   print(itemsModel[0].name! +
+                            //       itemsModel[0].options![0].toString());
+                            // }
+                            // if (itemsModel[1].options!.length > 0) {
+                            //   print(itemsModel[1].name! +
+                            //       itemsModel[1].options![0].toString());
+                            // }
+                            // if (itemsModel[2].options!.length > 0) {
+                            //   print(itemsModel[2].name! +
+                            //       itemsModel[2].options![0].toString());
+                            // }
+                            // if (itemsModel[3].options!.length > 0) {
+                            //   print(itemsModel[3].name! +
+                            //       itemsModel[3].options![0].toString());
+                            // }
+                            // if (multimimageModel.length > 0) {
                             int jj = 0;
                             String mj = '';
 
@@ -1724,7 +1764,6 @@ class AttrWidget extends StatefulWidget {
 
 class _AttrWidgetState extends State<AttrWidget> {
   // String selectedReportList = '';
-  List<TextEditingController>? _textFieldRateControllers=[];
 
   @override
   void initState() {
@@ -1770,9 +1809,7 @@ class _AttrWidgetState extends State<AttrWidget> {
                     visible: true,
                     options: [],
                     required:
-                    widget.attributeModel!.data!.attributes![index]!.required!,
-                    type: widget
-                    .attributeModel!.data!.attributes![index]!.type!);
+                    widget.attributeModel!.data!.attributes![index]!.required!);
               } else {
                 widget.itModel = NewAttributeModel(
                     name: widget.attributeModel!.data!.attributes![index]!
@@ -1785,23 +1822,18 @@ class _AttrWidgetState extends State<AttrWidget> {
                           .value![my_index2]!.value
                     ],
                     required:
-                    widget.attributeModel!.data!.attributes![index]!.required!,
-                    type: widget
-                        .attributeModel!.data!.attributes![index]!.type!);
+                    widget.attributeModel!.data!.attributes![index]!.required!);
               }
               widget.itemsModel.add(widget.itModel!);
               // if(attributeModel!.data!.attributes![index]!.title!)
-              _textFieldRateControllers!.add(new TextEditingController());
+
 
               if (my_index2 == -1) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Row(children: [
-                      text(widget.attributeModel!.data!.attributes![index]!.type=='text'
-                          ? " Add " +
-                          widget.attributeModel!.data!.attributes![index]!
-                              .title!:
+                      text(
                           " Select " +
                               widget.attributeModel!.data!.attributes![index]!
                                   .title!,
@@ -1817,8 +1849,7 @@ class _AttrWidgetState extends State<AttrWidget> {
                         pro_det_model: widget.attributeModel!,
                         index: index,
                         selectedReportList: '',
-                        itemsModel: widget.itemsModel,
-                        textFieldRateControllers: _textFieldRateControllers![index]),
+                        itemsModel: widget.itemsModel),
                     SizedBox(height: 10),
 
 
@@ -1830,10 +1861,6 @@ class _AttrWidgetState extends State<AttrWidget> {
                   children: <Widget>[
                     Row(children: [
                       text(
-                          widget.attributeModel!.data!.attributes![index]!.type=='text'
-                              ? " Add " +
-                              widget.attributeModel!.data!.attributes![index]!
-                                  .title!:
                           " Select " +
                               widget.attributeModel!.data!.attributes![index]!
                                   .title!,
@@ -1856,8 +1883,7 @@ class _AttrWidgetState extends State<AttrWidget> {
                         selectedReportList:
                         widget.pro_det_model!.metaData![my_index]!
                             .value![my_index2]!.value,
-                        itemsModel: widget.itemsModel,
-                        textFieldRateControllers: _textFieldRateControllers![index]),
+                        itemsModel: widget.itemsModel),
                     SizedBox(height: 10),
 
 
@@ -1877,10 +1903,9 @@ class PlayerWidget extends StatefulWidget {
   final int? index;
   final List<NewAttributeModel>? itemsModel;
   String? selectedReportList;
-   TextEditingController? textFieldRateControllers;
 
   PlayerWidget(
-      {Key? key, this.pro_det_model, this.index, this.selectedReportList, this.itemsModel,this.textFieldRateControllers})
+      {Key? key, this.pro_det_model, this.index, this.selectedReportList, this.itemsModel})
       : super(key: key);
 
   @override
@@ -1897,61 +1922,57 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   @override
   void initState() {
     super.initState();
-widget.textFieldRateControllers!.text= widget.selectedReportList!;
   }
-
 
   @override
   Widget build(BuildContext context) {
+    // var _value = widget.pro_det_model!.attributes![widget.index!]!.options!.isEmpty
+    //     ? selectedItemValue
+    //     : widget.pro_det_model!.attributes![widget.index!]!.options!.firstWhere((item) => item.toString() == selectedItemValue.toString());
+
+    List<Widget> techChips2(StateSetter setState2) {
+      List<Widget> chips = [];
+      for (int i = 0;
+      i <
+          widget.pro_det_model!.data!.attributes![widget.index!]!.values!
+              .length;
+      i++) {
+        Widget item = Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5),
+          child: FilterChip(
+            label: Text(widget.pro_det_model!.data!.attributes![widget.index!]!
+                .values![i]!.name!),
+            labelStyle: TextStyle(color: Colors.white),
+            backgroundColor: Colors.grey,
+            selectedColor: Colors.blue.shade800,
+            disabledColor: Colors.blue.shade400,
+            // selected: categoryListModel2[i].selected!,
+            onSelected: (bool value) {
+              // ischange = true;
+              setState2(() {
+                // categoryListModel2[i].selected = value;
+              });
+            },
+          ),
+        );
+        chips.add(item);
+      }
+      return chips;
+    }
 
     return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState2) {
-      if(widget.itemsModel![widget.index!].type=='text'){
-        return TextFormField(
-          maxLines: 1,
-          controller: widget.textFieldRateControllers,
-          autofocus: false,
-          onFieldSubmitted: (value) async {
-            FocusScope.of(context).unfocus();
-            FocusScope.of(context).requestFocus(new FocusNode());
-            widget.itemsModel![widget.index!].options!.clear();
-            widget.itemsModel![widget.index!].options!.add(value);
-          },
-          onChanged:  (text) {
-            widget.itemsModel![widget.index!].options!.clear();
-            widget.itemsModel![widget.index!].options!.add(text);
-          },
-          // onEditingComplete: () => node.nextFocus(),
-          style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
-
-          cursorColor: sh_app_txt_color,
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
-            hintText: "Add "+widget.itemsModel![widget.index!].name!,
-            hintStyle: TextStyle(color: sh_app_txt_color),
-            filled: true,
-            fillColor: sh_white,
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: sh_view_color, width: 1.0)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: sh_view_color, width: 1.0)),
-          ),
-        );
-      }else {
-        return MultiAttributeChip(
-          widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
-          widget.index!,
-          widget.itemsModel,
-          widget.selectedReportList,
-          onSelectionChanged: (selectedList) {
-            setState2(() {
-              widget.selectedReportList = selectedList;
-            });
-          },
-        );
-      }
+          return MultiAttributeChip(
+            widget.pro_det_model!.data!.attributes![widget.index!]!.values!,
+            widget.index!,
+            widget.itemsModel,
+            widget.selectedReportList,
+            onSelectionChanged: (selectedList) {
+              setState2(() {
+                widget.selectedReportList = selectedList;
+              });
+            },
+          );
           //   Wrap(
           //   spacing: 8,
           //   direction: Axis.horizontal,
