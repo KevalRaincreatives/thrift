@@ -57,10 +57,11 @@ class _DefaultAddressScreenState extends State<DefaultAddressScreen> {
           headers: headers);
       print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres");
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('DefaultAddressScreen list_shipping_addres Response status2: ${response.statusCode}');
+      print('DefaultAddressScreen list_shipping_addres Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
 
 
       _addressModel = new AddressListModel.fromJson(jsonResponse);

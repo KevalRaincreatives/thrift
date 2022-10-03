@@ -80,9 +80,9 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
               'https://thriftapp.rcstaging.co.in/wp-json/v3/view_profile_picture'),
           headers: headers,
           body: msg);
-      print('Response body: ${response.body}');
+      print('BankDetailScreen view_profile_picture Response status2: ${response.statusCode}');
+      print('BankDetailScreen view_profile_picture Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
       viewProModel = new ViewProModel.fromJson(jsonResponse);
 
       // fnl_img = viewProModel!.profilePicture!;
@@ -143,10 +143,10 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
               'https://thriftapp.rcstaging.co.in/wp-json/v3/update_account_details'),
           headers: headers,
           body: msg);
-      print('Response body: ${response.body}');
+      print('BankDetailScreen update_account_details Response status2: ${response.statusCode}');
+      print('BankDetailScreen update_account_details Response body2: ${response.body}');
       EasyLoading.dismiss();
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
 
       toast('Updated');
       Navigator.pop(context);

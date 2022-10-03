@@ -38,9 +38,9 @@ class _AccountFragmentState extends State<AccountFragment> {
   @override
   void initState() {
     fetchUserStatus2Main=fetchUserStatus2();
-    // fetchSellerMain=fetchSeller();
+
     super.initState();
-//    mListings2 = getPopular();
+
   }
 
   Future<CheckUserModel?> fetchUserStatus() async {
@@ -61,6 +61,10 @@ class _AccountFragmentState extends State<AccountFragment> {
         "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
           ,headers: headers);
 
+
+      print('AccountFragment check_seller_status Response status2: ${response.statusCode}');
+      print('AccountFragment check_seller_status Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
       checkUserModel = new CheckUserModel.fromJson(jsonResponse);
       prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
@@ -73,8 +77,6 @@ class _AccountFragmentState extends State<AccountFragment> {
         launchScreen(context, ProfileScreen.tag);
       }
 
-      print('sucess');
-      print('not json $jsonResponse');
 
       return checkUserModel;
     } catch (e) {
@@ -100,14 +102,13 @@ class _AccountFragmentState extends State<AccountFragment> {
         "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
           ,headers: headers);
 
+
+      print('AccountFragment check_seller_status Response status2: ${response.statusCode}');
+      print('AccountFragment check_seller_status Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
       checkUserModel = new CheckUserModel.fromJson(jsonResponse);
       prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
       EasyLoading.dismiss();
-
-      print('sucess');
-      print('not json $jsonResponse');
-
       return checkUserModel;
     } catch (e) {
       EasyLoading.dismiss();

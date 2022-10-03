@@ -58,12 +58,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
   CheckUserModel? checkUserModel;
   int timer = 800, offset = 0;
+  Future<CheckUserModel?>? fetchuserstatus;
 
 
   @override
   void initState() {
     super.initState();
-
+    fetchuserstatus=fetchUserStatus();
     // fragments = [homeFragment, settingFragment, profileFragment];
     // fetchData();
   }
@@ -102,8 +103,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         fragments = [homeFragment, settingFragment, profileFragment];
       }
 
-      print('sucess');
-      print('not json $jsonResponse');
+      print('DashboardScreen check_seller_status Response status2: ${response.statusCode}');
+      print('DashboardScreen check_seller_status Response body2: ${response.body}');
 
       return checkUserModel;
     } catch (e) {
@@ -163,7 +164,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onlineChild: WillPopScope(
                     onWillPop: _onWillPop,
                     child: FutureBuilder<CheckUserModel?>(
-                      future: fetchUserStatus(),
+                      future: fetchuserstatus,
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
                           return Stack(
@@ -235,7 +236,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       itemBuilder: (BuildContext ctx, index) {
                                         offset +=50;
                                         timer = 800 + offset;
-                                        print(timer);
+                                        // print(timer);
                                         return Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Container(

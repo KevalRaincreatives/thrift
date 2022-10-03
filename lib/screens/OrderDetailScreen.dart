@@ -84,8 +84,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           body: msg);
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
-      print('Response body2: ${response.body}');
+      print('OrderDetailScreen get_order_detail Response status2: ${response.statusCode}');
+      print('OrderDetailScreen get_order_detail Response body2: ${response.body}');
       orderDetailModel = new OrderDetailModel.fromJson(jsonResponse);
 
       return orderDetailModel;
@@ -138,7 +138,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final jsonResponse = json.decode(response.body);
       EasyLoading.dismiss();
 
-      print('not json2 $jsonResponse');
+      print('OrderDetailScreen reviews Response status2: ${response.statusCode}');
+      print('OrderDetailScreen reviews Response body2: ${response.body}');
+
       toast("Review Submitted successfully");
       // becameSellerModel = new BecameSellerModel.fromJson(jsonResponse);
 

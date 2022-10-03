@@ -65,8 +65,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
       var response = await http.get(
           Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&country=$user_country&search=$searchText"));
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SearchScreen products Response status2: ${response.statusCode}');
+      print('SearchScreen products Response body2: ${response.body}');
       productListModel.clear();
       final jsonResponse = json.decode(response.body);
       for (Map i in jsonResponse) {
@@ -163,8 +163,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
       var response = await http.get(
           Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&country=$user_country&search=$searchText"));
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SearchScreen products Response status2: ${response.statusCode}');
+      print('SearchScreen products Response body2: ${response.body}');
       productListModel.clear();
       final jsonResponse = json.decode(response.body);
       for (Map i in jsonResponse) {

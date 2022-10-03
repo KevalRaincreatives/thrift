@@ -174,6 +174,7 @@ const sh_hint_address_type = "Address Type";
 const sh_hint_city = "City";
 const sh_hint_pin_code = "Zip code";
 const sh_hint_code = "Zip code";
+const sh_hint_main_code = "Code";
 const sh_hint_mobile_no = "Phone number";
 const sh_text_start_to_shopping = "Start to Shopping";
 const sh_text_todo = "TODO";

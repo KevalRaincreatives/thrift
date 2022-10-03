@@ -93,8 +93,10 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
 
       var response;
       response = await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+
+
+      print('SellerProfileScreen seller_reviews Response status2: ${response.statusCode}');
+      print('SellerProfileScreen seller_reviews Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
       // for (Map i in jsonResponse) {
       //
@@ -121,8 +123,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       var response = await http.get(
           Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products_customers?seller_id=$seller_id"));
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SellerProfileScreen seller_products_customers Response status2: ${response.statusCode}');
+      print('SellerProfileScreen seller_products_customers Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
       productListModel = new ProductListSellerModel.fromJson(jsonResponse);
 

@@ -125,7 +125,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_estimated_retail_price?product_id=$pro_id'),
           headers: headers);
       final jsonResponse = json.decode(response.body);
-      print('not json prpr$jsonResponse');
+      print('ProductDetailScreen view_estimated_retail_price Response status2: ${response.statusCode}');
+      print('ProductDetailScreen view_estimated_retail_price Response body2: ${response.body}');
       estPriceModel = new EstPriceModel.fromJson(jsonResponse);
 
       return estPriceModel;
@@ -146,8 +147,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       var response = await http.get(Uri.parse(
           "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?category=$cat_id"));
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2:  prpr${response.body}');
+      print('ProductDetailScreen category Response status2: ${response.statusCode}');
+      print('ProductDetailScreen category Response body2: ${response.body}');
       productListModel.clear();
       final jsonResponse = json.decode(response.body);
       for (Map i in jsonResponse) {
@@ -172,7 +173,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       var response = await http.get(Uri.parse(
           'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id'));
       final jsonResponse = json.decode(response.body);
-      print('not json prpr$jsonResponse');
+      print('ProductDetailScreen get_product_seller Response status2: ${response.statusCode}');
+      print('ProductDetailScreen get_product_seller Response body2: ${response.body}');
       productSellerModel = new ProductSellerModel.fromJson(jsonResponse);
       prefs.setString(
           "seller_pic", productSellerModel!.seller!.profile_picture!);
@@ -194,7 +196,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       var response = await http.get(Uri.parse(
           'https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id'));
       final jsonResponse = json.decode(response.body);
-      print('not json prpr$jsonResponse');
+      print('ProductDetailScreen products Response status2: ${response.statusCode}');
+      print('ProductDetailScreen products Response body2: ${response.body}');
       pro_det_model = new ProductDetailModel.fromJson(jsonResponse);
       if (pro_det_model!.attributes!.length > 0) {
         if (pro_det_model!.attributes![0]!.variation == true) {
@@ -454,17 +457,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           body: msg,
           headers: headers);
 
-      print('Response body: addcart${response.body}');
+      print('ProductDetailScreen wooapp_add_to_cart Response status2: ${response.statusCode}');
+      print('ProductDetailScreen wooapp_add_to_cart Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
-      EasyLoading.dismiss();
+
+
       if (response.statusCode == 200) {
         addCartModel = new AddCartModel.fromJson(jsonResponse);
         if (addCartModel!.status == true) {
-          setState(() {
-            _isVisible = false;
-            _isVisible_success = true;
-          });
+          fetchCart();
+          // setState(() {
+          //   _isVisible = false;
+          //   _isVisible_success = true;
+          // });
+
+
 //           showDialog<void>(
 //             context: context,
 //             barrierDismissible: false, // user must tap button for close dialog!
@@ -497,6 +504,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 //             },
 //           );
         } else {
+          EasyLoading.dismiss();
           toast('Something went wrong');
           showDialog<void>(
               context: context,
@@ -515,6 +523,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               });
         }
       } else {
+        EasyLoading.dismiss();
         toast('Spmething went wrong');
         showDialog<void>(
             context: context,
@@ -558,7 +567,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       String? token = prefs.getString('token');
       String? user_country = prefs.getString('user_selected_country');
 
-      print(token);
+
       Map<String, String> headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -573,10 +582,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
           headers: headers);
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      EasyLoading.dismiss();
+      print('ProductDetailScreen woocart Response status2: ${response.statusCode}');
+      print('ProductDetailScreen woocart Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       cat_model = new CartModel.fromJson(jsonResponse);
 
       if (cat_model!.cart == null) {
@@ -594,6 +604,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       return cat_model;
     } catch (e) {
+      EasyLoading.dismiss();
       print('caught error $e');
       // return cat_model;
     }
@@ -620,6 +631,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     if (ct_changel!) {
       setState(() {
         ct_changel = false;
+          _isVisible = false;
+          _isVisible_success = true;
         // cart_count = cart_count! + 1;
       });
     }
@@ -1141,6 +1154,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     SuccesVisiblity() {
       if (_isVisible_success) {
+        var myprice2 =
+        double.parse(cat_model!.total.toString());
+        var myprice = myprice2.toStringAsFixed(2);
         return Visibility(
             visible: _isVisible_success,
             child: Container(
@@ -1186,84 +1202,60 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   SizedBox(
                     height: 12,
                   ),
-                  FutureBuilder<CartModel?>(
-                      future: fetchCart(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var myprice2 =
-                              double.parse(cat_model!.total.toString());
-                          var myprice = myprice2.toStringAsFixed(2);
-                          return Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    "You have ",
-                                    style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 15,
-                                        fontFamily: fontSemibold),
-                                  ),
-                                  Text(
-                                    cat_model!.cart!.length.toString() +
-                                        " Item ",
-                                    style: TextStyle(
-                                        color: sh_black,
-                                        fontSize: 15,
-                                        fontFamily: fontSemibold),
-                                  ),
-                                  Text(
-                                    "in your cart",
-                                    style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 15,
-                                        fontFamily: fontSemibold),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 6,
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    "Cart Total: ",
-                                    style: TextStyle(
-                                        color: sh_colorPrimary2,
-                                        fontSize: 15,
-                                        fontFamily: fontSemibold),
-                                  ),
-                                  Text(
-                                    "\$" +
-                                        myprice +
-                                        " " +
-                                        pro_det_model!.currency!,
-                                    style: TextStyle(
-                                        color: sh_black,
-                                        fontSize: 15,
-                                        fontFamily: fontSemibold),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        } else if (snapshot.hasError) {
-//                    return Text("${snapshot.error}");
-                          return Center(
-                              child: Container(
-                            alignment: Alignment.center,
-                            child: Text(
-                              'Your Cart is currently empty',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: sh_textColorPrimary,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ));
-                        }
-                        // By default, show a loading spinner.
-                        return Center(child: CircularProgressIndicator());
-                      }),
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            "You have ",
+                            style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: 15,
+                                fontFamily: fontSemibold),
+                          ),
+                          Text(
+                            cat_model!.cart!.length.toString() +
+                                " Item ",
+                            style: TextStyle(
+                                color: sh_black,
+                                fontSize: 15,
+                                fontFamily: fontSemibold),
+                          ),
+                          Text(
+                            "in your cart",
+                            style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: 15,
+                                fontFamily: fontSemibold),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 6,
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            "Cart Total: ",
+                            style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: 15,
+                                fontFamily: fontSemibold),
+                          ),
+                          Text(
+                            "\$" +
+                                myprice +
+                                " " +
+                                pro_det_model!.currency!,
+                            style: TextStyle(
+                                color: sh_black,
+                                fontSize: 15,
+                                fontFamily: fontSemibold),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   SizedBox(
                     height: 40,
                   ),

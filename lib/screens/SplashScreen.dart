@@ -123,7 +123,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       }
 
       final jsonResponse = json.decode(response.body);
-      print('not json woosettings$jsonResponse');
+      print('SplashScreen woosettings Response status2: ${response.statusCode}');
+      print('SplashScreen woosettings Response body2: ${response.body}');
       setting_model = new SettingModel.fromJson(jsonResponse);
       // String gfg=setting_model!.woosettings!.currencySymbol;
       // new String.fromCharCodes(new Runes('\u+$gfg'));
@@ -216,7 +217,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _testAsyncErrorOnInit() async {
     Future<void>.delayed(const Duration(seconds: 2), () {
       final List<int> list = <int>[];
-      print(list[100]);
+      // print(list[100]);
     });
   }
 
@@ -273,10 +274,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
             headers: headers);
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('SplashScreen woocart Response status2: ${response.statusCode}');
+        print('SplashScreen woocart Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
-        print('not json $jsonResponse');
+
         cat_model = new CartModel.fromJson(jsonResponse);
         if (cat_model!.cart == null) {
           prefs.setInt("cart_count", 0);

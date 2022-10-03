@@ -62,7 +62,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String UserId = prefs.getString('UserId');
       String? token = prefs.getString('token');
-      print("my tokens"+token!);
+
 
 
       // final msg = jsonEncode({"ID": UserId});
@@ -98,7 +98,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('MyProfileScreen profile Response status2: ${response.statusCode}');
+      print('MyProfileScreen profile Response body2: ${response.body}');
+
       EasyLoading.dismiss();
 
       profileModel = new ProfileModel.fromJson(jsonResponse);
@@ -123,7 +125,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       //   statename = profileModel.shipping.state;
       // }
 
-      print('sucess');
 
       return profileModel;
     } catch (e) {
@@ -171,7 +172,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
 //
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('MyProfileScreen edit_profile Response status2: ${response.statusCode}');
+      print('MyProfileScreen edit_profile Response body2: ${response.body}');
+
       profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
       toast(profileUpdateModel!.msg);
 
@@ -233,9 +236,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           body: msg);
       EasyLoading.dismiss();
 
-//
       final jsonResponse = json.decode(response.body);
-      print('not json2 $jsonResponse');
+      print('MyProfileScreen become_a_seller Response status2: ${response.statusCode}');
+      print('MyProfileScreen become_a_seller Response body2: ${response.body}');
       // profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
 
 

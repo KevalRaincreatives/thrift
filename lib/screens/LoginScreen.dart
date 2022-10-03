@@ -90,10 +90,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       EasyLoading.dismiss();
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('LoginScreen add_cart_data Response status2: ${response.statusCode}');
+      print('LoginScreen add_cart_data Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
 
       final allRows = await dbHelper.queryAllRows();
       cartPro.clear();
@@ -137,10 +138,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
             headers: headers);
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('LoginScreen woocart Response status2: ${response.statusCode}');
+        print('LoginScreen woocart Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
-        print('not json $jsonResponse');
+
         cart_model = new CartModel.fromJson(jsonResponse);
         if (cart_model!.cart == null) {
           prefs.setInt("cart_count", 0);
@@ -231,19 +232,15 @@ SaveToken();
         client.close();
       }
 
-
-//      r.raiseForStatus();
-//      String body = r.content();
-//      print(body);
-
       final jsonResponse = json.decode(response.body);
-      print('device json $jsonResponse');
-      // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+      print('LoginScreen add_device Response status2: ${response.statusCode}');
+      print('LoginScreen add_device Response body2: ${response.body}');
+
 
       EasyLoading.dismiss();
       launchScreen(context, DashboardScreen.tag);
       // launchScreen(context, DashboardScreen.tag);
-      print('sucess');
+
       return cat_model;
     } catch (e) {
       EasyLoading.dismiss();
@@ -289,12 +286,13 @@ SaveToken();
 
 
       final jsonResponse = json.decode(response.body);
-      print('not json login$jsonResponse');
-      print('Response bodylogin: ${response.body}');
+      print('LoginScreen login Response status2: ${response.statusCode}');
+      print('LoginScreen login Response body2: ${response.body}');
+
       if (response.statusCode == 200) {
 
         cat_model = new ShLoginModel.fromJson(jsonResponse);
-        print("cat dta$cat_model");
+
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString('token', cat_model!.data!.token.toString());
@@ -319,8 +317,6 @@ SaveToken();
         fetchCart();
         // launchScreen(context, DashboardScreen.tag);
 
-// toast("sucess");
-        print('sucess');
       } else {
         EasyLoading.dismiss();
         err_model = new ShLoginErrorNewModel.fromJson(jsonResponse);

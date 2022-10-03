@@ -53,8 +53,8 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
           body: msg
       );
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('OrderSuccessScreen send_push_notification_order Response status2: ${response.statusCode}');
+      print('OrderSuccessScreen send_push_notification_order Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
 
 

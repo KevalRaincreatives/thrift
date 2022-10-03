@@ -143,9 +143,6 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
     final allRows = await dbHelper.queryAllRows();
     cartPro.clear();
     allRows.forEach((row) => cartPro.add(CartPro.fromJson(row)));
-    // _showMessageInScaffold('Query done.');
-    print(cartPro.length.toString());
-
     fl_total = 0.0;
     for (var i = 0; i < cartPro.length; i++) {
       double fnlamnt = double.parse(cartPro[i].line_subtotal!) *
@@ -199,10 +196,10 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
           headers: headers);
 
-      print('Response status2: ${response.statusCode}');
-      print('Response bodycart: ${response.body}');
+      print('NewConfirmScreen woocart Response status2: ${response.statusCode}');
+      print('NewConfirmScreen woocart Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       cat_model = new CartModel.fromJson(jsonResponse);
 
       itemsModel.clear();
@@ -270,8 +267,9 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/order_status_push_notification?payment_method=cod&order_id=$order_id'),
           headers: headers);
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('NewConfirmScreen order_status_push_notification Response status2: ${response.statusCode}');
+      print('NewConfirmScreen order_status_push_notification Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
 
       return null;
@@ -301,8 +299,9 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
           headers: headers,
           body: msg);
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('NewConfirmScreen send_push_notification_order Response status2: ${response.statusCode}');
+      print('NewConfirmScreen send_push_notification_order Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
 
       return null;
@@ -386,10 +385,11 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
 
       EasyLoading.dismiss();
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body25: ${response.body}');
+      print('NewConfirmScreen create_order Response status2: ${response.statusCode}');
+      print('NewConfirmScreen create_order Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
 
       if (payment_method == "cod") {
         orderSuccessModel = new OrderSuccessNewModel.fromJson(jsonResponse);
@@ -403,6 +403,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
         if (errorCheckModel.success == "true") {
           orderWebSuccessModel =
               new OrderWebSuccessModel.fromJson(jsonResponse);
+          print("Myweburl : "+orderWebSuccessModel!.redirectUrl.toString());
           prefs.setString(
               "weburl", orderWebSuccessModel!.redirectUrl.toString());
           prefs.setString('ord_id', orderWebSuccessModel!.orderId!.toString());
@@ -1599,6 +1600,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
                                 child: TextFormField(
                                   controller: FeedbackCont,
                                   maxLines: 5,
+                                    // keyboardType: TextInputType.text, textInputAction: TextInputAction.done,
                                   style: TextStyle(
                                       color: sh_textColorPrimary,
                                       fontSize: textSizeMedium,

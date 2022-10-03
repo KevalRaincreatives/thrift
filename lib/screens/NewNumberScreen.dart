@@ -88,8 +88,8 @@ class _NewNumberScreenState extends State<NewNumberScreen> {
 
 
       final jsonResponse = json.decode(response.body);
-      print('Response body2: ${response.body}');
-      print('not json $jsonResponse');
+      print('NewNumberScreen chk_phone_availability Response status2: ${response.statusCode}');
+      print('NewNumberScreen chk_phone_availability Response body2: ${response.body}');
       numberCheckModel = new NumberCheckModel.fromJson(jsonResponse);
       if (numberCheckModel!.success!) {
         EasyLoading.dismiss();
@@ -121,7 +121,7 @@ class _NewNumberScreenState extends State<NewNumberScreen> {
               );}
         );
 
-        print('sucess');
+
       }
       return numberCheckModel;
     } catch (e) {

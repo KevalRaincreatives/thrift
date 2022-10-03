@@ -125,8 +125,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         categoryListModel.clear();
         categoryListModel2.clear();
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('ProductUpdateScreen products Response status2: ${response.statusCode}');
+        print('ProductUpdateScreen products Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         for (Map i in jsonResponse) {
           categoryListModel.add(CategoryModel.fromJson(i));
@@ -191,8 +191,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         itemsModel.clear();
 
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('ProductUpdateScreen attributes Response status2: ${response.statusCode}');
+        print('ProductUpdateScreen attributes Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         attributeModel = new AttributeModel.fromJson(jsonResponse);
       }
@@ -225,7 +225,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       var response = await http.get(Uri.parse(
           'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_estimated_retail_price?product_id=$pro_id'),headers: headers);
       final jsonResponse = json.decode(response.body);
-      print('not json prpr$jsonResponse');
+      print('ProductUpdateScreen view_estimated_retail_price Response status2: ${response.statusCode}');
+      print('ProductUpdateScreen view_estimated_retail_price Response body2: ${response.body}');
       estPriceModel = new EstPriceModel.fromJson(jsonResponse);
       EstPriceCont.text = estPriceModel!.estimatedRetailPrice!;
 
@@ -244,7 +245,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       addProMetaModel
           .add(new AddProMetaModel(key: "Brand", value: BrandCont.text));
       addProMetaModel
-          .add(new AddProMetaModel(key: "Faults", value: FaultsCont.text));
+          .add(new AddProMetaModel(key: "Fault (s)", value: FaultsCont.text));
 
       for (var j = 0; j < attributeModel!.data!.attributes!.length; j++) {
         if (itemsModel[j].options!.length > 0) {
@@ -292,9 +293,10 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: addcart${response.body}');
+      print('ProductUpdateScreen products/PUT Response status2: ${response.statusCode}');
+      print('ProductUpdateScreen products/PUT Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       createProModel = new CreateProModel.fromJson(jsonResponse);
       // EasyLoading.dismiss();
       toast("Product Update Successfully");
@@ -335,9 +337,10 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: addprice${response.body}');
+      print('ProductUpdateScreen edit_estimated_retail_price Response status2: ${response.statusCode}');
+      print('ProductUpdateScreen edit_estimated_retail_price Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       EasyLoading.dismiss();
 
       // EasyLoading.dismiss();
@@ -382,9 +385,10 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: addpic${response.body}');
+      print('ProductUpdateScreen add_product_images Response status2: ${response.statusCode}');
+      print('ProductUpdateScreen add_product_images Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       if(EstPriceCont.text.length>0){
         AddEstPrice(prodId);
       }else{
@@ -429,9 +433,10 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: delpic${response.body}');
+      print('ProductUpdateScreen delete_product_image Response status2: ${response.statusCode}');
+      print('ProductUpdateScreen delete_product_image Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       EasyLoading.dismiss();
 
       toast("Image Deleted");
@@ -439,8 +444,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         multimimageModel
             .removeAt(index);
 
-        print(
-            'set new state of images');
+
       });
 
       // Navigator.pop(context);
@@ -465,7 +469,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       }
     }
     AddPhoto(prodId);
-    print('object');
+
   }
 
   Future<ProductDetailModel?> fetchDetail() async {
@@ -479,7 +483,8 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       var response = await http.get(Uri.parse(
           'https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id'));
       final jsonResponse = json.decode(response.body);
-      print('not json prpr$jsonResponse');
+      print('ProductUpdateScreen products Response status2: ${response.statusCode}');
+      print('ProductUpdateScreen products Response body2: ${response.body}');
       pro_det_model = new ProductDetailModel.fromJson(jsonResponse);
 
       ProductNameCont.text = pro_det_model!.name!;
@@ -1127,7 +1132,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
                         height: spacing_middle,
                       ),
                       Row(children: [
-                        text(" Faults",
+                        text(" Fault (s)",
                             textColor: sh_app_txt_color,
                             fontFamily: "Bold"),
                         text("*",

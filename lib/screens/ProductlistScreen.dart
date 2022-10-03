@@ -85,8 +85,8 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
       var response = await http.get(
           Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100&country=$user_country&category=$cat_id"));
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('ProductListScreen products Response status2: ${response.statusCode}');
+      print('ProductListScreen products Response body2: ${response.body}');
       productListModel.clear();
       final jsonResponse = json.decode(response.body);
       for (Map i in jsonResponse) {

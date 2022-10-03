@@ -264,6 +264,7 @@ class OrderListModelData {
   String? shippingTotal;
   String? shippingMethod;
   String? paymentMethod;
+  String? order_status;
   List<OrderListModelDataProducts?>? products;
   OrderListModelDataShippingAddress? shippingAddress;
   OrderListModelDataBillingAddress? billingAddress;
@@ -299,6 +300,7 @@ class OrderListModelData {
     this.shippingTotal,
     this.shippingMethod,
     this.paymentMethod,
+    this.order_status,
     this.products,
     this.shippingAddress,
     this.billingAddress,
@@ -334,6 +336,7 @@ class OrderListModelData {
     shippingTotal = json["shipping_total"]?.toString();
     shippingMethod = json["shipping_method"]?.toString();
     paymentMethod = json["payment_method"]?.toString();
+    order_status= json["order_status"]?.toString();
     if (json["products"] != null) {
       final v = json["products"];
       final arr0 = <OrderListModelDataProducts>[];
@@ -377,6 +380,7 @@ class OrderListModelData {
     data["shipping_total"] = shippingTotal;
     data["shipping_method"] = shippingMethod;
     data["payment_method"] = paymentMethod;
+    data["order_status"]=order_status;
     if (products != null) {
       final v = products;
       final arr0 = [];

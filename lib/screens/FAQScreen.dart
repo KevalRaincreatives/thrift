@@ -59,20 +59,18 @@ class _FAQScreenState extends State<FAQScreen> {
       try {
         response=await client.get(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/customer_service'));
+                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/faq'));
       } finally {
         client.close();
       }
-//      r.raiseForStatus();
-//      String body = r.content();
-//      print(body);
 
       final jsonResponse = json.decode(response.body);
       termsModel = new TermsModel.fromJson(jsonResponse);
 
 
-      print('sucess');
-      print('not json $jsonResponse');
+      print('FAQScreen customer_service Response status2: ${response.statusCode}');
+      print('FAQScreen customer_service Response body2: ${response.body}');
+
 
       return termsModel;
     } catch (e) {

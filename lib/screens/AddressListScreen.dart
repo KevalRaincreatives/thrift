@@ -64,9 +64,10 @@ class _AddressListScreenState extends State<AddressListScreen> {
       await get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres'), headers: headers);
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('AddressListScreen list_shipping_addres Response status2: ${response.statusCode}');
+      print('AddressListScreen list_shipping_addres Response body2: ${response.body}');
       _addressModel = new AddressListModel.fromJson(jsonResponse);
-      print(_addressModel!.data);
+
       if(_addressModel!.data!.length>0) {
         prefs = await SharedPreferences.getInstance();
         prefs.setString('firstname', _addressModel!.data![0]!.firstName!);
@@ -107,8 +108,9 @@ class _AddressListScreenState extends State<AddressListScreen> {
           body: msg);
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
-      print('Response body2: ${response.body}');
+
+      print('AddressListScreen delete_shipping_addres Response status2: ${response.statusCode}');
+      print('AddressListScreen delete_shipping_addres Response body2: ${response.body}');
       // orderDetailModel = new OrderDetailModel.fromJson(jsonResponse);
       toast('Deleted');
       EasyLoading.dismiss();

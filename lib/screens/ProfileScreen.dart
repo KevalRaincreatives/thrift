@@ -95,7 +95,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('ProfileScreen profile Response status2: ${response.statusCode}');
+      print('ProfileScreen profile Response body2: ${response.body}');
       EasyLoading.dismiss();
 
       profileModel = new ProfileModel.fromJson(jsonResponse);
@@ -120,7 +121,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       //   statename = profileModel.shipping.state;
       // }
 
-      print('sucess');
 
       return profileModel;
     } catch (e) {
@@ -169,7 +169,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 //
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('ProfileScreen edit_profile Response status2: ${response.statusCode}');
+      print('ProfileScreen edit_profile Response body2: ${response.body}');
       profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
       toast(profileUpdateModel!.msg);
 
@@ -233,7 +234,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 //
       final jsonResponse = json.decode(response.body);
-      print('not json2 $jsonResponse');
+      print('ProfileScreen become_a_seller Response status2: ${response.statusCode}');
+      print('ProfileScreen become_a_seller Response body2: ${response.body}');
       // profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
 
 
@@ -364,10 +366,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/v3/update_profile_picture'),
           headers: headers,
           body: msg);
-      print('Response body: ${response.body}');
+      print('ProfileScreen update_profile_picture Response status2: ${response.statusCode}');
+      print('ProfileScreen update_profile_picture Response body2: ${response.body}');
       EasyLoading.dismiss();
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
 
       toast('Uploaded');
       // order_det_model = new OrderDetailModel.fromJson(jsonResponse);
@@ -400,9 +402,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/v3/view_profile_picture'),
           headers: headers,
           body: msg);
-      print('Response body: ${response.body}');
+      print('ProfileScreen view_profile_picture Response status2: ${response.statusCode}');
+      print('ProfileScreen view_profile_picture Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       viewProModel = new ViewProModel.fromJson(jsonResponse);
 
       fnl_img = viewProModel!.profilePicture!;
@@ -438,26 +441,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     var width = MediaQuery.of(context).size.width;
     final node = FocusScope.of(context);
 
-    ValidSeller() {
-      return InkWell(
-        onTap: () async {
-          // BecameSeller();
-          launchScreen(context, BecameSellerScreen.tag);
-        },
-        child: Container(
-          width: MediaQuery.of(context).size.width*.7,
-          padding: EdgeInsets.only(
-              top: 6, bottom: 10),
-          decoration: boxDecoration(
-              bgColor: sh_btn_color, radius: 10, showShadow: true),
-          child: text("Became a Seller",
-              fontSize: 16.0,
-              textColor: sh_colorPrimary2,
-              isCentered: true,
-              fontFamily: 'Bold'),
-        ),
-      );
-    }
+    // ValidSeller() {
+    //   return InkWell(
+    //     onTap: () async {
+    //       // BecameSeller();
+    //       launchScreen(context, BecameSellerScreen.tag);
+    //     },
+    //     child: Container(
+    //       width: MediaQuery.of(context).size.width*.7,
+    //       padding: EdgeInsets.only(
+    //           top: 6, bottom: 10),
+    //       decoration: boxDecoration(
+    //           bgColor: sh_btn_color, radius: 10, showShadow: true),
+    //       child: text("Became a Seller",
+    //           fontSize: 16.0,
+    //           textColor: sh_colorPrimary2,
+    //           isCentered: true,
+    //           fontFamily: 'Bold'),
+    //     ),
+    //   );
+    // }
 
     BadgeCount(){
       if(cart_count==0){
@@ -914,7 +917,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         top: 6, bottom: 10),
                                     decoration: boxDecoration(
                                         bgColor: sh_btn_color, radius: 10, showShadow: true),
-                                    child: text("Became a Seller",
+                                    child: text("Become a Seller",
                                         fontSize: 16.0,
                                         textColor: sh_colorPrimary2,
                                         isCentered: true,

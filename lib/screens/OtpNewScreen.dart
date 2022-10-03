@@ -190,7 +190,8 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
 
 //
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('OtpNewScreen edit_profile Response status2: ${response.statusCode}');
+      print('OtpNewScreen edit_profile Response body2: ${response.body}');
       profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
       toast(profileUpdateModel!.msg);
       Navigator.pushAndRemoveUntil(

@@ -102,8 +102,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       var response;
       response = await http.get(Uri.parse(
           "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SellerEditProfileScreen seller_reviews Response status2: ${response.statusCode}');
+      print('SellerEditProfileScreen seller_reviews Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
       // for (Map i in jsonResponse) {
       //
@@ -151,8 +151,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
             "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=asc&per_page=100&country=$user_country&seller_id=$UserId"));
         print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=asc&per_page=100&country=$user_country&seller_id=$UserId");
       }
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SellerEditProfileScreen seller_products Response status2: ${response.statusCode}');
+      print('SellerEditProfileScreen seller_products Response body2: ${response.body}');
 
       // productListModel!.products!.clear();
       final jsonResponse = json.decode(response.body);
@@ -215,14 +215,12 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
 
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('SellerEditProfileScreen profile Response status2: ${response.statusCode}');
+      print('SellerEditProfileScreen profile Response body2: ${response.body}');
 
       profileModel = new ProfileModel.fromJson(jsonResponse);
 
       prefs.setString("seller_name", profileModel!.data!.firstName!+" "+profileModel!.data!.lastName!);
-
-
-      print('sucess');
 
       return profileModel;
     } catch (e) {
@@ -261,10 +259,10 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
             headers: headers,
             body: msg);
       }
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SellerEditProfileScreen mark_as_unreserved Response status2: ${response.statusCode}');
+      print('SellerEditProfileScreen mark_as_unreserved Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       setState(() {
 
       });
@@ -306,10 +304,10 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
             headers: headers,
             body: msg);
 
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SellerEditProfileScreen mark_as_sold Response status2: ${response.statusCode}');
+      print('SellerEditProfileScreen mark_as_sold Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       EasyLoading.dismiss();
       setState(() {
 
@@ -341,7 +339,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       var response = await http.delete(Uri.parse(
           'https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id'));
       final jsonResponse = json.decode(response.body);
-      print('not json prpr$jsonResponse');
+      print('SellerEditProfileScreen products Response status2: ${response.statusCode}');
+      print('SellerEditProfileScreen products Response body2: ${response.body}');
       // pro_det_model = new ProductDetailModel.fromJson(jsonResponse);
       EasyLoading.dismiss();
       setState(() {
@@ -392,9 +391,10 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
           Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/v3/view_profile_picture'),
           headers: headers,
           body: msg);
-      print('Response body: ${response.body}');
+      print('SellerEditProfileScreen view_profile_picture Response status2: ${response.statusCode}');
+      print('SellerEditProfileScreen view_profile_picture Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       viewProModel = new ViewProModel.fromJson(jsonResponse);
 
       fnl_img = viewProModel!.profilePicture!;

@@ -40,7 +40,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           body: msg);
 
       final jsonResponse = json.decode(response.body);
-      print('forgot password $jsonResponse');
+
+      print('ForgotPasswordScreen wooapp_reset_password Response status2: ${response.statusCode}');
+      print('ForgotPasswordScreen wooapp_reset_password Response body2: ${response.body}');
+
       numberCheckModel = new ForgotModel.fromJson(jsonResponse);
       EasyLoading.dismiss();
       if (numberCheckModel!.success!) {

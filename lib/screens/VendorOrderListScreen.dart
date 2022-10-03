@@ -59,7 +59,8 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
           headers: headers);
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('VendorOrderListScreen view_vendor_order Response status2: ${response.statusCode}');
+      print('VendorOrderListScreen view_vendor_order Response body2: ${response.body}');
       orderListModel = new OrderListModel.fromJson(jsonResponse);
 
       return orderListModel;

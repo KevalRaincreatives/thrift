@@ -123,8 +123,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         categoryListModel.clear();
         categoryListModel2.clear();
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('CreateProductScreen categories Response status2: ${response.statusCode}');
+        print('CreateProductScreen categories Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         for (Map i in jsonResponse) {
           categoryListModel.add(CategoryModel.fromJson(i));
@@ -165,8 +165,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         attributeModel = null;
         itemsModel!.clear();
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('CreateProductScreen attributes Response status2: ${response.statusCode}');
+        print('CreateProductScreen attributes Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         attributeModel = new AttributeModel.fromJson(jsonResponse);
       }
@@ -187,9 +187,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     int myind = 0;
     for (var j = 0; j < itemsModel.length; j++) {
       if (itemsModel[j].options!.length > 0) {
-        print("take" +
-            itemsModel[j].name! +
-            itemsModel[j].options![0].toString());
+
         addProMetaModel.add(new AddProMetaModel(
             key: itemsModel[j].name!,
             value: itemsModel[j].options![0].toString()));
@@ -199,9 +197,6 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     int myind2 = itemsModel.length - 1;
     if (myind == myind2) {
       Future.delayed(const Duration(seconds: 2), () {
-        print("bcd3" + addProMetaModel.length.toString());
-        print("bcd" + myind.toString());
-        print("bcd2" + myind2.toString());
 
         return addProMetaModel;
       });
@@ -215,17 +210,15 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           .add(new AddProMetaModel(key: "Brand", value: BrandCont.text));
       if (_isVisible) {
         addProMetaModel
-            .add(new AddProMetaModel(key: "Faults", value: FaultsCont.text));
+            .add(new AddProMetaModel(key: "Fault (s)", value: FaultsCont.text));
       } else {
-        addProMetaModel.add(new AddProMetaModel(key: "Faults", value: "NONE"));
+        addProMetaModel.add(new AddProMetaModel(key: "Fault (s)", value: "NONE"));
       }
       int completedCount = 0;
       // await getUserNameSharedPreference(itemsModel,addProMetaModel).then((value) async{
       for (var j = 0; j < attributeModel!.data!.attributes!.length; j++) {
         if (itemsModel![j].options!.length > 0) {
-          print("take" +
-              itemsModel![j].name! +
-              itemsModel![j].options![0].toString());
+
           addProMetaModel.add(new AddProMetaModel(
               key: itemsModel![j].name!,
               value: itemsModel![j].options![0].toString()));
@@ -270,9 +263,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: addcart${response.body}');
+      print('CreateProductScreen products Response status2: ${response.statusCode}');
+      print('CreateProductScreen products Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       createProModel = new CreateProModel.fromJson(jsonResponse);
 
       toast("Product Created Successfully");
@@ -316,9 +310,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: addcart${response.body}');
+      print('CreateProductScreen add_product_images Response status2: ${response.statusCode}');
+      print('CreateProductScreen add_product_images Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       if (EstPriceCont.text.length > 0) {
         AddEstPrice(prodId);
       } else {
@@ -363,9 +358,11 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
           body: body,
           headers: headers);
 
-      print('Response body: addprice${response.body}');
+      print('CreateProductScreen add_estimated_retail_price Response status2: ${response.statusCode}');
+      print('CreateProductScreen add_estimated_retail_price Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       EasyLoading.dismiss();
 
       // EasyLoading.dismiss();
@@ -390,7 +387,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       uploadModel.add(upModel!);
     }
     AddPhoto(prodId);
-    print('object');
+
   }
 
   @override
@@ -655,7 +652,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                       ),
                       Row(
                         children: [
-                          text(" Faults",
+                          text(" Fault (s)",
                               textColor: sh_app_txt_color, fontFamily: "Bold"),
                           text("*", textColor: sh_red, fontFamily: "Bold"),
                         ],

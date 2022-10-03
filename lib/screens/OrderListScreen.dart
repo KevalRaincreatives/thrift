@@ -59,7 +59,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
           headers: headers);
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('OrderListScreen view_user_order Response status2: ${response.statusCode}');
+      print('OrderListScreen view_user_order Response body2: ${response.body}');
       orderListModel = new OrderListModel.fromJson(jsonResponse);
 
       return orderListModel;
@@ -134,11 +135,12 @@ class _OrderListScreenState extends State<OrderListScreen> {
     }
 
     OrderDate(int index) {
+      String order_status=orderListModel!.data![index]!.order_status!;
       String hh = orderListModel!.data![index]!.postTitle!.substring(13);
       String dd = hh.substring(0, hh.length - 10);
       return text(
           dd +
-              "\n Order Placed",
+              "\n Order Status: $order_status",
           maxLine: 2,
           fontSize: textSizeSMedium2,
           textColor: sh_textColorPrimary);

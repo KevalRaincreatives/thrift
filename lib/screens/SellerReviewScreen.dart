@@ -49,8 +49,8 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
       var response;
         response = await http.get(Uri.parse(
             "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('SellerReviewScreen seller_reviews Response status2: ${response.statusCode}');
+      print('SellerReviewScreen seller_reviews Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
       // for (Map i in jsonResponse) {
       //

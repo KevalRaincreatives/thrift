@@ -86,14 +86,10 @@ class _NewSignUpScreenState extends State<NewSignUpScreen> {
           headers: headers,
           body: msg);
 
-      // Response response = await get(
-      //   'https://moco.bb/wp-json/v3/check_phone?phone_number=$phoneNumber&country_code=$urlEncoded',
-      // );
-
 
       final jsonResponse = json.decode(response.body);
-      print('Response body2: ${response.body}');
-      print('not json $jsonResponse');
+      print('NewSignUpScreen chk_data_availability Response status2: ${response.statusCode}');
+      print('NewSignUpScreen chk_data_availability Response body2: ${response.body}');
       numberCheckModel = new NumberCheckModel.fromJson(jsonResponse);
       if (numberCheckModel!.success!) {
         EasyLoading.dismiss();
@@ -143,8 +139,6 @@ class _NewSignUpScreenState extends State<NewSignUpScreen> {
                   ),
                 ],
               );});
-
-        print('sucess');
       }
       return numberCheckModel;
     } catch (e) {

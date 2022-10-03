@@ -65,8 +65,8 @@ bool singleTap = true;
       termsModel = new TermsModel.fromJson(jsonResponse);
 
 
-      print('sucess');
-      print('not json $jsonResponse');
+      print('TermsConditionScreen terms Response status2: ${response.statusCode}');
+      print('TermsConditionScreen terms Response body2: ${response.body}');
 
       return termsModel;
     } catch (e) {
@@ -108,18 +108,14 @@ Future<ShLoginModel?> SaveToken() async {
     }
 
 
-//      r.raiseForStatus();
-//      String body = r.content();
-//      print(body);
-
     final jsonResponse = json.decode(response.body);
-    print('device json $jsonResponse');
+    print('TermsConditionScreen add_device Response status2: ${response.statusCode}');
+    print('TermsConditionScreen add_device Response body2: ${response.body}');
     // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
 
     EasyLoading.dismiss();
     launchScreen(context, DashboardScreen.tag);
     // launchScreen(context, DashboardScreen.tag);
-    print('sucess');
     return cat_model;
   } catch (e) {
     EasyLoading.dismiss();
@@ -168,13 +164,13 @@ Future<ShLoginModel?> getLogin() async {
 
 
     final jsonResponse = json.decode(response.body);
-    print('not json login$jsonResponse');
-    print('Response bodylogin: ${response.body}');
+    print('TermsConditionScreen login Response status2: ${response.statusCode}');
+    print('TermsConditionScreen login Response body2: ${response.body}');
     if (response.statusCode == 200) {
 
 
       cat_model = new ShLoginModel.fromJson(jsonResponse);
-      print("cat dta$cat_model");
+
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('token', cat_model!.data!.token.toString());
@@ -192,8 +188,7 @@ Future<ShLoginModel?> getLogin() async {
 
       SaveToken();
 
-// toast("sucess");
-      print('sucess');
+
     } else {
       EasyLoading.dismiss();
       err_model = new ShLoginErrorNewModel.fromJson(jsonResponse);
@@ -270,11 +265,11 @@ Future<SignUpNewModel?> getSetting() async {
     }
 
 
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    print('TermsConditionScreen registration Response status2: ${response.statusCode}');
+    print('TermsConditionScreen registration Response body2: ${response.body}');
 
     final jsonResponse = json.decode(response.body);
-    print('not json $jsonResponse');
+
     // signup_model = new SignUpModel.fromJson(jsonResponse);
     signup_model = new SignUpNewModel.fromJson(jsonResponse);
     if(signup_model!.status=='Yes'){

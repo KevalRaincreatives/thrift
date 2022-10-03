@@ -246,19 +246,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
         client.close();
       }
 
-
-//      r.raiseForStatus();
-//      String body = r.content();
-//      print(body);
-
       final jsonResponse = json.decode(response.body);
-      print('device json $jsonResponse');
-      // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+      print('VerificationScreen add_device Response status2: ${response.statusCode}');
+      print('VerificationScreen add_device Response body2: ${response.body}');
 
       EasyLoading.dismiss();
       launchScreen(context, DashboardScreen.tag);
       // launchScreen(context, DashboardScreen.tag);
-      print('sucess');
+
       return cat_model;
     } catch (e) {
       EasyLoading.dismiss();
@@ -307,13 +302,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
 
       final jsonResponse = json.decode(response.body);
-      print('not json login$jsonResponse');
-      print('Response bodylogin: ${response.body}');
+      print('VerificationScreen login Response status2: ${response.statusCode}');
+      print('VerificationScreen login Response body2: ${response.body}');
       if (response.statusCode == 200) {
 
 
         cat_model = new ShLoginModel.fromJson(jsonResponse);
-        print("cat dta$cat_model");
+
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString('token', cat_model!.data!.token.toString());
@@ -331,8 +326,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
 SaveToken();
 
-// toast("sucess");
-        print('sucess');
+
       } else {
         EasyLoading.dismiss();
         err_model = new ShLoginErrorNewModel.fromJson(jsonResponse);
@@ -410,8 +404,8 @@ SaveToken();
       }
 
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      print('VerificationScreen registration Response status2: ${response.statusCode}');
+      print('VerificationScreen registration Response body2: ${response.body}');
 
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');

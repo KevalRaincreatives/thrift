@@ -88,11 +88,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   Future<String?> fetchDetails() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-
       profile_name = prefs.getString("profile_name");
-
-      print('sucess');
-
       return "profileModel";
     } catch (e) {
       print('caught error $e');
@@ -121,11 +117,13 @@ class _HomeFragmentState extends State<HomeFragment> {
                 "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_ads"),
             headers: headers);
 
+        print('HomeFragment get_ads Response status2: ${response.statusCode}');
+        print('HomeFragment get_ads Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
-        print('not json image$jsonResponse');
+
+
 
         advModel = new AdvModel.fromJson(jsonResponse);
-        // if (new_car == 0) {
 
         prefs.setString("adv_image", "1");
         if(advModel!.data!=null) {
@@ -143,10 +141,7 @@ class _HomeFragmentState extends State<HomeFragment> {
 
   Future<List<ProductListModel>?> fetchAlbum() async {
     try {
-//      prefs = await SharedPreferences.getInstance();
-//      String UserId = prefs.getString('UserId');
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? cat_id = prefs.getString('cat_id');
       String? user_country = prefs.getString('user_selected_country');
 
       // String? user_country = "Barbados";
@@ -167,15 +162,17 @@ class _HomeFragmentState extends State<HomeFragment> {
         response = await http.get(Uri.parse(
             "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=asc&per_page=100&country=$user_country"));
       }
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('HomeFragment products Response status2: ${response.statusCode}');
+      print('HomeFragment products Response body2: ${response.body}');
+
+
       productListModel.clear();
       final jsonResponse = json.decode(response.body);
       for (Map i in jsonResponse) {
         if (i["display_product"] == true) {
           productListModel.add(ProductListModel.fromJson(i));
         }
-//        orderListModel = new OrderListModel2.fromJson(i);
+
       }
       if (productListModel.length > 0) {
         prefs.setString(
@@ -184,7 +181,6 @@ class _HomeFragmentState extends State<HomeFragment> {
 
       return productListModel;
     } catch (e) {
-//      return orderListModel;
       print('caught error $e');
     }
   }
@@ -206,6 +202,9 @@ class _HomeFragmentState extends State<HomeFragment> {
       var response = await http.get(Uri.parse(
           "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
       ,headers: headers);
+
+      print('HomeFragment check_seller_status Response status2: ${response.statusCode}');
+      print('HomeFragment check_seller_status Response body2: ${response.body}');
 
       final jsonResponse = json.decode(response.body);
       checkUserModel = new CheckUserModel.fromJson(jsonResponse);
@@ -305,8 +304,6 @@ class _HomeFragmentState extends State<HomeFragment> {
         toast("Your Seller Registration is Pending. You will be notified once approved.");
       }
 
-      print('sucess');
-      print('not json $jsonResponse');
 
       return checkUserModel;
     } catch (e) {
@@ -864,7 +861,7 @@ return FutureBuilder<String?>(
                                       (item) => GestureDetector(
                                         behavior: HitTestBehavior.translucent,
                                         onTap: () {
-                                          print("onTap");
+                                          // print("onTap");
                                           // toast(item.title);
                                           _controller.hideMenu();
                                           setState(() {
@@ -932,7 +929,7 @@ return FutureBuilder<String?>(
                                   itemBuilder: (BuildContext ctx, index) {
                                     offset +=50;
                                     timer = 800 + offset;
-                                    print(timer);
+                                    // print(timer);
                                     return Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Container(
@@ -1060,18 +1057,18 @@ class T2DrawerState extends State<T2Drawer> {
           client.close();
         }
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+        print('HomeFragment categories Response status2: ${response.statusCode}');
+        print('HomeFragment categories Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         for (Map i in jsonResponse) {
           categoryListModel.add(CategoryModel.fromJson(i));
-//        orderListModel = new OrderListModel2.fromJson(i);
+
         }
       }
 
       return categoryListModel;
     } catch (e) {
-//      return orderListModel;
+
       print('caught error $e');
     }
   }

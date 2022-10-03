@@ -61,16 +61,13 @@ class _CustomerSupportScreenState extends State<CustomerSupportScreen> {
       } finally {
         client.close();
       }
-//      r.raiseForStatus();
-//      String body = r.content();
-//      print(body);
-
       final jsonResponse = json.decode(response.body);
       termsModel = new TermsModel.fromJson(jsonResponse);
 
+      print('CustomerSupportScreen customer_service Response status2: ${response.statusCode}');
+      print('CustomerSupportScreen customer_service Response body2: ${response.body}');
 
-      print('sucess');
-      print('not json $jsonResponse');
+
 
       return termsModel;
     } catch (e) {

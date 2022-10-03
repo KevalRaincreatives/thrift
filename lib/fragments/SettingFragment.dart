@@ -70,10 +70,10 @@ class _SettingFragmentState extends State<SettingFragment> {
             Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/empty_cart'),
             headers: headers);
 
-        print('Response status2: ${response.statusCode}');
-        print('Response body2: ${response.body}');
+
+        print('SettingFragment empty_cart Response status2: ${response.statusCode}');
+        print('SettingFragment empty_cart Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
-        print('not json $jsonResponse');
       }
 
       prefs.setInt("cart_count", 0);
@@ -103,14 +103,10 @@ class _SettingFragmentState extends State<SettingFragment> {
       var response = await http
           .get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/countries'));
 
+      print('SettingFragment countries Response status2: ${response.statusCode}');
+      print('SettingFragment countries Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-
       countryNewModel = new CountryParishModel.fromJson(jsonResponse);
-      // for (var i = 0; i < countryNewModel!.data!.countries!.length; i++) {
-        // if (countryNewModel!.data!.countries![i]!.country == countryname) {
-        //   selectedValue = countryNewModel!.data!.countries![0];
-        // }
-      // }
       print('Caught error ');
 
       return countryNewModel;
@@ -367,6 +363,9 @@ hintMaxLines: 5,
         "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
           ,headers: headers);
 
+      print('SettingFragment check_seller_status Response status2: ${response.statusCode}');
+      print('SettingFragment check_seller_status Response body2: ${response.body}');
+
       final jsonResponse = json.decode(response.body);
       checkUserModel = new CheckUserModel.fromJson(jsonResponse);
       prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
@@ -378,9 +377,6 @@ hintMaxLines: 5,
       } else if (checkUserModel!.is_store_owner==2) {
         launchScreen(context, ProfileScreen.tag);
       }
-
-      print('sucess');
-      print('not json $jsonResponse');
 
       return checkUserModel;
     } catch (e) {

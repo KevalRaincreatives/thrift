@@ -96,7 +96,8 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
           headers: headers);
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('BecameSellerScreen profile Response status2: ${response.statusCode}');
+      print('BecameSellerScreen profile Response body2: ${response.body}');
       EasyLoading.dismiss();
 
       profileModel = new ProfileModel.fromJson(jsonResponse);
@@ -106,7 +107,7 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
       emailCont.text = profileModel!.data!.userEmail!;
       phoneNumberCont.text= profileModel!.data!.phone!;
 
-      print('sucess');
+
 
       return profileModel;
     } catch (e) {
@@ -198,7 +199,9 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
       final jsonResponse = json.decode(response.body);
       EasyLoading.dismiss();
 
-      print('not json2 $jsonResponse');
+      print('BecameSellerScreen become_a_seller Response status2: ${response.statusCode}');
+      print('BecameSellerScreen become_a_seller Response body2: ${response.body}');
+
       becameSellerModel = new BecameSellerModel.fromJson(jsonResponse);
 
 
@@ -259,7 +262,7 @@ if(becameSellerModel!.success!) {
           }
         }
       }
-      print('Caught error ');
+
 
       return countryNewModel;
 //      return jsonResponse.map((job) => new CountryModel.fromJson(job)).toList();

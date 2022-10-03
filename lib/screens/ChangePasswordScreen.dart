@@ -96,7 +96,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
+      print('ChangePasswordScreen wooapp_change_password Response status2: ${response.statusCode}');
+      print('ChangePasswordScreen wooapp_change_password Response body2: ${response.body}');
       EasyLoading.dismiss();
       couponModel = new CouponModel.fromJson(jsonResponse);
       if (couponModel!.success!) {

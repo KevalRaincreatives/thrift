@@ -76,8 +76,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
 
       final jsonResponse = json.decode(response.body);
-      print('Response body2: ${response.body}');
-      print('not json $jsonResponse');
+      print('OtpScreen chk_phone_availability Response status2: ${response.statusCode}');
+      print('OtpScreen chk_phone_availability Response body2: ${response.body}');
       numberCheckModel = new NumberCheckModel.fromJson(jsonResponse);
       if (numberCheckModel!.success!) {
         EasyLoading.dismiss();
@@ -109,7 +109,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 ],
               );});
 
-        print('sucess');
+
       }
       return numberCheckModel;
     } catch (e) {

@@ -48,7 +48,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           body: msg);
 
       final jsonResponse = json.decode(response.body);
-      print('forgot reset password $jsonResponse');
+      print('ResetPasswordScreen set_new_password Response status2: ${response.statusCode}');
+      print('ResetPasswordScreen set_new_password Response body2: ${response.body}');
       numberCheckModel = new ForgotModel.fromJson(jsonResponse);
 
       EasyLoading.dismiss();
@@ -101,7 +102,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         );
       }
 
-      print('sucess');
+
       return numberCheckModel;
     } catch (e) {
       print('caught error $e');
@@ -154,7 +155,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       Text(
                         "We have sent a reset code to your email.Enter it below to continue.",
                         style: TextStyle(
-                          fontFamily: 'Bold',
+                          fontFamily: 'Medium',
                           color: sh_colorPrimary2,
                           fontSize: 16,
                         ),
@@ -175,8 +176,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         style: TextStyle(
                           color: sh_app_txt_color,
                           fontSize: textSizeMedium,
-                          fontFamily: "Regular",
-                          fontWeight: FontWeight.w600,
+                          fontFamily: "Medium",
                         ),
                         controller: emailCont,
                         textCapitalization:
@@ -194,9 +194,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           sh_editText_background_active,
                           hintStyle: TextStyle(
                               color: sh_app_txt_color,
-                              fontFamily: 'Regular',
+                              fontFamily: 'Medium',
                               fontSize: textSizeMedium),
-                          hintText: sh_hint_code,
+                          hintText: sh_hint_main_code,
                           contentPadding: EdgeInsets.fromLTRB(
                               16, 8, 4, 8),
                           focusedBorder: OutlineInputBorder(
@@ -228,13 +228,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   style: TextStyle(
                     color: sh_app_txt_color,
                     fontSize: textSizeMedium,
-                    fontFamily: "Regular",
-                    fontWeight: FontWeight.w600,),
+                    fontFamily: "Medium"),
                   controller: passwordCont,
                   textCapitalization: TextCapitalization.words,
                   validator: (text) {
                     if (text == null || text.isEmpty) {
-                      return 'Please Enter Password';
+                      return 'Please Enter New Password';
                     }
                     return null;
                   },
@@ -244,9 +243,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     focusColor: sh_editText_background_active,
                     hintStyle: TextStyle(
                         color: sh_app_txt_color,
-                        fontFamily: 'Regular',
+                        fontFamily: 'Medium',
                         fontSize: textSizeMedium),
-                    hintText: sh_hint_password,
+                    hintText: sh_hint_new_password,
                     contentPadding:
                     EdgeInsets.fromLTRB(16, 8, 4, 8),
                     focusedBorder: OutlineInputBorder(
@@ -286,10 +285,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     decoration: boxDecoration(
                         bgColor: sh_btn_color, radius: 10, showShadow: true),
                     child: text("RESET",
-                        fontSize: 24.0,
+                        fontSize: 22.0,
                         textColor: sh_app_txt_color,
                         isCentered: true,
-                        fontFamily: 'Bold'),
+                        fontFamily: 'Medium'),
                   ),
                 ),
 

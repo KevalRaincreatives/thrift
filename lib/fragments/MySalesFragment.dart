@@ -54,8 +54,9 @@ class _MySalesFragmentState extends State<MySalesFragment> {
           Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_vendor_order'),
           headers: headers);
 
+      print('MySalesFragment view_vendor_order Response status2: ${response.statusCode}');
+      print('MySalesFragment view_vendor_order Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
       orderListModel = new OrderListModel.fromJson(jsonResponse);
 
       return orderListModel;
@@ -99,11 +100,12 @@ class _MySalesFragmentState extends State<MySalesFragment> {
     }
 
     OrderDate(int index) {
+      String order_status=orderListModel!.data![index]!.order_status!;
       String hh = orderListModel!.data![index]!.postTitle!.substring(13);
       String dd = hh.substring(0, hh.length - 10);
       return text(
           dd +
-              "\n Order Placed",
+              "\n Order Status: $order_status",
           maxLine: 2,
           fontSize: textSizeSMedium2,
           textColor: sh_textColorPrimary);

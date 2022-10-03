@@ -45,7 +45,8 @@ class _ShipmentScreenState extends State<ShipmentScreen> {
           Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping_methods'),
           headers: headers);
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('ShipmentScreen shipping_methods Response status2: ${response.statusCode}');
+      print('ShipmentScreen shipping_methods Response body2: ${response.body}');
       shipmentModel.clear();
       for (Map i in jsonResponse) {
         shipmentModel.add(ShipmentModel.fromJson(i));
@@ -83,10 +84,10 @@ class _ShipmentScreenState extends State<ShipmentScreen> {
           headers: headers,
           body: msg);
       EasyLoading.dismiss();
-      print('Response status2: ${response.statusCode}');
-      print('Response body2: ${response.body}');
+      print('ShipmentScreen add_shipping_charge Response status2: ${response.statusCode}');
+      print('ShipmentScreen add_shipping_charge Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
 
       addShipModel = new AddShipModel.fromJson(jsonResponse);
       prefs.setString("shipping_charge", addShipModel!.shippingCharge!.toString());

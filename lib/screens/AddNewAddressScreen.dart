@@ -120,8 +120,11 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
           headers: headers);
 
+
+      print('AddNewAddressScreen profile Response status2: ${response.statusCode}');
+      print('AddNewAddressScreen profile Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
       EasyLoading.dismiss();
 
       profileModel = new ProfileModel.fromJson(jsonResponse);
@@ -130,7 +133,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       lastNameCont.text = profileModel!.data!.lastName!;
       emailCont.text = profileModel!.data!.userEmail!;
 
-      print('sucess');
+
 
       return profileModel;
     } catch (e) {
@@ -188,8 +191,11 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           body: body,
           headers: headers);
 
+
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+      print('AddNewAddressScreen add_shipping_address Response status2: ${response.statusCode}');
+      print('AddNewAddressScreen add_shipping_address Response body2: ${response.body}');
+
       EasyLoading.dismiss();
       addressSuccessModel = new AddressSuccessModel.fromJson(jsonResponse);
       if (addressSuccessModel!.success!) {
@@ -276,7 +282,9 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           headers: headers);
 
       final jsonResponse = json.decode(response.body);
-      print('not json $jsonResponse');
+
+      print('AddNewAddressScreen update_shipping_addres Response status2: ${response.statusCode}');
+      print('AddNewAddressScreen update_shipping_addres Response body2: ${response.body}');
       EasyLoading.dismiss();
       couponModel = new CouponModel.fromJson(jsonResponse);
       if (couponModel!.success!) {
@@ -308,6 +316,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           .get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/countries'));
 
       final jsonResponse = json.decode(response.body);
+
 
 
       countryNewModel = new CountryParishModel.fromJson(jsonResponse);
