@@ -13,6 +13,9 @@ import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class WebPaymentScreen extends StatefulWidget {
   static String tag='/WebPaymentScreen';
