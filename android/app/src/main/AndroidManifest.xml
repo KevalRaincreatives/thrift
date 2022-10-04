@@ -15,7 +15,7 @@
 
 
     <application
-        android:label="Cassie by Casuarina"
+        android:label="Casuarina Thrift"
         tools:replace="android:label"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/app_icons">
