@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "498576797000-7qen3nmfl0bo726o2popfbhi1rfr3mg1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rc.thriftapp",
+            "certificate_hash": "d39a0f5d7ed390d6842641e04cf346cea954e91c"
+          }
+        },
+        {
           "client_id": "498576797000-dsq3upr8qpfje6o5oo1volfmb27c2rc5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
