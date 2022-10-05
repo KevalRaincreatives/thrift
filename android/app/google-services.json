@@ -14,11 +14,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "498576797000-3v46jpfa50qd6ptojur48hhp30puikom.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rc.thriftapp",
+            "certificate_hash": "042a5abaf9cc59ee64c69db321d138a3220e4c95"
+          }
+        },
+        {
           "client_id": "498576797000-dsq3upr8qpfje6o5oo1volfmb27c2rc5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.rc.thriftapp",
             "certificate_hash": "e893714255c609988bd08a4af614ca8385e5812b"
+          }
+        },
+        {
+          "client_id": "498576797000-n3bjs1jq9mcs2p8a5fkmgc9oe6t2ph9f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rc.thriftapp",
+            "certificate_hash": "e98d1b92470bf02eea794b2e3ae80bc14174a825"
           }
         },
         {
@@ -37,6 +53,13 @@
             {
               "client_id": "498576797000-7kniis6i1d5eac6osmk8qbv7h0hqtg2l.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "498576797000-7400sbtgu04sirb6m772tq20ausi9do1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rc.thrift"
+              }
             }
           ]
         }
