@@ -26,6 +26,14 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('D:\\Keystore\\cassie.jks')
+            storePassword 'justchill595@@'
+            keyAlias 'raincreatives'
+            keyPassword 'justchill595@@'
+        }
+    }
     compileSdkVersion 32
 
     lintOptions {
