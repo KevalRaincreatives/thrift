@@ -218,7 +218,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     SizedBox(
                                       width: 301,
                                       child: Text(
-                                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do",
+                                        "Sign Up",
                                         style: TextStyle(
                                           color: Color(0xaf000000),
                                           fontSize: 16,

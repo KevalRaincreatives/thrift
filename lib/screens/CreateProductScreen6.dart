@@ -46,7 +46,7 @@ class CreateProductScreen extends StatefulWidget {
 }
 
 class _CreateProductScreenState extends State<CreateProductScreen> {
-  List<CategoryModel> categoryListModel = [];
+  CategoryModel? categoryListModel;
 
   List<NewCategoryModel> categoryListModel2 = [];
   List<NewSelectedCategoryModel> selectedList = [];
@@ -116,25 +116,26 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories?per_page=25"));
+              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woo_product_categories"));
         } finally {
           client.close();
         }
-        categoryListModel.clear();
+        categoryListModel!.categories!.clear();
         categoryListModel2.clear();
 
         print('Response status2: ${response.statusCode}');
         print('Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
-        for (Map i in jsonResponse) {
-          categoryListModel.add(CategoryModel.fromJson(i));
-//        orderListModel = new OrderListModel2.fromJson(i);
-        }
+//         for (Map i in jsonResponse) {
+//           categoryListModel.add(CategoryModel.fromJson(i));
+// //        orderListModel = new OrderListModel2.fromJson(i);
+//         }
+        categoryListModel = new CategoryModel.fromJson(jsonResponse);
 
-        for (var i = 0; i < categoryListModel.length; i++) {
+        for (var i = 0; i < categoryListModel!.categories!.length; i++) {
           categoryListModel2.add(new NewCategoryModel(
-              catid: categoryListModel[i].id,
-              name: categoryListModel[i].name,
+              catid: categoryListModel!.categories![i]!.id,
+              name: categoryListModel!.categories![i]!.name,
               selected: false));
         }
       }

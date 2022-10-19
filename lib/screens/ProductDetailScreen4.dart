@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'dart:math';
@@ -34,12 +33,10 @@ import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   static String tag = '/ProductDetailScreen';
-  List<ProductListModelImages?>? proImage;
-  final String? proName,proPrice;
 
   // ProductListModel? product;
 
-  ProductDetailScreen({this.proName,this.proPrice,this.proImage});
+  const ProductDetailScreen({Key? key}) : super(key: key);
 
   @override
   _ProductDetailScreenState createState() => _ProductDetailScreenState();
@@ -97,8 +94,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool? ct_changel = true;
   @override
   void initState() {
-    _controller = PageController();
     fetchDetailMain = fetchDetail();
+    _controller = PageController();
     fetchEstPrice2 = fetchEstPrice();
     fetchSellerMain = fetchSeller();
     super.initState();
@@ -198,8 +195,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<ProductDetailModel?> AddCart() async {
 //    Dialogs.showLoadingDialog(context, _keyLoader);
-//     EasyLoading.show(status: 'Please wait...');
+    EasyLoading.show(status: 'Please wait...');
     try {
+      // String variation_id = '';
+      // if (pro_det_model!.attributes!.length > 0) {
+      //   if (pro_det_model!.attributes![0]!.variation == true) {
+      //     if (pro_det_model!.attributes![0]!.name == 'Size') {
+      //       variation_id = pro_det_model!.variations![selectedSize].toString();
+      //     } else if (pro_det_model!.attributes![0]!.name == 'Color') {
+      //       variation_id = pro_det_model!.variations![selectedColor].toString();
+      //     }
+      //   }
+      // }
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pro_id = prefs.getString('pro_id');
@@ -238,7 +245,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         addCartModel = new AddCartModel.fromJson(jsonResponse);
 
         if (addCartModel!.status == true) {
-          // EasyLoading.dismiss();
+          EasyLoading.dismiss();
           if (addCartModel!.cart == null) {
             prefs.setInt("cart_count", 0);
             cart_count == 0;
@@ -249,8 +256,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             prefs.setInt("cart_count", addCartModel!.cart!.length);
             cart_count == addCartModel!.cart!.length;
           }
-          // ct_changel = true;
-          // _incrementCounter();
+          ct_changel = true;
+          _incrementCounter();
+          // fetchCart();
+          // setState(() {
+          //   _isVisible = false;
+          //   _isVisible_success = true;
+          // });
 
 
 //           showDialog<void>(
@@ -285,7 +297,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 //             },
 //           );
         } else {
-          // EasyLoading.dismiss();
+          EasyLoading.dismiss();
           toast('Something went wrong');
           showDialog<void>(
               context: context,
@@ -304,7 +316,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               });
         }
       } else {
-        // EasyLoading.dismiss();
+        EasyLoading.dismiss();
         toast('Spmething went wrong');
         showDialog<void>(
             context: context,
@@ -324,7 +336,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
       return null;
     } catch (e) {
-      // EasyLoading.dismiss();
+      EasyLoading.dismiss();
       print('caught error $e');
     }
   }
@@ -431,13 +443,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       InkWell(
                         onTap: () async {
                           // BecameSeller();
-                          toast("Your report has successfully submited");
-
                           Navigator.of(context, rootNavigator: true).pop();
-                          // setState(() {
-                          //   _isVisible = false;
-                          //   _isVisible_success = true;
-                          // });
+                          setState(() {
+                            _isVisible = false;
+                            _isVisible_success = true;
+                          });
                         },
                         child: Container(
                           width: MediaQuery.of(context).size.width*.7,
@@ -516,7 +526,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   PageView.builder(
                     controller: _controller2,
-                    itemCount: widget.proImage!.length,
+                    itemCount: pro_det_model!.images!.length,
                     itemBuilder: (context, index) {
                       return Container(
                         child: Padding(
@@ -531,7 +541,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                               child: PhotoView(
                                   imageProvider: NetworkImage(
-                                    widget.proImage![index]!.src!,
+                                pro_det_model!.images![index]!.src!,
                               ))
                               // Image.network(
                               //     pro_det_model!.images![index]!.src!,
@@ -583,7 +593,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     Imagevw4() {
-      if (widget.proImage!.length < 1) {
+      if (pro_det_model!.images!.length < 1) {
         return
             //   Image.asset(
             //   sh_no_img,
@@ -596,7 +606,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             PageView.builder(
               controller: _controller,
-              itemCount: widget.proImage!.length,
+              itemCount: pro_det_model!.images!.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onTap: () {
@@ -615,7 +625,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                         child: FadeInImage.assetNetwork(
                             placeholder: 'images/tenor.gif',
-                            image: widget.proImage![index]!.src!,
+                            image: pro_det_model!.images![index]!.src!,
                             fit: BoxFit.fitWidth),
                       ),
                     ),
@@ -632,7 +642,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: new Center(
                   child: new DotsIndicator(
                     controller: _controller,
-                    itemCount: widget.proImage!.length,
+                    itemCount: pro_det_model!.images!.length,
                     onPageSelected: (int page) {
                       _controller!.animateToPage(
                         page,
@@ -815,17 +825,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       // var myprice2 = double.parse(pro_det_model!.price!);
       // var myprice = myprice2.toStringAsFixed(2);
       var myprice2, myprice;
-      if (widget.proPrice == '') {
+      if (pro_det_model!.price == '') {
         myprice = "0.00";
       } else {
-        myprice2 = double.parse(widget.proPrice!);
+        myprice2 = double.parse(pro_det_model!.price!);
         myprice = myprice2.toStringAsFixed(2);
       }
 
       return Row(
         children: [
           Text(
-            "\$" + myprice + " " + "USD",
+            "\$" + myprice + " " + pro_det_model!.currency!,
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontBold,
@@ -969,12 +979,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
 
-
-
     SuccesVisiblity() {
       if (_isVisible_success) {
         var myprice2 =
-        double.parse(pro_det_model!.price!.toString());
+        double.parse(addCartModel!.total.toString());
         var myprice = myprice2.toStringAsFixed(2);
         return Visibility(
             visible: _isVisible_success,
@@ -1033,8 +1041,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 fontFamily: fontSemibold),
                           ),
                           Text(
-
-                                "1 Item ",
+                              addCartModel!.cart!.length.toString() +
+                                " Item ",
                             style: TextStyle(
                                 color: sh_black,
                                 fontSize: 15,
@@ -1098,46 +1106,43 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               fontFamily: 'Bold'),
                         ),
                       ),
-            // CheckShimmer(),
-                      groceryButton(),
-
-                      // InkWell(
-                      //   onTap: () async {
-                      //     Navigator.of(context).pop(ConfirmAction.CANCEL);
-                      //     SharedPreferences prefs =
-                      //         await SharedPreferences.getInstance();
-                      //     prefs.setInt("shiping_index", -2);
-                      //     prefs.setInt("payment_index", -2);
-                      //     // launchScreen(context, CartScreen.tag);
-                      //     Navigator.push(
-                      //       context,
-                      //       MaterialPageRoute(
-                      //           builder: (context) => CartScreen()),
-                      //     ).then((value) {
-                      //       setState(() {
-                      //         // refresh state
-                      //       });
-                      //     });
-                      //     //   Navigator.pushReplacement(
-                      //     // context,
-                      //     // MaterialPageRoute(
-                      //     //   builder: (context) => CartScreen(),
-                      //     // ),
-                      //     // );
-                      //   },
-                      //   child: Container(
-                      //     padding: EdgeInsets.all(spacing_standard),
-                      //     decoration: boxDecoration(
-                      //         bgColor: sh_colorPrimary2,
-                      //         radius: 6,
-                      //         showShadow: true),
-                      //     child: text("Cart/Checkout",
-                      //         textColor: sh_white,
-                      //         isCentered: true,
-                      //         fontSize: 12.0,
-                      //         fontFamily: 'Bold'),
-                      //   ),
-                      // ),
+                      InkWell(
+                        onTap: () async {
+                          Navigator.of(context).pop(ConfirmAction.CANCEL);
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          // launchScreen(context, CartScreen.tag);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CartScreen()),
+                          ).then((value) {
+                            setState(() {
+                              // refresh state
+                            });
+                          });
+                          //   Navigator.pushReplacement(
+                          // context,
+                          // MaterialPageRoute(
+                          //   builder: (context) => CartScreen(),
+                          // ),
+                          // );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(spacing_standard),
+                          decoration: boxDecoration(
+                              bgColor: sh_colorPrimary2,
+                              radius: 6,
+                              showShadow: true),
+                          child: text("Cart/Checkout",
+                              textColor: sh_white,
+                              isCentered: true,
+                              fontSize: 12.0,
+                              fontFamily: 'Bold'),
+                        ),
+                      ),
                     ],
                   )
                 ],
@@ -1212,257 +1217,205 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: SingleChildScrollView(
                     child: Container(
                       width: width,
-                      padding: EdgeInsets.fromLTRB(26, 0, 26, 0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Stack(
-                            children: [_productImage()],
-                          ),
-                          SizedBox(
-                            height: 8,
-                          ),
-                          Text(
-                            widget.proName!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                color: sh_colorPrimary2,
-                                fontFamily: fontBold,
-                                fontSize: textSizeLargeMedium),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          MyPrice(),
-                          SizedBox(
-                            height: 14,
-                          ),
-                          FutureBuilder<ProductDetailModel?>(
-                            future: fetchDetailMain,
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return Container(
+                      child: FutureBuilder<ProductDetailModel?>(
+                        future: fetchDetailMain,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return Container(
+                              width: width,
+                              padding: EdgeInsets.fromLTRB(26, 0, 26, 0),
+                              child: Stack(
+                                children: <Widget>[
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Stack(
+                                        children: [_productImage()],
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
 
-                                  child: Stack(
-                                    children: <Widget>[
                                       Column(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-
-
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-
-                                              FutureBuilder<EstPriceModel?>(
-                                                future: fetchEstPrice2,
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    if (estPriceModel!
-                                                        .estimatedRetailPrice!
-                                                        .length >
-                                                        0) {
-                                                      return Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Text(
-                                                            'Estimated Retail Price',
-                                                            style: TextStyle(
-                                                                fontSize: 14,
-                                                                fontFamily:
-                                                                fontSemibold,
-                                                                color:
-                                                                sh_colorPrimary2),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          EstPrice(),
-                                                          SizedBox(
-                                                            height: 6,
-                                                          ),
-                                                        ],
-                                                      );
-                                                    }else{
-                                                      return Container();
-                                                    }
-                                                  } else if (snapshot.hasError) {
-                                                    return Text(
-                                                        "${snapshot.error}");
-                                                  }
-                                                  // By default, show a loading spinner.
-                                                  return Container();
-                                                },
-                                              ),
-                                              // CheckVariant()
-                                            ],
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            pro_det_model!.name!,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                color: sh_colorPrimary2,
+                                                fontFamily: fontBold,
+                                                fontSize: textSizeLargeMedium),
                                           ),
-
                                           SizedBox(
-                                            height: 12,
+                                            height: 2,
                                           ),
-                                          CheckVariant(),
+                                          MyPrice(),
 
-                                          // _availableSize(),
                                           // SizedBox(
-                                          //   height: 20,
+                                          //   height: 2,
                                           // ),
-                                          // _availableColor(),
+                                          //
+                                          //
+                                          // Text(
+                                          //   pro_det_model!.slug!,
+                                          //   maxLines: 2,
+                                          //   style: TextStyle(
+                                          //       color: sh_textColorSecondary,
+                                          //       fontFamily: fontMedium,
+                                          //       fontSize: textSizeSMedium),
+                                          // ),
                                           SizedBox(
-                                            height: 8,
+                                            height: 14,
                                           ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-                                              Text(
-                                                "Description",
-                                                maxLines: 2,
-                                                style: TextStyle(
-                                                    color: sh_colorPrimary2,
-                                                    fontFamily: fontSemibold,
-                                                    fontSize: textSizeMedium),
-                                              ),
-                                              SizedBox(
-                                                height: 4,
-                                              ),
-                                              Html(
-                                                data: pro_det_model!.description,
-                                                style: {
-                                                  "body": Style(color: sh_black,fontFamily: "Regular"),
-                                                },
-                                              ),
-                                            ],
-                                          ),
-
-                                          SizedBox(
-                                            height: 8,
-                                          ),
-                                          Container(
-                                            height: 0.5,
-                                            color: sh_app_txt_color,
-                                          ),
-                                          SizedBox(
-                                            height: 26,
-                                          ),
-                                          FutureBuilder<ProductSellerModel?>(
-                                            future: fetchSellerMain,
+                                          FutureBuilder<EstPriceModel?>(
+                                            future: fetchEstPrice2,
                                             builder: (context, snapshot) {
                                               if (snapshot.hasData) {
-                                                return Container(
-                                                  child: InkWell(
-                                                    onTap: () async {
-                                                      SharedPreferences prefs =
-                                                          await SharedPreferences
-                                                              .getInstance();
-                                                      prefs.setString(
-                                                          "seller_id",
+                                                if (estPriceModel!
+                                                    .estimatedRetailPrice!
+                                                    .length >
+                                                    0) {
+                                                  return Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        'Estimated Retail Price',
+                                                        style: TextStyle(
+                                                            fontSize: 14,
+                                                            fontFamily:
+                                                            fontSemibold,
+                                                            color:
+                                                            sh_colorPrimary2),
+                                                      ),
+                                                      SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      EstPrice(),
+                                                      SizedBox(
+                                                        height: 6,
+                                                      ),
+                                                    ],
+                                                  );
+                                                }else{
+                                                  return Container();
+                                                }
+                                              } else if (snapshot.hasError) {
+                                                return Text(
+                                                    "${snapshot.error}");
+                                              }
+                                              // By default, show a loading spinner.
+                                              return Container();
+                                            },
+                                          ),
+                                          // CheckVariant()
+                                        ],
+                                      ),
+
+                                      SizedBox(
+                                        height: 12,
+                                      ),
+                                      CheckVariant(),
+
+                                      // _availableSize(),
+                                      // SizedBox(
+                                      //   height: 20,
+                                      // ),
+                                      // _availableColor(),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            "Description",
+                                            maxLines: 2,
+                                            style: TextStyle(
+                                                color: sh_colorPrimary2,
+                                                fontFamily: fontSemibold,
+                                                fontSize: textSizeMedium),
+                                          ),
+                                          SizedBox(
+                                            height: 4,
+                                          ),
+                                          Html(
+                                            data: pro_det_model!.description,
+                                            style: {
+                                              "body": Style(color: sh_black,fontFamily: "Regular"),
+                                            },
+                                          ),
+                                        ],
+                                      ),
+
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Container(
+                                        height: 0.5,
+                                        color: sh_app_txt_color,
+                                      ),
+                                      SizedBox(
+                                        height: 26,
+                                      ),
+                                      FutureBuilder<ProductSellerModel?>(
+                                        future: fetchSellerMain,
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
+                                            return Container(
+                                              child: InkWell(
+                                                onTap: () async {
+                                                  SharedPreferences prefs =
+                                                      await SharedPreferences
+                                                          .getInstance();
+                                                  prefs.setString(
+                                                      "seller_id",
+                                                      productSellerModel!
+                                                          .seller!.sellerId
+                                                          .toString());
+                                                  prefs.setString(
+                                                      "seller_name",
+                                                      productSellerModel!
+                                                              .seller!
+                                                              .firstName![0]
+                                                              .toString() +
+                                                          " " +
                                                           productSellerModel!
-                                                              .seller!.sellerId
+                                                              .seller!
+                                                              .lastName![0]
                                                               .toString());
-                                                      prefs.setString(
-                                                          "seller_name",
-                                                          productSellerModel!
-                                                                  .seller!
-                                                                  .firstName![0]
-                                                                  .toString() +
-                                                              " " +
-                                                              productSellerModel!
-                                                                  .seller!
-                                                                  .lastName![0]
-                                                                  .toString());
-                                                      launchScreen(context,
-                                                          SellerProfileScreen.tag);
-                                                    },
-                                                    child: Column(
+                                                  launchScreen(context,
+                                                      SellerProfileScreen.tag);
+                                                },
+                                                child: Column(
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
                                                       children: [
+                                                        Text(
+                                                          "Seller",
+                                                          maxLines: 2,
+                                                          style: TextStyle(
+                                                              color:
+                                                                  sh_colorPrimary2,
+                                                              fontFamily:
+                                                              fontSemibold,
+                                                              fontSize: 16),
+                                                        ),
                                                         Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
-                                                          children: [
+                                                          children: <Widget>[
                                                             Text(
-                                                              "Seller",
+                                                              "View Profile",
                                                               maxLines: 2,
                                                               style: TextStyle(
                                                                   color:
-                                                                      sh_colorPrimary2,
-                                                                  fontFamily:
-                                                                  fontSemibold,
-                                                                  fontSize: 16),
-                                                            ),
-                                                            Row(
-                                                              children: <Widget>[
-                                                                Text(
-                                                                  "View Profile",
-                                                                  maxLines: 2,
-                                                                  style: TextStyle(
-                                                                      color:
-                                                                          sh_black,
-                                                                      fontFamily:
-                                                                      fontSemibold,
-                                                                      fontSize: 14),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        SizedBox(
-                                                          height: 6,
-                                                        ),
-                                                        Row(
-                                                          children: [
-                                                            Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(2.0),
-                                                                child: productSellerModel!
-                                                                            .seller!
-                                                                            .profile_picture ==
-                                                                        null
-                                                                    ? CircleAvatar(
-                                                                        // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                                        backgroundImage:
-                                                                            NetworkImage(
-                                                                                "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"),
-                                                                        radius: 22,
-                                                                      )
-                                                                    : CircleAvatar(
-                                                                        // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                                        backgroundImage:
-                                                                            NetworkImage(productSellerModel!
-                                                                                .seller!
-                                                                                .profile_picture!),
-                                                                        radius: 22,
-                                                                      )),
-                                                            // Icon(
-                                                            //   Icons.circle,
-                                                            //   color: sh_grey,
-                                                            //   size: 40,
-                                                            // ),
-                                                            SizedBox(
-                                                              width: 10,
-                                                            ),
-                                                            Text(
-                                                              productSellerModel!
-                                                                      .seller!
-                                                                      .firstName![
-                                                                          0]!
-                                                                      .toString() +
-                                                                  " " +
-                                                                  productSellerModel!
-                                                                      .seller!
-                                                                      .lastName![0]!
-                                                                      .toString(),
-                                                              maxLines: 2,
-                                                              style: TextStyle(
-                                                                  color:
-                                                                      sh_colorPrimary2,
+                                                                      sh_black,
                                                                   fontFamily:
                                                                   fontSemibold,
                                                                   fontSize: 14),
@@ -1471,150 +1424,216 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
-                                                );
-                                              } else if (snapshot.hasError) {
-                                                return Text("${snapshot.error}");
-                                              }
-                                              // By default, show a loading spinner.
-                                              return CircularProgressIndicator();
-                                            },
-                                          ),
-
-                                          SizedBox(
-                                            height: 36,
-                                          ),
-                                          InkWell(
-                                            onTap: () async {
-                                              SharedPreferences prefs =
-                                                  await SharedPreferences
-                                                      .getInstance();
-
-                                              prefs.setString("variant_id", "");
-                                              AddCart();
-                                              ct_changel = true;
-                                              cart_count==1;
-                                              _incrementCounter();
-                                            },
-                                            child: Container(
-                                              width:
-                                                  MediaQuery.of(context).size.width,
-                                              padding: EdgeInsets.only(
-                                                  top: spacing_middle,
-                                                  bottom: spacing_middle),
-                                              decoration: boxDecoration(
-                                                  bgColor: sh_app_background,
-                                                  radius: 10,
-                                                  showShadow: true),
-                                              child: text("Add to Cart",
-                                                  textColor: sh_app_txt_color,
-                                                  isCentered: true,
-                                                  fontFamily: 'Bold'),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: 18,
-                                          ),
-                                        ],
+                                                    SizedBox(
+                                                      height: 6,
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(2.0),
+                                                            child: productSellerModel!
+                                                                        .seller!
+                                                                        .profile_picture ==
+                                                                    null
+                                                                ? CircleAvatar(
+                                                                    // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                                    backgroundImage:
+                                                                        NetworkImage(
+                                                                            "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"),
+                                                                    radius: 22,
+                                                                  )
+                                                                : CircleAvatar(
+                                                                    // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                                    backgroundImage:
+                                                                        NetworkImage(productSellerModel!
+                                                                            .seller!
+                                                                            .profile_picture!),
+                                                                    radius: 22,
+                                                                  )),
+                                                        // Icon(
+                                                        //   Icons.circle,
+                                                        //   color: sh_grey,
+                                                        //   size: 40,
+                                                        // ),
+                                                        SizedBox(
+                                                          width: 10,
+                                                        ),
+                                                        Text(
+                                                          productSellerModel!
+                                                                  .seller!
+                                                                  .firstName![
+                                                                      0]!
+                                                                  .toString() +
+                                                              " " +
+                                                              productSellerModel!
+                                                                  .seller!
+                                                                  .lastName![0]!
+                                                                  .toString(),
+                                                          maxLines: 2,
+                                                          style: TextStyle(
+                                                              color:
+                                                                  sh_colorPrimary2,
+                                                              fontFamily:
+                                                              fontSemibold,
+                                                              fontSize: 14),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          } else if (snapshot.hasError) {
+                                            return Text("${snapshot.error}");
+                                          }
+                                          // By default, show a loading spinner.
+                                          return CircularProgressIndicator();
+                                        },
                                       ),
+
+                                      SizedBox(
+                                        height: 36,
+                                      ),
+                                      InkWell(
+                                        onTap: () async {
+                                          SharedPreferences prefs =
+                                              await SharedPreferences
+                                                  .getInstance();
+
+                                          prefs.setString("variant_id", "");
+                                          AddCart();
+                                        },
+                                        child: Container(
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          padding: EdgeInsets.only(
+                                              top: spacing_middle,
+                                              bottom: spacing_middle),
+                                          decoration: boxDecoration(
+                                              bgColor: sh_app_background,
+                                              radius: 10,
+                                              showShadow: true),
+                                          child: text("Add to Cart",
+                                              textColor: sh_app_txt_color,
+                                              isCentered: true,
+                                              fontFamily: 'Bold'),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 18,
+                                      ),
+                                    ],
+                                  ),
 //                        _detailWidget()
-                                    ],
+                                ],
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+                          // By default, show a loading spinner.
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            direction: ShimmerDirection.ltr,
+                            child: Container(
+                              width: width,
+                              padding: EdgeInsets.fromLTRB(12, 12, 12, 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    height: 250,
+                                    child: Column(
+                                      children: <Widget>[
+                                        Container(
+                                          width: double.infinity,
+                                          height: 200.0,
+                                          color: Colors.white,
+                                        ),
+                                        // Scrollindic()
+                                      ],
+                                    ),
                                   ),
-                                );
-                              } else if (snapshot.hasError) {
-                                return Text("${snapshot.error}");
-                              }
-                              // By default, show a loading spinner.
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                direction: ShimmerDirection.ltr,
-                                child: Container(
-                                  width: width,
-                                  padding: EdgeInsets.fromLTRB(1, 12, 12, 12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 0, 12, 12),
-                                          child: Container(
-                                            width: width * .40,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 0, 12, 12),
+                                      child: Container(
+                                        width: width * .40,
+                                        height: 12.0,
+                                        color: Colors.white,
                                       ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .30,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .35,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .20,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width,
-                                            height: 62.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                    ],
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .30,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .35,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .20,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width,
+                                        height: 62.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -1821,97 +1840,5 @@ class DotsIndicator extends AnimatedWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: new List<Widget>.generate(itemCount!, _buildDot),
     );
-  }
-}
-
-
-class groceryButton extends StatefulWidget {
-
-
-  groceryButton();
-
-  @override
-  groceryButtonState createState() => groceryButtonState();
-}
-
-class groceryButtonState extends State<groceryButton> {
-  bool ch=false;
-
-  @override
-  void initState() {
-    Timer(
-        Duration(milliseconds: 1500),
-            () {
-              setState(() {
-                ch=true;
-              });
-            }
-    );
-    super.initState();
-//    mListings2 = getPopular();
-  }
-
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    if(ch) {
-      return InkWell(
-        onTap: () async {
-          Navigator.of(context).pop(ConfirmAction.CANCEL);
-          SharedPreferences prefs =
-          await SharedPreferences.getInstance();
-          prefs.setInt("shiping_index", -2);
-          prefs.setInt("payment_index", -2);
-          // launchScreen(context, CartScreen.tag);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => CartScreen()),
-          ).then((value) {
-            setState(() {
-              // refresh state
-            });
-          });
-          //   Navigator.pushReplacement(
-          // context,
-          // MaterialPageRoute(
-          //   builder: (context) => CartScreen(),
-          // ),
-          // );
-        },
-        child: Container(
-          padding: EdgeInsets.all(spacing_standard),
-          decoration: boxDecoration(
-              bgColor: sh_colorPrimary2,
-              radius: 6,
-              showShadow: true),
-          child: text("Cart/Checkout",
-              textColor: sh_white,
-              isCentered: true,
-              fontSize: 12.0,
-              fontFamily: 'Bold'),
-        ),
-      );
-    }else{
-      return Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        direction: ShimmerDirection.ltr,
-        child: Container(
-          padding: EdgeInsets.all(spacing_standard),
-          decoration: boxDecoration(
-              bgColor: sh_colorPrimary2,
-              radius: 6,
-              showShadow: true),
-          child: text("Cart/Checkout",
-              textColor: sh_white,
-              isCentered: true,
-              fontSize: 12.0,
-              fontFamily: 'Bold'),
-        ),
-      );
-    }
   }
 }

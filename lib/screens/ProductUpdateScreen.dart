@@ -49,7 +49,7 @@ class ProductUpdateScreen extends StatefulWidget {
 
 class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
   Widget? _form;
-  List<CategoryModel> categoryListModel = [];
+  CategoryModel? categoryListModel;
 
   List<NewCategoryModel> categoryListModel2 = [];
   List<NewSelectedCategoryModel> selectedList = [];
@@ -118,40 +118,37 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories?per_page=25"));
+              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woo_product_categories"));
         } finally {
           client.close();
         }
-        categoryListModel.clear();
+        // categoryListModel!.categories!.clear();
         categoryListModel2.clear();
 
         print('ProductUpdateScreen products Response status2: ${response.statusCode}');
         print('ProductUpdateScreen products Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
-        for (Map i in jsonResponse) {
-          categoryListModel.add(CategoryModel.fromJson(i));
-//        orderListModel = new OrderListModel2.fromJson(i);
-        }
+        categoryListModel = new CategoryModel.fromJson(jsonResponse);
 
-        for (var i = 0; i < categoryListModel.length; i++) {
+        for (var i = 0; i < categoryListModel!.categories!.length; i++) {
           var product2;
           try {
             product2 = pro_det_model!.categories!.firstWhere(
-                  (product) => product!.id == categoryListModel[i].id,
+                  (product) => product!.id == categoryListModel!.categories![i]!.id,
             );
           } catch (e) {
             print('caught error $e');
           }
           if (product2 == null) {
             categoryListModel2.add(new NewCategoryModel(
-                catid: categoryListModel[i].id,
-                name: categoryListModel[i].name,
+                catid: categoryListModel!.categories![i]!.id,
+                name: categoryListModel!.categories![i]!.name,
                 selected: false));
           } else {
-            selectedReportList.add(categoryListModel[i].id!);
+            selectedReportList.add(categoryListModel!.categories![i]!.id!);
             categoryListModel2.add(new NewCategoryModel(
-                catid: categoryListModel[i].id,
-                name: categoryListModel[i].name,
+                catid: categoryListModel!.categories![i]!.id,
+                name: categoryListModel!.categories![i]!.name,
                 selected: true));
           }
           // categoryListModel2.add(new NewCategoryModel(
@@ -233,8 +230,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
 
       return estPriceModel;
     } catch (e) {
-      // EasyLoading.dismiss();
-//      return orderListModel;
+
       print('caught error $e');
     }
   }
@@ -313,7 +309,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
-
+      String? user_default_country=prefs.getString('user_default_country');
       print(token);
 
       // Response response = await get(
@@ -327,6 +323,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       var body = json.encode({
         "product_id": prodId,
         "estimated_retail_price": EstPriceCont.text,
+        "product_country":user_default_country
       });
 
       // final msg = jsonEncode({"username": username, "password": password});

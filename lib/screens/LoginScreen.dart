@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/database/CartPro.dart';
 import 'package:thrift/database/database_hepler.dart';
@@ -155,7 +154,7 @@ SaveToken();
 
       return cart_model;
     } catch (e) {
-      EasyLoading.dismiss();
+      // EasyLoading.dismiss();
       print('caught error $e');
       // return cat_model;
     }
@@ -237,13 +236,13 @@ SaveToken();
       print('LoginScreen add_device Response body2: ${response.body}');
 
 
-      EasyLoading.dismiss();
-      launchScreen(context, DashboardScreen.tag);
+      // EasyLoading.dismiss();
+      // launchScreen(context, DashboardScreen.tag);
       // launchScreen(context, DashboardScreen.tag);
 
       return cat_model;
     } catch (e) {
-      EasyLoading.dismiss();
+      // EasyLoading.dismiss();
       // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
       print('caught error $e');
     }
@@ -298,7 +297,7 @@ SaveToken();
         prefs.setString('token', cat_model!.data!.token.toString());
         prefs.setString('UserId', cat_model!.ID.toString());
         prefs.setString('is_store_owner', cat_model!.data!.is_store_owner.toString());
-        prefs.setString('user_country', cat_model!.data!.country!);
+        prefs.setString('user_default_country', cat_model!.data!.country!);
         prefs.setString('user_selected_country', cat_model!.data!.country!);
         prefs.setString('vendor_country', cat_model!.data!.country!);
 
@@ -311,11 +310,12 @@ SaveToken();
         // prefs.setString('OrderLastName', cat_model!.data!.last_name!);
         prefs.setString('OrderUserEmail', cat_model!.data!.userEmail!);
         prefs.commit();
+        EasyLoading.dismiss();
 
         // _queryAll();
-        // SaveToken();
         fetchCart();
-        // launchScreen(context, DashboardScreen.tag);
+        SaveToken();
+        launchScreen(context, DashboardScreen.tag);
 
       } else {
         EasyLoading.dismiss();

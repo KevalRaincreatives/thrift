@@ -4,7 +4,6 @@ import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/ProductDetailScreen.dart';
@@ -16,7 +15,6 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
-import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 
 
 
@@ -39,13 +37,11 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
   Future<List<ProductListModel>?>? fetchAlbumMain;
   int? cart_count;
   int timer = 800, offset = 0;
-  int pageno=1;
-  bool isLoading = false;
   @override
   void initState() {
     super.initState();
     fetchDataMain=fetchData();
-    fetchAlbum();
+    fetchAlbumMain=fetchAlbum();
 
   }
   Future<String?> fetchtotal() async {
@@ -81,33 +77,22 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
     try {
 //      prefs = await SharedPreferences.getInstance();
 //      String UserId = prefs.getString('UserId');
-      setState(() {
-        isLoading = true;
-      });
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? cat_id = prefs.getString('cat_id');
       String? user_country = prefs.getString('user_selected_country');
       // toast(cat_id);
 
-
       var response = await http.get(
-          Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?stock_status=instock&status=publish&order=desc&per_page=10&category=$cat_id&page=$pageno"));
-      print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?stock_status=instock&status=publish&order=desc&per_page=10&category=$cat_id&page=$pageno");
+          Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100&country=$user_country&category=$cat_id"));
 
       print('ProductListScreen products Response status2: ${response.statusCode}');
       print('ProductListScreen products Response body2: ${response.body}');
-      // productListModel.clear();
+      productListModel.clear();
       final jsonResponse = json.decode(response.body);
       for (Map i in jsonResponse) {
         productListModel.add(ProductListModel.fromJson(i));
 //        orderListModel = new OrderListModel2.fromJson(i);
       }
-
-      setState(() {
-        isLoading = false;
-        pageno = pageno+1;
-      });
 
       return productListModel;
     } catch (e) {
@@ -324,136 +309,111 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
           padding: EdgeInsets.fromLTRB(0,0, 10, 0),
           child: SingleChildScrollView(
 
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
+            child: Container(
+              color: sh_white,
+              // margin: EdgeInsets.fromLTRB(0, 60, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
 
-                  padding: const EdgeInsets.fromLTRB(12.0,8,8,12),
-                  child: FutureBuilder<String?>(
-                    future: fetchDataMain,
+                    padding: const EdgeInsets.fromLTRB(12.0,8,8,12),
+                    child: FutureBuilder<String?>(
+                      future: fetchDataMain,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return  TextName(appBarTitleText);
+                        }
+                        return Center(child: CircularProgressIndicator());
+                      },
+                    ),
+                  ),
+                  FutureBuilder<List<ProductListModel>?>(
+                    future: fetchAlbumMain,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        return  TextName(appBarTitleText);
+      if(productListModel.length > 0) {
+        return Wrap(
+          runSpacing: runSpacing,
+          spacing: spacing,
+          alignment: WrapAlignment.center,
+          children: List.generate(productListModel.length, (index) {
+              return InkWell(
+                onTap: () async {
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  prefs.setString(
+                      'pro_id', productListModel[index].id.toString());
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ProductDetailScreen()));
+                },
+                child: Container(
+                  width: w * .9,
+                  decoration: boxDecoration4(showShadow: false),
+                  margin: EdgeInsets.only(left: 12, bottom: 12),
+                  // padding: EdgeInsets.fromLTRB(spacing_standard,spacing_standard,spacing_standard,spacing_control_half),
+                  padding:
+                  EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      NewImagevw(index),
+                      SizedBox(
+                        height: 6,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 0, right: spacing_standard),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              productListModel[index].name!,
+                              maxLines: 1,
+                              style: TextStyle(
+                                  color: sh_black,
+                                  fontFamily: fontBold,
+                                  fontSize: textSizeMedium),
+                            ),
+                            SizedBox(
+                              height: 2,
+                            ),
+                            MyPrice(index),
+                            SizedBox(
+                              height: 4,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              );
+          }),
+        );
+      }else{
+        return Container(
+          height: height-350,
+          alignment: Alignment.center,
+          child: Center(
+              child: Text(
+                'No Product Found',
+                style: TextStyle(
+                    fontSize: 20,
+                    color: sh_colorPrimary2,
+                    fontWeight: FontWeight.bold),
+              ),
+          ),
+        );
+      }
+
                       }
                       return Center(child: CircularProgressIndicator());
                     },
                   ),
-                ),
-                Container(
-                  height: height,
-                  width: width,
-                  child: Column(
-                    children: [
-                      LazyLoadScrollView(
-                        isLoading: isLoading,
-                        onEndOfPage: () => fetchAlbum(),
-                        child: Expanded(
-                          child: AnimationLimiter(
-                            child: GridView.count(
-                              childAspectRatio: 0.75,
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 32.0,
-                              mainAxisSpacing: 10.0,
-                              children: List.generate(
-                                productListModel.length,
-                                    (int index) {
-                                  return AnimationConfiguration
-                                      .staggeredGrid(
-                                    position: index,
-                                    duration:
-                                    const Duration(milliseconds: 375),
-                                    columnCount: 2,
-                                    child: ScaleAnimation(
-                                      child: FadeInAnimation(
-                                        child: InkWell(
-                                          onTap: () async {
-                                            SharedPreferences prefs =
-                                            await SharedPreferences
-                                                .getInstance();
-                                            prefs.setString(
-                                                'pro_id',
-                                                productListModel[index]
-                                                    .id
-                                                    .toString());
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      ProductDetailScreen()),).then((value) {   setState(() {
-                                              // refresh state
-                                            });});
-                                          },
-                                          child: Container(
-                                            decoration: boxDecoration4(
-                                                showShadow: false),
-                                            // margin: EdgeInsets.only(left: 16, bottom: 16),
-                                            // padding: EdgeInsets.fromLTRB(spacing_standard,spacing_standard,spacing_standard,spacing_control_half),
-                                            // padding:
-                                            // EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                              CrossAxisAlignment
-                                                  .stretch,
-                                              children: <Widget>[
-                                                NewImagevw(index),
-                                                SizedBox(
-                                                  height: 6,
-                                                ),
-                                                Padding(
-                                                  padding: const EdgeInsets
-                                                      .only(
-                                                      left:
-                                                      0,
-                                                      right:
-                                                      spacing_standard),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                    CrossAxisAlignment
-                                                        .start,
-                                                    children: <Widget>[
-                                                      Text(
-                                                        productListModel[
-                                                        index]
-                                                            .name!,
-                                                        maxLines: 1,
-                                                        style: TextStyle(
-                                                            color:
-                                                            sh_app_black,
-                                                            fontFamily:
-                                                            fontBold,
-                                                            fontSize:
-                                                            textSizeMedium),
-                                                      ),
-                                                      SizedBox(
-                                                        height: 4,
-                                                      ),
-                                                      MyPrice(index),
-                                                      SizedBox(
-                                                        height: 4,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    ],
-                  ),
-                )
-              ],
+                ],
+              ),
             ),
           ),
         ),

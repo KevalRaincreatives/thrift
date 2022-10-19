@@ -58,7 +58,6 @@ import 'package:thrift/utils/T3Dialog.dart';
 import 'package:sizer/sizer.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-
 Future<void>  main() async {
   bool isInDebugMode = false;
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,10 +71,11 @@ Future<void>  main() async {
     sound: true,
   );
 
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    // statusBarColor: Colors.red,
-      statusBarBrightness: Brightness.light
-  ));
+  // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+  //   statusBarColor: Colors.red,
+  //     statusBarBrightness: Brightness.dark
+  // ));
+  // FlutterStatusbarcolor.setStatusBarColor(Colors.lightGreen, animate: true);
   HttpOverrides.global = new MyHttpOverrides();
   // FirebaseCrashlytics.instance.enableInDevMode = true;
 
@@ -132,6 +132,7 @@ class MyApp extends StatelessWidget {
     return Sizer(
         builder: (context, orientation, deviceType) {
           return MaterialApp(
+            debugShowCheckedModeBanner: false,
             title: 'Cassie by Casuarina',
             theme: ThemeData(
               primarySwatch: Colors.lightBlue,

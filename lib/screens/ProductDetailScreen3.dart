@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'dart:math';
@@ -34,12 +33,10 @@ import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   static String tag = '/ProductDetailScreen';
-  List<ProductListModelImages?>? proImage;
-  final String? proName,proPrice;
 
   // ProductListModel? product;
 
-  ProductDetailScreen({this.proName,this.proPrice,this.proImage});
+  const ProductDetailScreen({Key? key}) : super(key: key);
 
   @override
   _ProductDetailScreenState createState() => _ProductDetailScreenState();
@@ -97,8 +94,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool? ct_changel = true;
   @override
   void initState() {
-    _controller = PageController();
     fetchDetailMain = fetchDetail();
+    _controller = PageController();
     fetchEstPrice2 = fetchEstPrice();
     fetchSellerMain = fetchSeller();
     super.initState();
@@ -194,12 +191,215 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  Future<GetVariantModel?> fetchVariant(String myurl) async {
+    EasyLoading.show(status: 'Please wait...');
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? pro_id = prefs.getString('pro_id');
+      // toast(pro_id);
+      // print(
+      //     "https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id");
+      var response = await http.get(Uri.parse(myurl));
+      final jsonResponse = json.decode(response.body);
+      print('not json prpr$jsonResponse');
+      EasyLoading.dismiss();
+      getVariantModel = new GetVariantModel.fromJson(jsonResponse);
 
+      if (getVariantModel!.data!.variationId == 0) {
+        prefs.setString("variant_id", "");
+      } else {
+        prefs.setString(
+            "variant_id", getVariantModel!.data!.variationId.toString());
+        // AddCart();
+        AddCheckCart();
+      }
+      // if(pro_det_model.type=='variable'){
+      //   fetchVariant();
+      // }
+      return getVariantModel;
+    } catch (e) {
+      EasyLoading.dismiss();
+      print('caught error $e');
+    }
+  }
+
+  void _insert() async {
+    // row to insert
+    if (myvariation_name.length > 2) {
+      myvariation_name = myvariation_name.substring(1);
+      myvariation_value = myvariation_value.substring(1);
+    }
+    print(myvariation_name);
+    print(myvariation_value);
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? variation_id = prefs.getString('variant_id');
+
+    final allRows = await dbHelper.queryAllRows();
+    cartPro.clear();
+    allRows.forEach((row) => cartPro.add(CartPro.fromJson(row)));
+    if ((cartPro.singleWhereOrNull(
+          (it) => it.product_id == pro_det_model!.id.toString(),
+        )) !=
+        null) {
+      if (variation_id != '') {
+        if ((cartPro.singleWhere((it) => it.variation_id == variation_id,
+                orElse: () => null!)) !=
+            null) {
+          print('Already exists!');
+          int chk = 0;
+          for (var i = 0; i < cartPro.length; i++) {
+            if (cartPro[i].variation_id == variation_id) {
+              chk == i;
+            }
+          }
+          int dd = int.parse(cartPro[chk].quantity!) + 1;
+
+          double fnlamnt = double.parse(cartPro[chk].line_subtotal!) *
+              double.parse(dd.toString());
+
+          CartPro car = CartPro(
+              cartPro[chk].id,
+              cartPro[chk].product_id,
+              cartPro[chk].product_name,
+              cartPro[chk].product_img,
+              cartPro[chk].variation_id,
+              cartPro[chk].variation_name,
+              cartPro[chk].variation_value,
+              dd.toString(),
+              cartPro[chk].line_subtotal,
+              fnlamnt.toString());
+          final rowsAffected = await dbHelper.update(car);
+        } else {
+          print('Added!');
+          Map<String, dynamic> row = {
+            DatabaseHelper.columnProductId: pro_det_model!.id.toString(),
+            DatabaseHelper.columnProductName: pro_det_model!.name.toString(),
+            DatabaseHelper.columnProductImage:
+                pro_det_model!.images![0]!.src.toString(),
+            DatabaseHelper.columnVariationId: variation_id,
+            DatabaseHelper.columnVariationName: myvariation_name,
+            DatabaseHelper.columnVariationValue: myvariation_value,
+            DatabaseHelper.columnQuantity: "1",
+            DatabaseHelper.columnLine_subtotal: pro_det_model!.price.toString(),
+            DatabaseHelper.columnLine_total: pro_det_model!.price.toString(),
+          };
+          CartPro car = CartPro.fromJson(row);
+          final id = await dbHelper.insert(car);
+        }
+      } else {
+        print('Already exists!');
+        int chk = 0;
+        for (var i = 0; i < cartPro.length; i++) {
+          if (cartPro[i].product_id == pro_det_model!.id.toString()) {
+            chk == i;
+          }
+        }
+        int dd = int.parse(cartPro[chk].quantity!) + 1;
+
+        double fnlamnt = double.parse(cartPro[chk].line_subtotal!) *
+            double.parse(dd.toString());
+
+        CartPro car = CartPro(
+            cartPro[chk].id,
+            cartPro[chk].product_id,
+            cartPro[chk].product_name,
+            cartPro[chk].product_img,
+            cartPro[chk].variation_id,
+            cartPro[chk].variation_name,
+            cartPro[chk].variation_value,
+            dd.toString(),
+            cartPro[chk].line_subtotal,
+            fnlamnt.toString());
+        final rowsAffected = await dbHelper.update(car);
+      }
+
+      // print('Already exists!');
+    } else {
+      print('Added!');
+      Map<String, dynamic> row = {
+        DatabaseHelper.columnProductId: pro_det_model!.id.toString(),
+        DatabaseHelper.columnProductName: pro_det_model!.name.toString(),
+        DatabaseHelper.columnProductImage:
+            pro_det_model!.images![0]!.src.toString(),
+        DatabaseHelper.columnVariationId: variation_id,
+        DatabaseHelper.columnVariationName: myvariation_name,
+        DatabaseHelper.columnVariationValue: myvariation_value,
+        DatabaseHelper.columnQuantity: "1",
+        DatabaseHelper.columnLine_subtotal: pro_det_model!.price.toString(),
+        DatabaseHelper.columnLine_total: pro_det_model!.price.toString(),
+      };
+      CartPro car = CartPro.fromJson(row);
+      final id = await dbHelper.insert(car);
+    }
+
+    // Map<String, dynamic> row = {
+    //   DatabaseHelper.columnProductId: pro_det_model.id.toString(),
+    //   DatabaseHelper.columnProductName: pro_det_model.name.toString(),
+    //   DatabaseHelper.columnProductImage: pro_det_model.images[0].src.toString(),
+    //   DatabaseHelper.columnVariationId: variation_id,
+    //   DatabaseHelper.columnVariation: variation,
+    //   DatabaseHelper.columnQuantity: "1",
+    //   DatabaseHelper.columnLine_subtotal: pro_det_model.price.toString(),
+    //   DatabaseHelper.columnLine_total: pro_det_model.price.toString(),
+    // };
+    // CartPro car = CartPro.fromJson(row);
+    // final id = await dbHelper.insert(car);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button for close dialog!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Success"),
+          content: Text(
+            "Product added to cart",
+          ),
+          actions: [
+            TextButton(
+              child: Text("Continue Shopping"),
+              onPressed: () {
+                Navigator.of(context).pop(ConfirmAction.CANCEL);
+              },
+            ),
+            TextButton(
+              child: Text("View Cart"),
+              onPressed: () async {
+                Navigator.of(context).pop(ConfirmAction.CANCEL);
+//                    launchScreen(context, ShCartScreen.tag);
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                prefs.setInt("shiping_index", -2);
+                prefs.setInt("payment_index", -2);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CartScreen()),
+                ).then((value) {
+                  setState(() {
+                    // refresh state
+                  });
+                });
+              },
+            )
+          ],
+        );
+      },
+    );
+    // toast('inserted row id: $id');
+  }
 
   Future<ProductDetailModel?> AddCart() async {
 //    Dialogs.showLoadingDialog(context, _keyLoader);
-//     EasyLoading.show(status: 'Please wait...');
+    EasyLoading.show(status: 'Please wait...');
     try {
+      // String variation_id = '';
+      // if (pro_det_model!.attributes!.length > 0) {
+      //   if (pro_det_model!.attributes![0]!.variation == true) {
+      //     if (pro_det_model!.attributes![0]!.name == 'Size') {
+      //       variation_id = pro_det_model!.variations![selectedSize].toString();
+      //     } else if (pro_det_model!.attributes![0]!.name == 'Color') {
+      //       variation_id = pro_det_model!.variations![selectedColor].toString();
+      //     }
+      //   }
+      // }
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pro_id = prefs.getString('pro_id');
@@ -238,7 +438,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         addCartModel = new AddCartModel.fromJson(jsonResponse);
 
         if (addCartModel!.status == true) {
-          // EasyLoading.dismiss();
+          EasyLoading.dismiss();
           if (addCartModel!.cart == null) {
             prefs.setInt("cart_count", 0);
             cart_count == 0;
@@ -249,8 +449,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             prefs.setInt("cart_count", addCartModel!.cart!.length);
             cart_count == addCartModel!.cart!.length;
           }
-          // ct_changel = true;
-          // _incrementCounter();
+          ct_changel = true;
+          _incrementCounter();
+          // fetchCart();
+          // setState(() {
+          //   _isVisible = false;
+          //   _isVisible_success = true;
+          // });
 
 
 //           showDialog<void>(
@@ -285,7 +490,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 //             },
 //           );
         } else {
-          // EasyLoading.dismiss();
+          EasyLoading.dismiss();
           toast('Something went wrong');
           showDialog<void>(
               context: context,
@@ -304,7 +509,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               });
         }
       } else {
-        // EasyLoading.dismiss();
+        EasyLoading.dismiss();
         toast('Spmething went wrong');
         showDialog<void>(
             context: context,
@@ -324,8 +529,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
       return null;
     } catch (e) {
-      // EasyLoading.dismiss();
+      EasyLoading.dismiss();
       print('caught error $e');
+    }
+  }
+
+  Future<String?> AddCheckCart() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // String pro_id = prefs.getString('pro_id');
+    String? token = prefs.getString('token');
+
+    if (token != null && token != '') {
+      AddCart();
+    } else {
+      _insert();
     }
   }
 
@@ -431,13 +648,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       InkWell(
                         onTap: () async {
                           // BecameSeller();
-                          toast("Your report has successfully submited");
-
                           Navigator.of(context, rootNavigator: true).pop();
-                          // setState(() {
-                          //   _isVisible = false;
-                          //   _isVisible_success = true;
-                          // });
+                          setState(() {
+                            _isVisible = false;
+                            _isVisible_success = true;
+                          });
                         },
                         child: Container(
                           width: MediaQuery.of(context).size.width*.7,
@@ -516,7 +731,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   PageView.builder(
                     controller: _controller2,
-                    itemCount: widget.proImage!.length,
+                    itemCount: pro_det_model!.images!.length,
                     itemBuilder: (context, index) {
                       return Container(
                         child: Padding(
@@ -531,7 +746,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                               child: PhotoView(
                                   imageProvider: NetworkImage(
-                                    widget.proImage![index]!.src!,
+                                pro_det_model!.images![index]!.src!,
                               ))
                               // Image.network(
                               //     pro_det_model!.images![index]!.src!,
@@ -583,7 +798,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     Imagevw4() {
-      if (widget.proImage!.length < 1) {
+      if (pro_det_model!.images!.length < 1) {
         return
             //   Image.asset(
             //   sh_no_img,
@@ -596,7 +811,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             PageView.builder(
               controller: _controller,
-              itemCount: widget.proImage!.length,
+              itemCount: pro_det_model!.images!.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onTap: () {
@@ -615,7 +830,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                         child: FadeInImage.assetNetwork(
                             placeholder: 'images/tenor.gif',
-                            image: widget.proImage![index]!.src!,
+                            image: pro_det_model!.images![index]!.src!,
                             fit: BoxFit.fitWidth),
                       ),
                     ),
@@ -632,7 +847,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: new Center(
                   child: new DotsIndicator(
                     controller: _controller,
-                    itemCount: widget.proImage!.length,
+                    itemCount: pro_det_model!.images!.length,
                     onPageSelected: (int page) {
                       _controller!.animateToPage(
                         page,
@@ -651,7 +866,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: new IconButton(
-                    icon: new Image.asset(sh_report_pro,height: 20,width: 20,fit: BoxFit.fill,),
+                    icon: new Image.asset(sh_report_pro,height: 50,width: 50,),
                     onPressed: () {
                       _openCustomDialog2();
                     }),
@@ -815,17 +1030,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       // var myprice2 = double.parse(pro_det_model!.price!);
       // var myprice = myprice2.toStringAsFixed(2);
       var myprice2, myprice;
-      if (widget.proPrice == '') {
+      if (pro_det_model!.price == '') {
         myprice = "0.00";
       } else {
-        myprice2 = double.parse(widget.proPrice!);
+        myprice2 = double.parse(pro_det_model!.price!);
         myprice = myprice2.toStringAsFixed(2);
       }
 
       return Row(
         children: [
           Text(
-            "\$" + myprice + " " + "USD",
+            "\$" + myprice + " " + pro_det_model!.currency!,
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontBold,
@@ -858,7 +1073,62 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     CheckVariant() {
+      if (pro_det_model!.variations!.length > 0) {
+        return Container(
+          child: ListView.builder(
+              itemCount: pro_det_model!.attributes!.length,
+              physics: NeverScrollableScrollPhysics(),
+              // itemExtent: 50.0,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                itModel = MyVariant(
+                    attr_name: pro_det_model!.attributes![index]!.name!,
+                    attr_optn: "");
+                itemsModel.add(itModel!);
 
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      pro_det_model!.attributes![index]!.name!,
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: 'ExtraBold',
+                          color: sh_colorPrimary2),
+                    ),
+                    SizedBox(height: 20),
+                    PlayerWidget(
+                        pro_det_model: pro_det_model!,
+                        index: index,
+                        itemsModel: itemsModel),
+                    // DropdownButton(
+                    //   underline: SizedBox(),
+                    //   isExpanded: true,
+                    //   items: pro_det_model!.attributes![index]!.options!
+                    //       .map((item) {
+                    //     return new DropdownMenuItem(
+                    //       child: Text(
+                    //         item.toString(),
+                    //         style: TextStyle(
+                    //             color: sh_textColorPrimary,
+                    //             fontFamily: fontRegular,
+                    //             fontSize: textSizeNormal),
+                    //       ),
+                    //       value: item,
+                    //     );
+                    //   }).toList(),
+                    //   hint: Text('Select'),
+                    //   value: selectedValue,
+                    //   onChanged: (String? newVal) {
+                    //     selectedValue = newVal!;
+                    //     setState(() {});
+                    //   },
+                    // ),
+                  ],
+                );
+              }),
+        );
+      } else {
         int? my_index = -1;
         for (var i = 0; i < pro_det_model!.metaData!.length; i++) {
           if (pro_det_model!.metaData![i]!.key == "attrs_val") {
@@ -925,6 +1195,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 );
               });
         }
+      }
     }
 
     BadgeCount() {
@@ -969,12 +1240,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
 
-
-
     SuccesVisiblity() {
       if (_isVisible_success) {
         var myprice2 =
-        double.parse(pro_det_model!.price!.toString());
+        double.parse(addCartModel!.total.toString());
         var myprice = myprice2.toStringAsFixed(2);
         return Visibility(
             visible: _isVisible_success,
@@ -1033,8 +1302,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 fontFamily: fontSemibold),
                           ),
                           Text(
-
-                                "1 Item ",
+                              addCartModel!.cart!.length.toString() +
+                                " Item ",
                             style: TextStyle(
                                 color: sh_black,
                                 fontSize: 15,
@@ -1098,46 +1367,43 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               fontFamily: 'Bold'),
                         ),
                       ),
-            // CheckShimmer(),
-                      groceryButton(),
-
-                      // InkWell(
-                      //   onTap: () async {
-                      //     Navigator.of(context).pop(ConfirmAction.CANCEL);
-                      //     SharedPreferences prefs =
-                      //         await SharedPreferences.getInstance();
-                      //     prefs.setInt("shiping_index", -2);
-                      //     prefs.setInt("payment_index", -2);
-                      //     // launchScreen(context, CartScreen.tag);
-                      //     Navigator.push(
-                      //       context,
-                      //       MaterialPageRoute(
-                      //           builder: (context) => CartScreen()),
-                      //     ).then((value) {
-                      //       setState(() {
-                      //         // refresh state
-                      //       });
-                      //     });
-                      //     //   Navigator.pushReplacement(
-                      //     // context,
-                      //     // MaterialPageRoute(
-                      //     //   builder: (context) => CartScreen(),
-                      //     // ),
-                      //     // );
-                      //   },
-                      //   child: Container(
-                      //     padding: EdgeInsets.all(spacing_standard),
-                      //     decoration: boxDecoration(
-                      //         bgColor: sh_colorPrimary2,
-                      //         radius: 6,
-                      //         showShadow: true),
-                      //     child: text("Cart/Checkout",
-                      //         textColor: sh_white,
-                      //         isCentered: true,
-                      //         fontSize: 12.0,
-                      //         fontFamily: 'Bold'),
-                      //   ),
-                      // ),
+                      InkWell(
+                        onTap: () async {
+                          Navigator.of(context).pop(ConfirmAction.CANCEL);
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          // launchScreen(context, CartScreen.tag);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CartScreen()),
+                          ).then((value) {
+                            setState(() {
+                              // refresh state
+                            });
+                          });
+                          //   Navigator.pushReplacement(
+                          // context,
+                          // MaterialPageRoute(
+                          //   builder: (context) => CartScreen(),
+                          // ),
+                          // );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(spacing_standard),
+                          decoration: boxDecoration(
+                              bgColor: sh_colorPrimary2,
+                              radius: 6,
+                              showShadow: true),
+                          child: text("Cart/Checkout",
+                              textColor: sh_white,
+                              isCentered: true,
+                              fontSize: 12.0,
+                              fontFamily: 'Bold'),
+                        ),
+                      ),
                     ],
                   )
                 ],
@@ -1212,257 +1478,205 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: SingleChildScrollView(
                     child: Container(
                       width: width,
-                      padding: EdgeInsets.fromLTRB(26, 0, 26, 0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Stack(
-                            children: [_productImage()],
-                          ),
-                          SizedBox(
-                            height: 8,
-                          ),
-                          Text(
-                            widget.proName!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                color: sh_colorPrimary2,
-                                fontFamily: fontBold,
-                                fontSize: textSizeLargeMedium),
-                          ),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          MyPrice(),
-                          SizedBox(
-                            height: 14,
-                          ),
-                          FutureBuilder<ProductDetailModel?>(
-                            future: fetchDetailMain,
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return Container(
+                      child: FutureBuilder<ProductDetailModel?>(
+                        future: fetchDetailMain,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return Container(
+                              width: width,
+                              padding: EdgeInsets.fromLTRB(26, 0, 26, 0),
+                              child: Stack(
+                                children: <Widget>[
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Stack(
+                                        children: [_productImage()],
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
 
-                                  child: Stack(
-                                    children: <Widget>[
                                       Column(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-
-
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-
-                                              FutureBuilder<EstPriceModel?>(
-                                                future: fetchEstPrice2,
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    if (estPriceModel!
-                                                        .estimatedRetailPrice!
-                                                        .length >
-                                                        0) {
-                                                      return Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Text(
-                                                            'Estimated Retail Price',
-                                                            style: TextStyle(
-                                                                fontSize: 14,
-                                                                fontFamily:
-                                                                fontSemibold,
-                                                                color:
-                                                                sh_colorPrimary2),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          EstPrice(),
-                                                          SizedBox(
-                                                            height: 6,
-                                                          ),
-                                                        ],
-                                                      );
-                                                    }else{
-                                                      return Container();
-                                                    }
-                                                  } else if (snapshot.hasError) {
-                                                    return Text(
-                                                        "${snapshot.error}");
-                                                  }
-                                                  // By default, show a loading spinner.
-                                                  return Container();
-                                                },
-                                              ),
-                                              // CheckVariant()
-                                            ],
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            pro_det_model!.name!,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                color: sh_colorPrimary2,
+                                                fontFamily: fontBold,
+                                                fontSize: textSizeLargeMedium),
                                           ),
-
                                           SizedBox(
-                                            height: 12,
+                                            height: 2,
                                           ),
-                                          CheckVariant(),
+                                          MyPrice(),
 
-                                          // _availableSize(),
                                           // SizedBox(
-                                          //   height: 20,
+                                          //   height: 2,
                                           // ),
-                                          // _availableColor(),
+                                          //
+                                          //
+                                          // Text(
+                                          //   pro_det_model!.slug!,
+                                          //   maxLines: 2,
+                                          //   style: TextStyle(
+                                          //       color: sh_textColorSecondary,
+                                          //       fontFamily: fontMedium,
+                                          //       fontSize: textSizeSMedium),
+                                          // ),
                                           SizedBox(
-                                            height: 8,
+                                            height: 14,
                                           ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-                                              Text(
-                                                "Description",
-                                                maxLines: 2,
-                                                style: TextStyle(
-                                                    color: sh_colorPrimary2,
-                                                    fontFamily: fontSemibold,
-                                                    fontSize: textSizeMedium),
-                                              ),
-                                              SizedBox(
-                                                height: 4,
-                                              ),
-                                              Html(
-                                                data: pro_det_model!.description,
-                                                style: {
-                                                  "body": Style(color: sh_black,fontFamily: "Regular"),
-                                                },
-                                              ),
-                                            ],
-                                          ),
-
-                                          SizedBox(
-                                            height: 8,
-                                          ),
-                                          Container(
-                                            height: 0.5,
-                                            color: sh_app_txt_color,
-                                          ),
-                                          SizedBox(
-                                            height: 26,
-                                          ),
-                                          FutureBuilder<ProductSellerModel?>(
-                                            future: fetchSellerMain,
+                                          FutureBuilder<EstPriceModel?>(
+                                            future: fetchEstPrice2,
                                             builder: (context, snapshot) {
                                               if (snapshot.hasData) {
-                                                return Container(
-                                                  child: InkWell(
-                                                    onTap: () async {
-                                                      SharedPreferences prefs =
-                                                          await SharedPreferences
-                                                              .getInstance();
-                                                      prefs.setString(
-                                                          "seller_id",
+                                                if (estPriceModel!
+                                                    .estimatedRetailPrice!
+                                                    .length >
+                                                    0) {
+                                                  return Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        'Estimated Retail Price',
+                                                        style: TextStyle(
+                                                            fontSize: 14,
+                                                            fontFamily:
+                                                            fontSemibold,
+                                                            color:
+                                                            sh_colorPrimary2),
+                                                      ),
+                                                      SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      EstPrice(),
+                                                      SizedBox(
+                                                        height: 6,
+                                                      ),
+                                                    ],
+                                                  );
+                                                }else{
+                                                  return Container();
+                                                }
+                                              } else if (snapshot.hasError) {
+                                                return Text(
+                                                    "${snapshot.error}");
+                                              }
+                                              // By default, show a loading spinner.
+                                              return Container();
+                                            },
+                                          ),
+                                          // CheckVariant()
+                                        ],
+                                      ),
+
+                                      SizedBox(
+                                        height: 12,
+                                      ),
+                                      CheckVariant(),
+
+                                      // _availableSize(),
+                                      // SizedBox(
+                                      //   height: 20,
+                                      // ),
+                                      // _availableColor(),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            "Description",
+                                            maxLines: 2,
+                                            style: TextStyle(
+                                                color: sh_colorPrimary2,
+                                                fontFamily: fontSemibold,
+                                                fontSize: textSizeMedium),
+                                          ),
+                                          SizedBox(
+                                            height: 4,
+                                          ),
+                                          Html(
+                                            data: pro_det_model!.description,
+                                            style: {
+                                              "body": Style(color: sh_black,fontFamily: "Regular"),
+                                            },
+                                          ),
+                                        ],
+                                      ),
+
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Container(
+                                        height: 0.5,
+                                        color: sh_app_txt_color,
+                                      ),
+                                      SizedBox(
+                                        height: 26,
+                                      ),
+                                      FutureBuilder<ProductSellerModel?>(
+                                        future: fetchSellerMain,
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
+                                            return Container(
+                                              child: InkWell(
+                                                onTap: () async {
+                                                  SharedPreferences prefs =
+                                                      await SharedPreferences
+                                                          .getInstance();
+                                                  prefs.setString(
+                                                      "seller_id",
+                                                      productSellerModel!
+                                                          .seller!.sellerId
+                                                          .toString());
+                                                  prefs.setString(
+                                                      "seller_name",
+                                                      productSellerModel!
+                                                              .seller!
+                                                              .firstName![0]
+                                                              .toString() +
+                                                          " " +
                                                           productSellerModel!
-                                                              .seller!.sellerId
+                                                              .seller!
+                                                              .lastName![0]
                                                               .toString());
-                                                      prefs.setString(
-                                                          "seller_name",
-                                                          productSellerModel!
-                                                                  .seller!
-                                                                  .firstName![0]
-                                                                  .toString() +
-                                                              " " +
-                                                              productSellerModel!
-                                                                  .seller!
-                                                                  .lastName![0]
-                                                                  .toString());
-                                                      launchScreen(context,
-                                                          SellerProfileScreen.tag);
-                                                    },
-                                                    child: Column(
+                                                  launchScreen(context,
+                                                      SellerProfileScreen.tag);
+                                                },
+                                                child: Column(
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
                                                       children: [
+                                                        Text(
+                                                          "Seller",
+                                                          maxLines: 2,
+                                                          style: TextStyle(
+                                                              color:
+                                                                  sh_colorPrimary2,
+                                                              fontFamily:
+                                                              fontSemibold,
+                                                              fontSize: 16),
+                                                        ),
                                                         Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
-                                                          children: [
+                                                          children: <Widget>[
                                                             Text(
-                                                              "Seller",
+                                                              "View Profile",
                                                               maxLines: 2,
                                                               style: TextStyle(
                                                                   color:
-                                                                      sh_colorPrimary2,
-                                                                  fontFamily:
-                                                                  fontSemibold,
-                                                                  fontSize: 16),
-                                                            ),
-                                                            Row(
-                                                              children: <Widget>[
-                                                                Text(
-                                                                  "View Profile",
-                                                                  maxLines: 2,
-                                                                  style: TextStyle(
-                                                                      color:
-                                                                          sh_black,
-                                                                      fontFamily:
-                                                                      fontSemibold,
-                                                                      fontSize: 14),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        SizedBox(
-                                                          height: 6,
-                                                        ),
-                                                        Row(
-                                                          children: [
-                                                            Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(2.0),
-                                                                child: productSellerModel!
-                                                                            .seller!
-                                                                            .profile_picture ==
-                                                                        null
-                                                                    ? CircleAvatar(
-                                                                        // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                                        backgroundImage:
-                                                                            NetworkImage(
-                                                                                "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"),
-                                                                        radius: 22,
-                                                                      )
-                                                                    : CircleAvatar(
-                                                                        // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                                        backgroundImage:
-                                                                            NetworkImage(productSellerModel!
-                                                                                .seller!
-                                                                                .profile_picture!),
-                                                                        radius: 22,
-                                                                      )),
-                                                            // Icon(
-                                                            //   Icons.circle,
-                                                            //   color: sh_grey,
-                                                            //   size: 40,
-                                                            // ),
-                                                            SizedBox(
-                                                              width: 10,
-                                                            ),
-                                                            Text(
-                                                              productSellerModel!
-                                                                      .seller!
-                                                                      .firstName![
-                                                                          0]!
-                                                                      .toString() +
-                                                                  " " +
-                                                                  productSellerModel!
-                                                                      .seller!
-                                                                      .lastName![0]!
-                                                                      .toString(),
-                                                              maxLines: 2,
-                                                              style: TextStyle(
-                                                                  color:
-                                                                      sh_colorPrimary2,
+                                                                      sh_black,
                                                                   fontFamily:
                                                                   fontSemibold,
                                                                   fontSize: 14),
@@ -1471,150 +1685,271 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                                         ),
                                                       ],
                                                     ),
-                                                  ),
-                                                );
-                                              } else if (snapshot.hasError) {
-                                                return Text("${snapshot.error}");
+                                                    SizedBox(
+                                                      height: 6,
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(2.0),
+                                                            child: productSellerModel!
+                                                                        .seller!
+                                                                        .profile_picture ==
+                                                                    null
+                                                                ? CircleAvatar(
+                                                                    // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                                    backgroundImage:
+                                                                        NetworkImage(
+                                                                            "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"),
+                                                                    radius: 22,
+                                                                  )
+                                                                : CircleAvatar(
+                                                                    // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                                    backgroundImage:
+                                                                        NetworkImage(productSellerModel!
+                                                                            .seller!
+                                                                            .profile_picture!),
+                                                                    radius: 22,
+                                                                  )),
+                                                        // Icon(
+                                                        //   Icons.circle,
+                                                        //   color: sh_grey,
+                                                        //   size: 40,
+                                                        // ),
+                                                        SizedBox(
+                                                          width: 10,
+                                                        ),
+                                                        Text(
+                                                          productSellerModel!
+                                                                  .seller!
+                                                                  .firstName![
+                                                                      0]!
+                                                                  .toString() +
+                                                              " " +
+                                                              productSellerModel!
+                                                                  .seller!
+                                                                  .lastName![0]!
+                                                                  .toString(),
+                                                          maxLines: 2,
+                                                          style: TextStyle(
+                                                              color:
+                                                                  sh_colorPrimary2,
+                                                              fontFamily:
+                                                              fontSemibold,
+                                                              fontSize: 14),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          } else if (snapshot.hasError) {
+                                            return Text("${snapshot.error}");
+                                          }
+                                          // By default, show a loading spinner.
+                                          return CircularProgressIndicator();
+                                        },
+                                      ),
+
+                                      SizedBox(
+                                        height: 36,
+                                      ),
+                                      InkWell(
+                                        onTap: () async {
+                                          SharedPreferences prefs =
+                                              await SharedPreferences
+                                                  .getInstance();
+                                          String? pro_id =
+                                              prefs.getString('pro_id');
+                                          if (pro_det_model!
+                                                  .variations!.length >
+                                              0) {
+                                            int selval = 0;
+                                            String mygsss = '';
+
+                                            for (var i = 0;
+                                                i < itemsModel.length;
+                                                i++) {
+                                              if (itemsModel[i].attr_optn ==
+                                                  '') {
+                                                selval = 1;
+                                              } else {
+                                                mynames = "&attributes[" +
+                                                    pro_det_model!
+                                                        .attributes![i]!.name! +
+                                                    "]=";
+
+//                     print(itemsModel[i].attr_name);
+// print(itemsModel[i].attr_optn);
+
+                                                mygsss = mygsss +
+                                                    mynames +
+                                                    itemsModel[i].attr_optn!;
+                                                myvariation_name =
+                                                    myvariation_name +
+                                                        "," +
+                                                        pro_det_model!
+                                                            .attributes![i]!
+                                                            .name!;
+                                                myvariation_value =
+                                                    myvariation_value +
+                                                        "," +
+                                                        itemsModel[i]
+                                                            .attr_optn!;
                                               }
-                                              // By default, show a loading spinner.
-                                              return CircularProgressIndicator();
-                                            },
-                                          ),
+                                            }
+                                            if (selval == 1) {
+                                              mygsss = '';
+                                              toast("select value");
+                                            } else {
+                                              print(
+                                                  'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_variation_id/?product_id=$pro_id' +
+                                                      mygsss);
+                                              fetchVariant(
+                                                  'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_variation_id/?product_id=$pro_id' +
+                                                      mygsss);
 
-                                          SizedBox(
-                                            height: 36,
-                                          ),
-                                          InkWell(
-                                            onTap: () async {
-                                              SharedPreferences prefs =
-                                                  await SharedPreferences
-                                                      .getInstance();
-
-                                              prefs.setString("variant_id", "");
-                                              AddCart();
-                                              ct_changel = true;
-                                              cart_count==1;
-                                              _incrementCounter();
-                                            },
-                                            child: Container(
-                                              width:
-                                                  MediaQuery.of(context).size.width,
-                                              padding: EdgeInsets.only(
-                                                  top: spacing_middle,
-                                                  bottom: spacing_middle),
-                                              decoration: boxDecoration(
-                                                  bgColor: sh_app_background,
-                                                  radius: 10,
-                                                  showShadow: true),
-                                              child: text("Add to Cart",
-                                                  textColor: sh_app_txt_color,
-                                                  isCentered: true,
-                                                  fontFamily: 'Bold'),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: 18,
-                                          ),
-                                        ],
+                                              // toast("Proceed");
+                                            }
+                                          } else {
+                                            prefs.setString("variant_id", "");
+                                            // AddCart();
+                                            AddCheckCart();
+                                          }
+                                          // AddCheckCart();
+                                        },
+                                        child: Container(
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          padding: EdgeInsets.only(
+                                              top: spacing_middle,
+                                              bottom: spacing_middle),
+                                          decoration: boxDecoration(
+                                              bgColor: sh_app_background,
+                                              radius: 10,
+                                              showShadow: true),
+                                          child: text("Add to Cart",
+                                              textColor: sh_app_txt_color,
+                                              isCentered: true,
+                                              fontFamily: 'Bold'),
+                                        ),
                                       ),
+                                      SizedBox(
+                                        height: 18,
+                                      ),
+                                    ],
+                                  ),
 //                        _detailWidget()
-                                    ],
+                                ],
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+                          // By default, show a loading spinner.
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            direction: ShimmerDirection.ltr,
+                            child: Container(
+                              width: width,
+                              padding: EdgeInsets.fromLTRB(12, 12, 12, 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    height: 250,
+                                    child: Column(
+                                      children: <Widget>[
+                                        Container(
+                                          width: double.infinity,
+                                          height: 200.0,
+                                          color: Colors.white,
+                                        ),
+                                        // Scrollindic()
+                                      ],
+                                    ),
                                   ),
-                                );
-                              } else if (snapshot.hasError) {
-                                return Text("${snapshot.error}");
-                              }
-                              // By default, show a loading spinner.
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                direction: ShimmerDirection.ltr,
-                                child: Container(
-                                  width: width,
-                                  padding: EdgeInsets.fromLTRB(1, 12, 12, 12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 0, 12, 12),
-                                          child: Container(
-                                            width: width * .40,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 0, 12, 12),
+                                      child: Container(
+                                        width: width * .40,
+                                        height: 12.0,
+                                        color: Colors.white,
                                       ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .30,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .35,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .20,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width,
-                                            height: 62.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                    ],
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .30,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .35,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .20,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
+                                  Container(
+                                      child: InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          18.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width,
+                                        height: 62.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -1757,6 +2092,249 @@ Widget _icon(IconData icon,
   );
 }
 
+class Similar extends StatelessWidget {
+  ProductListModel? model;
+  Color? sh_app_black, sh_red, sh_textColorSecondary;
+
+  Similar(ProductListModel model, int pos, Color sh_app_black, Color sh_red,
+      Color sh_textColorSecondary) {
+    this.model = model;
+    this.sh_app_black = sh_app_black;
+    this.sh_red = sh_red;
+    this.sh_textColorSecondary = sh_textColorSecondary;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var width = MediaQuery.of(context).size.width;
+
+    Imagevw4() {
+      if (model!.images!.length < 1) {
+        return Image.asset(
+          sh_no_img,
+          fit: BoxFit.fill,
+          height: width * 0.34,
+        );
+      } else {
+        return Image.network(
+          model!.images![0]!.src!,
+          fit: BoxFit.fill,
+          height: width * 0.34,
+          width: width,
+        );
+      }
+    }
+
+    NewImagevw() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Stack(
+            children: [
+              Imagevw4(),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.end,
+              //   children: <Widget>[
+              //     Container(
+              //       height: 40,
+              //       width: 40,
+              //       padding: EdgeInsets.only(
+              //           left: spacing_control, right: spacing_control),
+              //       decoration: BoxDecoration(
+              //         borderRadius: BorderRadius.all(Radius.circular(30)),
+              //         color: sh_dots_color.withOpacity(0.5),
+              //       ),
+              //       child: Icon(
+              //         Icons.favorite_border,
+              //         color: sh_textColorSecondary,
+              //         size: 24,
+              //       ),
+              //     ),
+              //   ],
+              // ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    SimilarPrice() {
+      // var myprice2 = double.parse(model!.price!);
+      // var myprice = myprice2.toStringAsFixed(2);
+      var myprice2, myprice;
+      if (model!.price == '') {
+        myprice = "0.00";
+      } else {
+        myprice2 = double.parse(model!.price!);
+        myprice = myprice2.toStringAsFixed(2);
+      }
+
+      return Row(
+        children: [
+          Text(
+            "\$" + myprice,
+            style: TextStyle(
+                color: sh_app_black,
+                fontFamily: fontBold,
+                fontSize: textSizeSMedium),
+          ),
+          // SizedBox(
+          //   width: 5,
+          // ),
+          // Text(
+          //   "\$" + myprice,
+          //   style: TextStyle(
+          //       color: sh_red,
+          //       fontFamily: fontBold,
+          //       fontSize: textSizeSmall,
+          //       decoration: TextDecoration.lineThrough),
+          // )
+        ],
+      );
+    }
+
+    return GestureDetector(
+      onTap: () async {
+//        callNext(GroceryProductDescription(), context);
+//        SharedPreferences prefs = await SharedPreferences.getInstance();
+//        prefs.setString('pro_id', model.id.toString());
+//        Navigator.push(
+//            context,
+//            MaterialPageRoute(
+//                builder: (context) => SCProductDetailScreen(product: product)));
+      },
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.44,
+        decoration: boxDecoration4(showShadow: true),
+        margin: EdgeInsets.only(bottom: 10, right: 10),
+        padding: EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //   children: <Widget>[
+            //     Container(
+            //       padding: EdgeInsets.only(
+            //           left: spacing_control, right: spacing_control),
+            //       decoration: boxDecoration(
+            //         radius: spacing_control,
+            //       ),
+            //     ),
+            //     Icon(
+            //       Icons.favorite_border,
+            //       color: sh_textColorSecondary,
+            //     )
+            //   ],
+            // ),
+            // SizedBox(
+            //   height: 4,
+            // ),
+            // Imagevw(),
+            NewImagevw(),
+            SizedBox(
+              height: 6,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
+                  left: spacing_standard, right: spacing_standard),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  // text(model!.slug,
+                  //     fontFamily: fontMedium,
+                  //     textColor: sh_textColorSecondary,
+                  //     fontSize: textSizeSmall),
+                  // // Descrptntext(index),
+                  // SizedBox(
+                  //   height: 4,
+                  // ),
+                  Text(
+                    model!.name!,
+                    maxLines: 2,
+                    style: TextStyle(
+                        color: sh_app_black,
+                        fontFamily: fontBold,
+                        fontSize: textSizeMedium),
+                  ),
+                  SizedBox(
+                    height: 6,
+                  ),
+                  SimilarPrice(),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PlayerWidget extends StatefulWidget {
+  final ProductDetailModel? pro_det_model;
+  final int? index;
+  final List<MyVariant>? itemsModel;
+
+  PlayerWidget({Key? key, this.pro_det_model, this.index, this.itemsModel})
+      : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() {
+    return _PlayerWidgetState();
+  }
+}
+
+class _PlayerWidgetState extends State<PlayerWidget> {
+  String? selectedItemValue = null;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // var _value = widget.pro_det_model!.attributes![widget.index!]!.options!.isEmpty
+    //     ? selectedItemValue
+    //     : widget.pro_det_model!.attributes![widget.index!]!.options!.firstWhere((item) => item.toString() == selectedItemValue.toString());
+
+    return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState2) {
+      return DropdownButton(
+        iconEnabledColor: sh_app_txt_color,
+        underline: SizedBox(),
+        isExpanded: true,
+        items: widget.pro_det_model!.attributes![widget.index!]!.options!
+            .map((item) {
+          return new DropdownMenuItem(
+            child: Text(
+              item.toString(),
+              style: TextStyle(
+                  color: sh_black,
+                  fontFamily: fontRegular,
+                  fontSize: textSizeNormal),
+            ),
+            value: item,
+          );
+        }).toList(),
+        hint: Text(
+          'Select',
+          style: TextStyle(color: sh_black),
+        ),
+        value: selectedItemValue,
+        onChanged: (String? newVal) {
+          setState2(() {
+            selectedItemValue = newVal!;
+            widget.itemsModel![widget.index!].attr_optn = newVal;
+          });
+        },
+      );
+    });
+  }
+}
+
 /// An indicator showing the currently selected page of a PageController
 class DotsIndicator extends AnimatedWidget {
   final PageController? controller;
@@ -1821,97 +2399,5 @@ class DotsIndicator extends AnimatedWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: new List<Widget>.generate(itemCount!, _buildDot),
     );
-  }
-}
-
-
-class groceryButton extends StatefulWidget {
-
-
-  groceryButton();
-
-  @override
-  groceryButtonState createState() => groceryButtonState();
-}
-
-class groceryButtonState extends State<groceryButton> {
-  bool ch=false;
-
-  @override
-  void initState() {
-    Timer(
-        Duration(milliseconds: 1500),
-            () {
-              setState(() {
-                ch=true;
-              });
-            }
-    );
-    super.initState();
-//    mListings2 = getPopular();
-  }
-
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    if(ch) {
-      return InkWell(
-        onTap: () async {
-          Navigator.of(context).pop(ConfirmAction.CANCEL);
-          SharedPreferences prefs =
-          await SharedPreferences.getInstance();
-          prefs.setInt("shiping_index", -2);
-          prefs.setInt("payment_index", -2);
-          // launchScreen(context, CartScreen.tag);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => CartScreen()),
-          ).then((value) {
-            setState(() {
-              // refresh state
-            });
-          });
-          //   Navigator.pushReplacement(
-          // context,
-          // MaterialPageRoute(
-          //   builder: (context) => CartScreen(),
-          // ),
-          // );
-        },
-        child: Container(
-          padding: EdgeInsets.all(spacing_standard),
-          decoration: boxDecoration(
-              bgColor: sh_colorPrimary2,
-              radius: 6,
-              showShadow: true),
-          child: text("Cart/Checkout",
-              textColor: sh_white,
-              isCentered: true,
-              fontSize: 12.0,
-              fontFamily: 'Bold'),
-        ),
-      );
-    }else{
-      return Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        direction: ShimmerDirection.ltr,
-        child: Container(
-          padding: EdgeInsets.all(spacing_standard),
-          decoration: boxDecoration(
-              bgColor: sh_colorPrimary2,
-              radius: 6,
-              showShadow: true),
-          child: text("Cart/Checkout",
-              textColor: sh_white,
-              isCentered: true,
-              fontSize: 12.0,
-              fontFamily: 'Bold'),
-        ),
-      );
-    }
   }
 }

@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/model/CheckUserModel.dart';
+import 'package:thrift/model/UserDelModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/CustomerSupportScreen.dart';
 import 'package:thrift/screens/FAQScreen.dart';
+import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/screens/ProfileScreen.dart';
 import 'package:thrift/screens/SellerEditProfileScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
@@ -34,6 +36,7 @@ class _SettingFragmentState extends State<SettingFragment> {
   Future<CountryParishModel?>? countrydetail;
   CheckUserModel? checkUserModel;
   Future<String?>? fetchaddMain;
+  UserDelModel? userDelModel;
 
   @override
   void initState() {
@@ -86,6 +89,53 @@ class _SettingFragmentState extends State<SettingFragment> {
 
 //      print(cat_model.data);
       return "cat_model";
+    } catch (e) {
+      EasyLoading.dismiss();
+      print('caught error $e');
+      // return cat_model;
+    }
+  }
+
+  Future<UserDelModel?> deleteAccount() async {
+    EasyLoading.show(status: 'Please wait...');
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // String pro_id = prefs.getString('pro_id');
+      String? token = prefs.getString('token');
+      String? UserId = prefs.getString('UserId');
+      toast("$UserId");
+      print(token);
+      if (token != null && token != '') {
+        Map<String, String> headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        };
+
+        Response response = await get(
+            Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/thrift_user_activation?user_id=$UserId'),
+            headers: headers);
+
+
+        print('SettingFragment thrift_user_activation Response status2: ${response.statusCode}');
+        print('SettingFragment thrift_user_activation Response body2: ${response.body}');
+        final jsonResponse = json.decode(response.body);
+        userDelModel = new UserDelModel.fromJson(jsonResponse);
+if(userDelModel!.success!){
+  _openCustomDialog5();
+}else{
+  toast("Something went wrong");
+}
+
+      }
+
+
+      EasyLoading.dismiss();
+
+      // first2=false;
+
+//      print(cat_model.data);
+      return userDelModel;
     } catch (e) {
       EasyLoading.dismiss();
       print('caught error $e');
@@ -210,7 +260,8 @@ class _SettingFragmentState extends State<SettingFragment> {
                       onTap: () async {
                         // BecameSeller();
                         Navigator.of(context, rootNavigator: true).pop();
-                        _openCustomDialog2();
+                        deleteAccount();
+                        // _openCustomDialog5();
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width*.7,
@@ -250,11 +301,79 @@ class _SettingFragmentState extends State<SettingFragment> {
           );
         },
         transitionDuration: Duration(milliseconds: 200),
-        barrierDismissible: true,
+        barrierDismissible: false,
         barrierLabel: '',
         context: context,
         pageBuilder: (context, animation1, animation2) {
       return Container();
+        });
+  }
+
+
+  void _openCustomDialog5() {
+    showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          return WillPopScope(
+            onWillPop: () async {
+              return false;
+            },
+            child: Transform.scale(
+              scale: a1.value,
+              child: Opacity(
+                opacity: a1.value,
+                child: AlertDialog(
+                  shape: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0)),
+                  title: Center(child: Text('Thank you! Your account is disabled now & will be permanently deleted in 30 working days! If you want to restore your account, please contact us at help@casuarinathrift.com',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 16,),
+                      InkWell(
+                        onTap: () async {
+                          // BecameSeller();
+                          SharedPreferences prefs = await SharedPreferences
+                              .getInstance();
+                          String? final_token = prefs.getString(
+                              'token');
+                          prefs.setString("token", "");
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    LoginScreen()),
+                            ModalRoute.withName('/LoginScreen'),
+                          );
+                          // Navigator.of(context, rootNavigator: true).pop();
+                          // _openCustomDialog2();
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width*.7,
+                          padding: EdgeInsets.only(
+                              top: 6, bottom: 10),
+                          decoration: boxDecoration(
+                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                          child: text("OK",
+                              fontSize: 16.0,
+                              textColor: sh_white,
+                              isCentered: true,
+                              fontFamily: 'Bold'),
+                        ),
+                      ),
+                      SizedBox(height: 10,),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        barrierLabel: '',
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          return Container();
         });
   }
 

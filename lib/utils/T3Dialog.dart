@@ -50,7 +50,7 @@ dialogContent(BuildContext context) {
         children: <Widget>[
           ClipRRect(
             child: Image.asset(
-              t3_ic_pizza_dialog,
+              sh_toolbar,
             ),
             borderRadius: BorderRadius.circular(8),
           ),

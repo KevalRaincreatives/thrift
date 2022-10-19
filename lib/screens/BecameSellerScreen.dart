@@ -46,7 +46,8 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
   var bankNameCont = TextEditingController();
   var otherCont = TextEditingController();
 
-
+  bool singleTap = true;
+  int val = 1;
 
 
 
@@ -639,6 +640,23 @@ if(becameSellerModel!.success!) {
                             editTextStyle3("Other Details", otherCont, node,
                                 "Please Enter Other Details", sh_white, sh_view_color, 4),
                           ],),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Radio(
+                            value: 2,
+                            groupValue: val,
+                            onChanged: (int? value) {
+                              setState(() {
+                                val = value!;
+                              });
+                            },
+                            activeColor: sh_colorPrimary2,
+                          ),
+                          Text('I agree to the ',style: TextStyle(color: sh_black,fontSize: 13),),
+                          Text('Terms & Conditions',style: TextStyle(color: sh_colorPrimary2,fontSize: 13, decoration: TextDecoration.underline,),),
+                        ],
                       ),
 
 SizedBox(height: 16,),

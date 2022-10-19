@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/screens/NewSignUpScreen.dart';
 import 'package:thrift/screens/TermsConditionScreen.dart';

@@ -58,55 +58,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
   CheckUserModel? checkUserModel;
   int timer = 800, offset = 0;
-  Future<CheckUserModel?>? fetchuserstatus;
-
+  Future<String?>? fetchuserstatus;
+String? is_store_owner;
 
   @override
   void initState() {
     super.initState();
     fetchuserstatus=fetchUserStatus();
-    // fragments = [homeFragment, settingFragment, profileFragment];
-    // fetchData();
   }
 
-  Future<CheckUserModel?> fetchUserStatus() async {
-    // EasyLoading.show(status: 'Please wait...');
+  Future<String?> fetchUserStatus() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId");
-      var response = await http.get(Uri.parse(
-        "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
-          ,headers: headers);
-
-      final jsonResponse = json.decode(response.body);
-      checkUserModel = new CheckUserModel.fromJson(jsonResponse);
-      prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
-      // EasyLoading.dismiss();
-      if(checkUserModel!.is_store_owner==0){
+      is_store_owner=prefs.getString('is_store_owner');
+      if(prefs.getString('is_store_owner')=='0'){
         fragments = [homeFragment, settingFragment, profileFragment];
       }
-      else if (checkUserModel!.is_store_owner==1) {
+      else if (prefs.getString('is_store_owner')=='1') {
         // toast("value");
         // launchScreen(context, BecameSellerScreen.tag);
         fragments = [homeFragment, settingFragment, mysalesFragment,profileFragment];
         // Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
-      } else if (checkUserModel!.is_store_owner==2) {
+      } else if (prefs.getString('is_store_owner')=='2') {
         fragments = [homeFragment, settingFragment, profileFragment];
       }
 
-      print('DashboardScreen check_seller_status Response status2: ${response.statusCode}');
-      print('DashboardScreen check_seller_status Response body2: ${response.body}');
 
-      return checkUserModel;
+      return 'checkUserModel';
     } catch (e) {
       // EasyLoading.dismiss();
       print('caught error $e');
@@ -163,7 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: NetworkAwareWidget(
                 onlineChild: WillPopScope(
                     onWillPop: _onWillPop,
-                    child: FutureBuilder<CheckUserModel?>(
+                    child: FutureBuilder<String?>(
                       future: fetchuserstatus,
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
@@ -181,7 +159,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         decoration: boxDecoration(
                                             bgColor: sh_colorPrimary2, radius: 22, showShadow: true),
                                         margin: EdgeInsets.fromLTRB(12,0,12,6),
-                                        child:  checkUserModel!.is_store_owner==1 ?
+                                        child:  is_store_owner=='1' ?
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -209,7 +187,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               )
                             ],
                           );
-
                         }
                         return Column(
                           children: [

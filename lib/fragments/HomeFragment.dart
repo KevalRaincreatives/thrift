@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -56,6 +55,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   late List<ItemModel> menuItems;
   CustomPopupMenuController _controller = CustomPopupMenuController();
 
+  var SearchCont = TextEditingController();
   final double runSpacing = 4;
   final double spacing = 4;
   final columns = 2;
@@ -77,9 +77,8 @@ class _HomeFragmentState extends State<HomeFragment> {
       ItemModel('Price High to Low'),
       ItemModel('Price Low to High'),
     ];
-    // Timerss();
-    fetchAdv();
     fetchDetailsMain=fetchDetails();
+    fetchAdv();
     // fetchAlbumMain=fetchAlbum();
     super.initState();
   }
@@ -383,88 +382,6 @@ class _HomeFragmentState extends State<HomeFragment> {
       );
     }
 
-    void _openCustomDialog() {
-      showGeneralDialog(
-          barrierColor: Colors.black.withOpacity(0.5),
-          transitionBuilder: (context, a1, a2, widget) {
-            return Transform.scale(
-              scale: a1.value,
-              child: Opacity(
-                opacity: a1.value,
-                child: AlertDialog(
-                  shape: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(
-                      child: Text(
-                    'You are not a seller yet!',
-                    style: TextStyle(
-                        color: sh_colorPrimary2,
-                        fontSize: 18,
-                        fontFamily: 'Bold'),
-                    textAlign: TextAlign.center,
-                  )),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        height: 16,
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          // BecameSeller();
-
-                          Navigator.of(context, rootNavigator: true).pop();
-                          launchScreen(context, BecameSellerScreen.tag);
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width * .7,
-                          padding: EdgeInsets.only(top: 6, bottom: 10),
-                          decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2,
-                              radius: 10,
-                              showShadow: true),
-                          child: text("Become a Seller",
-                              fontSize: 16.0,
-                              textColor: sh_white,
-                              isCentered: true,
-                              fontFamily: 'Bold'),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          Navigator.of(context, rootNavigator: true).pop();
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width * .7,
-                          padding: EdgeInsets.only(top: 6, bottom: 10),
-                          decoration: boxDecoration(
-                              bgColor: sh_btn_color,
-                              radius: 10,
-                              showShadow: true),
-                          child: text("Cancel",
-                              fontSize: 16.0,
-                              textColor: sh_colorPrimary2,
-                              isCentered: true,
-                              fontFamily: 'Bold'),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-          transitionDuration: Duration(milliseconds: 200),
-          barrierDismissible: true,
-          barrierLabel: '',
-          context: context,
-          pageBuilder: (context, animation1, animation2) {
-            return Container();
-          });
-    }
 
     BadgeCount(){
       if(cart_count==0){
@@ -553,7 +470,7 @@ return FutureBuilder<String?>(
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      ProductDetailScreen()),).then((value) {   setState(() {
+                                      ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: productListModel[index].images,)),).then((value) {   setState(() {
                               // refresh state
                             });});
                           },
@@ -780,6 +697,7 @@ return FutureBuilder<String?>(
                   color: Colors.transparent,
                   margin: EdgeInsets.fromLTRB(26, 0, 26, 0),
                   child: TextFormField(
+                    controller: SearchCont,
                     textInputAction: TextInputAction.search,
                     onFieldSubmitted: (value) async {
                       if (value.length > 1) {
@@ -799,10 +717,24 @@ return FutureBuilder<String?>(
                         fontFamily: "Bold"),
                     decoration: InputDecoration(
                       filled: true,
-                      suffixIcon: Icon(
-                        Icons.search,
-                        color: sh_colorPrimary2,
+                      suffixIcon: InkWell(
+                        onTap: () {
+                          if (SearchCont.text.length > 1) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      SearchScreen(serchdata: SearchCont.text)),
+                            );
+                          } else {
+                            toast("Please enter more character");
+                          }
+                        },
+                        child: Icon(
+                          Icons.search,
+                          color: sh_colorPrimary2,
 
+                        ),
                       ),
                       fillColor: sh_text_back,
                       contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -974,14 +906,6 @@ return FutureBuilder<String?>(
           ),
           onPressed: () async {
             fetchUserStatus();
-            // SharedPreferences prefs = await SharedPreferences.getInstance();
-            // if (prefs.getString("is_store_owner") == '0') {
-            //   _openCustomDialog();
-            // } else if (prefs.getString("is_store_owner") == '1') {
-            //   launchScreen(context, CreateProductScreen.tag);
-            // } else if (prefs.getString("is_store_owner") == '2') {
-            //   toast("Approval is pending");
-            // }
           },
         ),
 
@@ -1036,8 +960,8 @@ class T2Drawer extends StatefulWidget {
 
 class T2DrawerState extends State<T2Drawer> {
   var selectedItem = -1;
-  List<CategoryModel> categoryListModel = [];
-  Future<List<CategoryModel>?>? fetchAlbumMain;
+  CategoryModel? categoryListModel;
+  Future<CategoryModel?>? fetchAlbumMain;
 
   @override
   void initState() {
@@ -1045,14 +969,14 @@ class T2DrawerState extends State<T2Drawer> {
     fetchAlbumMain=fetchAlbum();
   }
 
-  Future<List<CategoryModel>?> fetchAlbum() async {
+  Future<CategoryModel?> fetchAlbum() async {
     try {
-      if (categoryListModel.length == 0) {
+
         final client = RetryClient(http.Client());
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories?per_page=25"));
+              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woo_product_categories"));
         } finally {
           client.close();
         }
@@ -1060,11 +984,8 @@ class T2DrawerState extends State<T2Drawer> {
         print('HomeFragment categories Response status2: ${response.statusCode}');
         print('HomeFragment categories Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
-        for (Map i in jsonResponse) {
-          categoryListModel.add(CategoryModel.fromJson(i));
+        categoryListModel = new CategoryModel.fromJson(jsonResponse);
 
-        }
-      }
 
       return categoryListModel;
     } catch (e) {
@@ -1128,7 +1049,7 @@ class T2DrawerState extends State<T2Drawer> {
                 //      Container(height: 0.5,
                 //      color: sh_colorPrimary2,),
 
-                FutureBuilder<List<CategoryModel>?>(
+                FutureBuilder<CategoryModel?>(
                   future: fetchAlbumMain,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
@@ -1139,7 +1060,7 @@ class T2DrawerState extends State<T2Drawer> {
                           // NeverScrollableScrollPhysics(),
 
                           scrollDirection: Axis.vertical,
-                          itemCount: categoryListModel.length,
+                          itemCount: categoryListModel!.categories!.length,
                           shrinkWrap: true,
                           itemBuilder: (context, index) {
                             return GestureDetector(
@@ -1147,15 +1068,15 @@ class T2DrawerState extends State<T2Drawer> {
                                   SharedPreferences prefs =
                                   await SharedPreferences.getInstance();
                                   prefs.setString('cat_id',
-                                      categoryListModel[index].id.toString());
+                                      categoryListModel!.categories![index]!.id.toString());
                                   prefs.setString('cat_names',
-                                      categoryListModel[index].name.toString());
+                                      categoryListModel!.categories![index]!.name.toString());
                                   launchScreen(context, ProductlistScreen.tag);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.fromLTRB(
                                       18.0, 12, 12, 12),
-                                  child: Text(  unescape.convert(categoryListModel[index].name!),
+                                  child: Text(  unescape.convert(categoryListModel!.categories![index]!.name!),
                                       style: TextStyle(
                                           color: sh_colorPrimary2,
                                           fontSize: 15.sp,

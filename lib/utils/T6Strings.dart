@@ -68,4 +68,3 @@ const t6_lbl_share_with_friends = "Share with Friends";
 const t6_lbl_let_s_get_started = "Get started";
 const t6_lbl_triceps_kickbacks = "Triceps Kickbacks";
 const t6_7_15 = "7-15";
-const t6_sample_text = "Lorem Ipsum is simply dummy text of the print and typesetting industry";

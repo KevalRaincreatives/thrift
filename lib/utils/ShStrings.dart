@@ -192,7 +192,6 @@ const sh_text_date = "24 Aug 2019";
 const sh_text_order_approved = "Order Approved";
 const sh_text_item_delivered = "Item Delivered";
 const sh_text_pin_code = "386466";
-const sh_text_reward = "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration.";
 const sh_text_mobile = "+91 123456745";
 
 const sh_title_account = "My Account";

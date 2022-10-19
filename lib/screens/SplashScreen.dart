@@ -51,16 +51,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   void initState() {
-    // startTime();
-    _controller=AnimationController(
-      vsync: this,
-      duration: Duration(microseconds: 200),
-      lowerBound: 0.0,
-      upperBound: 0.1
-    )..addListener(() {setState(() {
 
-    });}
-    );
+    // _controller=AnimationController(
+    //   vsync: this,
+    //   duration: Duration(microseconds: 200),
+    //   lowerBound: 0.0,
+    //   upperBound: 0.1
+    // )..addListener(() {setState(() {
+    //
+    // });}
+    // );
     initializeFlutterFire();
     messaging = FirebaseMessaging.instance;
     messaging!.getToken().then((value){
@@ -89,8 +89,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       // print("message activity_id6"+message.data["activity_id"]);
       // toast("eventstt");
     });
-
-    fetchDetail2();
+    startTime();
+    // fetchDetail2();
     super.initState();
 
 
@@ -131,53 +131,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      prefs.setString('WPLANG',
-          setting_model!.woosettings!.WPLANG.toString());
-      prefs.setString('privacy_policy',
-          setting_model!.woosettings!.wpPageForPrivacyPolicy.toString());
-      prefs.setString('store_address',
-          setting_model!.woosettings!.woocommerceStoreAddress.toString());
-      prefs.setString('store_city',
-          setting_model!.woosettings!.woocommerceStoreCity.toString());
-      prefs.setString('default_country',
-          setting_model!.woosettings!.woocommerceDefaultCountry.toString());
-      prefs.setString('store_postcode',
-          setting_model!.woosettings!.woocommerceStorePostcode.toString());
+
       prefs.setString('currency', "\$");
-      prefs.setString('currency_pos',
-          setting_model!.woosettings!.woocommerceCurrencyPos.toString());
-      prefs.setString('price_thousand_sep',
-          setting_model!.woosettings!.woocommercePriceThousandSep.toString());
-      prefs.setString('price_decimal_sep',
-          setting_model!.woosettings!.woocommercePriceDecimalSep.toString());
+      prefs.setString('currency_pos',"l");
+      prefs.setString('price_decimal_sep',":");
       prefs.setString('price_num_decimals', setting_model!.woosettings!.woocommerce_price_num_decimals.toString());
-      prefs.setString('weight_unit',
-          setting_model!.woosettings!.woocommerceWeightUnit.toString());
-      prefs.setString('dimension_unit',
-          setting_model!.woosettings!.woocommerceDimensionUnit.toString());
-      prefs.setString('enable_reviews',
-          setting_model!.woosettings!.woocommerceEnableReviews.toString());
-      prefs.setString('enable_guest_checkout',
-          setting_model!.woosettings!.woocommerceEnableGuestCheckout.toString());
-      prefs.setString(
-          'registration_generate_username',
-          setting_model!.woosettings!.woocommerceRegistrationGenerateUsername
-              .toString());
-      prefs.setString('email_from_name',
-          setting_model!.woosettings!.woocommerceEmailFromName.toString());
-      prefs.setString('email_from_address',
-          setting_model!.woosettings!.woocommerceEmailFromAddress.toString());
-      prefs.setString('terms_page_id',
-          setting_model!.woosettings!.woocommerceTermsPageId.toString());
-      // prefs.setString('currency_symbol', setting_model!.woosettings!.currencySymbol
-      //     .toString());
-      // prefs.setString('currency_symbol', "\$");
-      if(setting_model!.woosettings!.woocommerceCurrency=='EUR'){
-        prefs.setString('currency_symbol', "\€");
-      }else{
         prefs.setString('currency_symbol', "\$");
-      }
-      prefs.setString('phone_no', setting_model!.woosettings!.phoneNo.toString());
       prefs.setString("adv_image", "0");
       // prefs.setString('apps_logo', setting_model!.woosettings!.log.toString());
 
@@ -298,7 +257,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   startTime() async {
-    var _duration = Duration(seconds: 2);
+    var _duration = Duration(milliseconds: 500);
     return Timer(_duration, navigationPage);
   }
 
@@ -306,6 +265,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     // finish(context);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? final_token = prefs.getString('token');
+    prefs.setString('currency', "\$");
+    prefs.setString('currency_pos',"l");
+    prefs.setString('price_decimal_sep',":");
+    prefs.setString('price_num_decimals', '');
+    prefs.setString('currency_symbol', "\$");
+    prefs.setString("adv_image", "0");
     if (final_token != null && final_token != '') {
       Navigator.pushReplacement(
         context,
@@ -332,7 +297,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarColor: Colors.transparent));
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
-    _scale=1-_controller!.value;
+    // _scale=1-_controller!.value;
 
     return Scaffold(
       backgroundColor: sh_colorPrimary2,

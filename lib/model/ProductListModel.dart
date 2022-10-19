@@ -448,6 +448,7 @@ class ProductListModel {
   List<int?>? relatedIds;
   List<ProductListModelMetaData?>? metaData;
   String? stockStatus;
+  String? product_country;
   bool? display_product;
   String? currency;
   ProductListModelLinks? Links;
@@ -511,6 +512,7 @@ class ProductListModel {
     this.relatedIds,
     this.metaData,
     this.stockStatus,
+    this.product_country,
     this.display_product,
     this.currency,
     this.Links,
@@ -602,6 +604,7 @@ class ProductListModel {
     metaData = arr0;
     }
     stockStatus = json["stock_status"]?.toString();
+    product_country= json["product_country"]?.toString();
     display_product= json["display_product"];
     currency= json["currency"];
     Links = (json["_links"] != null) ? ProductListModelLinks.fromJson(json["_links"]) : null;
@@ -696,6 +699,7 @@ class ProductListModel {
     data["meta_data"] = arr0;
     }
     data["stock_status"] = stockStatus;
+    data["product_country"]=product_country;
     data["display_product"]=display_product;
     data["currency"]=currency;
     if (Links != null) {
