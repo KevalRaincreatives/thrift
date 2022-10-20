@@ -449,8 +449,6 @@ class ProductListModel {
   List<ProductListModelMetaData?>? metaData;
   String? stockStatus;
   String? product_country;
-  bool? display_product;
-  String? currency;
   ProductListModelLinks? Links;
 
   ProductListModel({
@@ -513,8 +511,6 @@ class ProductListModel {
     this.metaData,
     this.stockStatus,
     this.product_country,
-    this.display_product,
-    this.currency,
     this.Links,
   });
   ProductListModel.fromJson(Map<dynamic, dynamic> json) {
@@ -605,8 +601,6 @@ class ProductListModel {
     }
     stockStatus = json["stock_status"]?.toString();
     product_country= json["product_country"]?.toString();
-    display_product= json["display_product"];
-    currency= json["currency"];
     Links = (json["_links"] != null) ? ProductListModelLinks.fromJson(json["_links"]) : null;
   }
   Map<String, dynamic> toJson() {
@@ -700,8 +694,6 @@ class ProductListModel {
     }
     data["stock_status"] = stockStatus;
     data["product_country"]=product_country;
-    data["display_product"]=display_product;
-    data["currency"]=currency;
     if (Links != null) {
     data["_links"] = Links!.toJson();
     }

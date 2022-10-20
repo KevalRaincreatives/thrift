@@ -517,7 +517,6 @@ class ProductDetailModel {
   List<int?>? relatedIds;
   List<ProductDetailModelMetaData?>? metaData;
   String? stockStatus;
-  String? currency;
   ProductDetailModelLinks? Links;
 
   ProductDetailModel({
@@ -581,7 +580,6 @@ class ProductDetailModel {
     this.relatedIds,
     this.metaData,
     this.stockStatus,
-    this.currency,
     this.Links,
   });
   ProductDetailModel.fromJson(Map<String, dynamic> json) {
@@ -685,7 +683,6 @@ class ProductDetailModel {
     metaData = arr0;
     }
     stockStatus = json["stock_status"]?.toString();
-    currency= json["currency"]?.toString();
     Links = (json["_links"] != null) ? ProductDetailModelLinks.fromJson(json["_links"]) : null;
   }
   Map<String, dynamic> toJson() {
@@ -778,7 +775,6 @@ class ProductDetailModel {
     data["meta_data"] = arr0;
     }
     data["stock_status"] = stockStatus;
-    data["currency"]=currency;
     if (Links != null) {
     data["_links"] = Links!.toJson();
     }

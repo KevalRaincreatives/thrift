@@ -311,7 +311,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
       return Row(
         children: [
           Text(
-            "\$" + myprice+ " "+productListModel[index].currency!,
+            "\$" + myprice+ " "+"USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: 'Medium',
@@ -399,7 +399,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => ProductDetailScreen()));
+                                builder: (context) => ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: productListModel[index].images,)));
                       },
                       child: Container(
                         decoration: boxDecoration4(showShadow: false),

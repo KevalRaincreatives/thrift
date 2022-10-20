@@ -616,7 +616,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
       var myprice2 = double.parse(cat_model!.cart![pos]!.productPrice!);
       var myprice = myprice2.toStringAsFixed(2);
 
-      return text(currency! + myprice + " " + cat_model!.currency!,
+      return text(currency! + myprice + " " + "USD",
           textColor: sh_black, fontFamily: fontSemibold, fontSize: 16.0);
     }
 
@@ -1215,7 +1215,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
               fontSize: textSizeMedium,
               fontFamily: fontBold,
               textColor: sh_colorPrimary2),
-          text(currency! + myprice + " " + cat_model!.currency!,
+          text(currency! + myprice + " " + "USD",
               fontSize: textSizeMedium,
               fontFamily: fontBold,
               textColor: sh_black),
@@ -1226,7 +1226,7 @@ class _NewConfirmScreenState extends State<NewConfirmScreen>
     ShipPrice() {
       var myprice2 = double.parse(shipping_charge.toString());
       var myprice = myprice2.toStringAsFixed(2);
-      return Text(currency! + myprice + " " + cat_model!.currency!,
+      return Text(currency! + myprice + " " + "USD",
           style: TextStyle(color: sh_colorPrimary2, fontSize: 15, fontFamily: fontBold));
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

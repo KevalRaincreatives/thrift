@@ -390,132 +390,130 @@ SaveToken();
                         Container(height: height*.5,),
                         Container(
                           width: width*.7,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextFormField(
-                                onEditingComplete: () =>
-                                    node.nextFocus(),
-                                controller: emailCont,
-                                validator: (text) {
-                                  if (text == null || text.isEmpty) {
-                                    return 'Please Enter Username';
-                                  }
-                                  return null;
-                                },
-                                cursorColor: sh_app_txt_color,
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
-                                  hintText: "Email/Username",
-                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                                  labelText: "Email/Username",
-                                  labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
-                                  ),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
-                                  ),
-                                ),
-                                maxLines: 1,
-                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              ),
-                              SizedBox(height: 26,),
-                              TextFormField(
-                                onEditingComplete: () =>
-                                    node.nextFocus(),
-                                obscureText: !this._showPassword,
-                                controller: passwordCont,
-                                validator: (text) {
-                                  if (text == null || text.isEmpty) {
-                                    return 'Please Enter Password';
-                                  }
-                                  return null;
-                                },
-                                cursorColor: sh_app_txt_color,
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
-                                  hintText: "Password",
-                                  hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      Icons.remove_red_eye,
-                                      color: this._showPassword ? sh_colorPrimary2 : Colors.grey,
-                                    ),
-                                    onPressed: () {
-                                      setState(() => this._showPassword = !this._showPassword);
-                                    },
-                                  ),
-                                  labelText: "Password",
-                                  labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
-                                  ),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
-                                  ),
-                                ),
-                                maxLines: 1,
-                                style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
-                              ),
-                              SizedBox(height: 12,),
-                              InkWell(
-                                  onTap: () async{
-                                    launchScreen(context,
-                                        ForgotPasswordScreen.tag);
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  onEditingComplete: () =>
+                                      node.nextFocus(),
+                                  controller: emailCont,
+                                  validator: (text) {
+                                    if (text == null || text.isEmpty) {
+                                      return 'Please Enter Username';
+                                    }
+                                    return null;
                                   },
-                                  child: text("Forgot your password?", textColor: sh_textColorPrimary,fontSize: 14.0,fontFamily: 'Regular')),
-                              SizedBox(height: 22,),
-                              InkWell(
-                                onTap: () async {
-                                  getLogin();
-                                  // if (_formKey.currentState!.validate()) {
-                                  //   // TODO submit
-                                  //   FocusScope.of(context).requestFocus(FocusNode());
-                                  // toast(selectedReportList.join(" , "));
-                                  // for (var i = 0; i < selectedReportList.length; i++) {
-                                  //   addProCatModel.add(new AddProCategoryModel(id: selectedReportList[i]));
-                                  // }
-                                  // toast(itemsModel.length.toString());
-                                  // AddProduct();
-                                  // }
-                                },
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width*.7,
-                                  padding: EdgeInsets.only(
-                                      top: 6, bottom: 10),
-                                  decoration: boxDecoration(
-                                      bgColor: sh_btn_color, radius: 10, showShadow: true),
-                                  child: text("Log In",
-                                      fontSize: 24.0,
-                                      textColor: sh_app_txt_color,
-                                      isCentered: true,
-                                      fontFamily: 'Bold'),
+                                  cursorColor: sh_app_txt_color,
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
+                                    hintText: "Email/Username",
+                                    hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                    labelText: "Email/Username",
+                                    labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
+                                    ),
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
+                                    ),
+                                  ),
+                                  maxLines: 1,
+                                  style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
                                 ),
-                              ),
-                              SizedBox(height: 20,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  text("Don't have an account?", textColor: sh_textColorSecondary,fontSize: 14.0),
-                                  Container(
-                                    margin: EdgeInsets.only(left: 4),
-                                    child: GestureDetector(
+                                SizedBox(height: 26,),
+                                TextFormField(
+                                  onEditingComplete: () =>
+                                      node.nextFocus(),
+                                  obscureText: !this._showPassword,
+                                  controller: passwordCont,
+                                  validator: (text) {
+                                    if (text == null || text.isEmpty) {
+                                      return 'Please Enter Password';
+                                    }
+                                    return null;
+                                  },
+                                  cursorColor: sh_app_txt_color,
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.fromLTRB(2, 8, 4, 8),
+                                    hintText: "Password",
+                                    hintStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        Icons.remove_red_eye,
+                                        color: this._showPassword ? sh_colorPrimary2 : Colors.grey,
+                                      ),
+                                      onPressed: () {
+                                        setState(() => this._showPassword = !this._showPassword);
+                                      },
+                                    ),
+                                    labelText: "Password",
+                                    labelStyle: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(color: sh_app_txt_color, width: 1.0),
+                                    ),
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide:  BorderSide(color: sh_app_txt_color, width: 1.0),
+                                    ),
+                                  ),
+                                  maxLines: 1,
+                                  style: TextStyle(color: sh_app_txt_color,fontFamily: 'Regular'),
+                                ),
+                                SizedBox(height: 12,),
+                                InkWell(
+                                    onTap: () async{
+                                      launchScreen(context,
+                                          ForgotPasswordScreen.tag);
+                                    },
+                                    child: text("Forgot your password?", textColor: sh_textColorPrimary,fontSize: 14.0,fontFamily: 'Regular')),
+                                SizedBox(height: 22,),
+                                InkWell(
+                                  onTap: () async {
 
-                                        child: Text("Sign Up",
-                                            style: TextStyle(
-                                                fontSize: textSizeLargeMedium,
-                                                decoration: TextDecoration.underline,
-                                                color: sh_app_txt_color,
-                                                fontFamily: 'Bold'
-                                            )),
-                                        onTap: () {
-                                          launchScreen(context, NewSignUpScreen.tag);
-                                        }),
-                                  )
-                                ],
-                              ),
-                            ],
+                                    if (_formKey.currentState!.validate()) {
+                                      // TODO submit
+                                      FocusScope.of(context).requestFocus(FocusNode());
+                                      getLogin();
+                                    }
+                                  },
+                                  child: Container(
+                                    width: MediaQuery.of(context).size.width*.7,
+                                    padding: EdgeInsets.only(
+                                        top: 6, bottom: 10),
+                                    decoration: boxDecoration(
+                                        bgColor: sh_btn_color, radius: 10, showShadow: true),
+                                    child: text("Log In",
+                                        fontSize: 24.0,
+                                        textColor: sh_app_txt_color,
+                                        isCentered: true,
+                                        fontFamily: 'Bold'),
+                                  ),
+                                ),
+                                SizedBox(height: 20,),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    text("Don't have an account?", textColor: sh_textColorSecondary,fontSize: 14.0),
+                                    Container(
+                                      margin: EdgeInsets.only(left: 4),
+                                      child: GestureDetector(
+
+                                          child: Text("Sign Up",
+                                              style: TextStyle(
+                                                  fontSize: textSizeLargeMedium,
+                                                  decoration: TextDecoration.underline,
+                                                  color: sh_app_txt_color,
+                                                  fontFamily: 'Bold'
+                                              )),
+                                          onTap: () {
+                                            launchScreen(context, NewSignUpScreen.tag);
+                                          }),
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],

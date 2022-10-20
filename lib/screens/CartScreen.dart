@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:shimmer/shimmer.dart';
+
 import 'package:sizer/sizer.dart';
 import 'package:thrift/database/CartPro.dart';
 import 'package:thrift/database/database_hepler.dart';
 import 'package:thrift/model/AddShipModel.dart';
 import 'package:thrift/model/AddressListModel.dart';
 import 'package:thrift/model/CartModel.dart';
+import 'package:thrift/model/StaticPaymentModel.dart';
 import 'package:thrift/model/CouponErrorModel.dart';
 import 'package:thrift/model/CouponModel.dart';
 import 'package:http/http.dart';
@@ -52,7 +54,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   CouponModel? couponModel;
   CouponErrorModel? couponErrorModel;
   final dbHelper = DatabaseHelper.instance;
-  List<CartPro> cartPro = [];
+
   String? final_token;
   double fl_total = 50.0;
   final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
@@ -70,7 +72,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   NewShipmentModel? newShipmentModel;
   int? selectedShipingIndex = 0;
   AddShipModel? addShipModel;
-  PaymentModel? paymentModel;
+  Future<List<StaticPaymentModel>?>? fetchPaymentmy;
+  List<StaticPaymentModel> staticpaymentListModel=[];
   int? selectedPaymentIndex = -1;
   String? total_amount;
   bool first = true;
@@ -79,14 +82,14 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   var myprice;
   ProductSellerModel? productSellerModel;
   Future<AddressListModel?>? fetchAddressmy;
-  Future<PaymentModel?>? fetchPaymentmy;
+
   Future<NewShipmentModel?>? fetchShipmentmy;
-  Future<CartModel?>? fetchAlbummy;
+  List<CartPro> cartPro = [];
 
 
   @override
   void initState() {
-    fetchAlbummy=fetchAlbum();
+
     fetchAddressmy = fetchAddress();
     fetchPaymentmy=fetchPayment();
     fetchShipmentmy=fetchShipment();
@@ -154,6 +157,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       // String pro_id = prefs.getString('pro_id');
       String? token = prefs.getString('token');
       String? user_country = prefs.getString('user_selected_country');
+      final_token = prefs.getString('token');
+      currency = prefs.getString('currency');
+      currency_pos = prefs.getString('currency_pos');
 //      print
       if(user_country=='Barbados'){
         isSwitchedVisible=true;
@@ -250,29 +256,17 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<PaymentModel?> fetchPayment() async {
+  Future<List<StaticPaymentModel>?> fetchPayment() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
       String? user_country = prefs.getString('user_selected_country');
+      final_token = prefs.getString('token');
+      currency = prefs.getString('currency');
+      currency_pos = prefs.getString('currency_pos');
 
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+      staticpaymentListModel.add(new StaticPaymentModel(id: 'wipay_credit',title: "Credit\/Debit Card"));
 
-      Response response = await get(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_payment_method/?country=$user_country'),
-          headers: headers);
-      final jsonResponse = json.decode(response.body);
-
-      print('CartScreen list_payment_method Response status2: ${response.statusCode}');
-      print('CartScreen list_payment_method Response body2: ${response.body}');
-      paymentModel = new PaymentModel.fromJson(jsonResponse);
-
-      print(paymentModel!.data);
       if(prefs.getInt("payment_index")!=null && prefs.getInt("payment_index")!=-2){
         // toast("cd");
         selectedPaymentIndex=prefs.getInt("payment_index");
@@ -280,7 +274,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         // toast("dd");
         selectedPaymentIndex=-1;
       }
-      return paymentModel;
+      return staticpaymentListModel;
     } catch (e) {
       print('caught error $e');
     }
@@ -303,7 +297,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<CartModel?> fetchAlbum() async {
+  Future<List<CartPro>?> fetchAlbum() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String pro_id = prefs.getString('pro_id');
@@ -319,53 +313,39 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       }
       print(token);
 
-        Map<String, String> headers = {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        };
-
-        Response response = await get(
-            Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
-            headers: headers);
-
-        print('CartScreen woocart Response status2: ${response.statusCode}');
-        print('CartScreen woocart Response body2: ${response.body}');
-        final jsonResponse = json.decode(response.body);
-
-        cat_model = new CartModel.fromJson(jsonResponse);
-        if (cat_model!.cart == null) {
-          prefs.setInt("cart_count", 0);
-        }else if (cat_model!.cart!.length == 0) {
+      final allRows = await dbHelper.queryAllRows();
+      cartPro.clear();
+      allRows.forEach((row) => cartPro.add(CartPro.fromJson(row)));
+      fl_total = 0.0;
+      for (var i = 0; i < cartPro.length; i++) {
+        double fnlamnt = double.parse(cartPro[i].line_subtotal!) *
+            double.parse(cartPro[i].quantity!);
+        fl_total += fnlamnt;
+      }
+ if (cartPro.length == 0) {
           prefs.setInt("cart_count", 0);
         }else{
-          prefs.setInt("cart_count", cat_model!.cart!.length);
+          prefs.setInt("cart_count", cartPro.length);
         }
 
 
-        user_total = cat_model!.total.toString();
+        user_total = fl_total.toString();
         if (first) {
-          total_amount = cat_model!.total.toString();
+          total_amount = fl_total.toString();
         } else {
           first = false;
         }
 
-        if (cat_model!.couponDiscountTotals!.length == 0) {
+        // if (cat_model!.couponDiscountTotals!.length == 0) {
           prefs.setString("coupon_code", "");
           prefs.setString("coupon_amount", "");
-        } else {
-          prefs.setString("coupon_code", cat_model!.appliedCoupons![0]);
-          prefs.setString(
-              "coupon_amount", cat_model!.couponDiscountTotals!.toString());
-        }
 
 
 
       // first2=false;
 
 //      print(cat_model.data);
-      return cat_model;
+      return cartPro;
     } catch (e) {
       print('caught error $e');
       // return cat_model;
@@ -461,7 +441,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       print('CartScreen update_cart Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
 
-      setState(() {});
+      // setState(() {});
       // if(prefs.getInt('cart_count')!=null){
       // int cart_tot=prefs.getInt('cart_count')!-1;
       prefs.setInt("cart_count", prefs.getInt('cart_count')!-1);
@@ -521,51 +501,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<CouponModel?> removeCoupon() async {
-    EasyLoading.show(status: 'Please wait...');
-
-    try {
-      String username = cat_model!.appliedCoupons![0];
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String pro_id = prefs.getString('pro_id');
-      String? token = prefs.getString('token');
-//      print
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      final msg = jsonEncode({"coupon_code": username});
-      print(msg);
-
-      Response response = await post(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/remove_coupon'),
-          headers: headers,
-          body: msg);
-      print('CartScreen remove_coupon Response status2: ${response.statusCode}');
-      print('CartScreen remove_coupon Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-
-
-      // couponModel = new CouponModel.fromJson(jsonResponse);
-      // if (couponModel.success) {
-      setState(() {
-        _couponController.text = '';
-      });
-      EasyLoading.dismiss();
-
-      // } else {
-      //   couponErrorModel = new CouponErrorModel.fromJson(jsonResponse);
-      //   toast(couponErrorModel.error);
-      // }
-      return couponModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
 
   Future<String> fnlPrice() async{
     var myprice2;
@@ -585,13 +520,13 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     } else {
 
       if(selectedShipingIndex==-1){
-        myprice2 = double.parse(cat_model!.total.toString());
+        myprice2 = double.parse(fl_total.toString());
       }else {
 
         double total;
         double rate = double.parse(newShipmentModel!
             .methods![selectedShipingIndex!]!.settings!.cost!.value!);
-        total = double.parse(cat_model!.total!) + rate;
+        total = fl_total + rate;
         total_amount = total.toString();
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString("total_amnt", total_amount!);
@@ -608,7 +543,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     EasyLoading.show(status: 'Please wait...');
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? pro_id = cat_model!.cart![0]!.productId;
+      String? pro_id = cartPro[0].product_id;
       // toast(pro_id);
       // print(
       //     "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id");
@@ -636,191 +571,63 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
 
-    Applycoupon() {
-      if (cat_model!.couponDiscountTotals!.length == 0) {
-        // do sth
-        return Container(
-          color: sh_white,
-          padding: EdgeInsets.all(8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              text("Apply Coupons",
-                  fontFamily: fontBold,
-                  fontSize: textSizeSMedium,
-                  textColor: sh_textColorPrimary),
-              SizedBox(
-                height: spacing_standard,
-              ),
-              Container(
-                decoration: boxDecoration(
-                    showShadow: true, radius: 0, bgColor: sh_light_gray),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        controller: _couponController,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.all(14.0),
-                          isDense: true,
-                          hintText: "Enter apply code",
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(2.0),
-                              borderSide: BorderSide(
-                                  color: sh_textColorSecondary, width: 0.4)),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(2.0),
-                                  topRight: Radius.circular(0.0),
-                                  bottomLeft: Radius.circular(2.0),
-                                  bottomRight: Radius.circular(0.0)),
-                              borderSide: BorderSide(
-                                  color: sh_textColorSecondary, width: 0.2)),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                        flex: 1,
-                        child: InkWell(
-                          onTap: () async {
-                            getCoupon();
-                          },
-                          child: Container(
-                            padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                            decoration: gradientBoxDecoration(
-                                radius: 1,
-                                gradientColor1: sh_colorPrimary,
-                                gradientColor2: sh_colorPrimary),
-                            child: Center(
-                                child: text("Apply",
-                                    fontFamily: fontBold,
-                                    fontSize: textSizeSMedium,
-                                    textColor: sh_white)),
-                          ),
-                        ))
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
+    void _delete(id) async {
+      // Assuming that the number of rows is the id for the last row.
+      final rowsDeleted = await dbHelper.delete(id);
+      setState(() {});
+      // _showMessageInScaffold('deleted $rowsDeleted row(s): row $id');
+    }
+
+    void _update(
+        id,
+        pro_id,
+        pro_name,
+        product_img,
+        variation_id,
+        variation_name,
+        variation_value,
+        qty,
+        line_subtotal,
+        line_total,
+        st_status) async {
+      // row to update
+      int? quantity;
+        quantity = int.parse(qty) - 1;
+      String quantitys = quantity.toString();
+
+      if (quantity == 0) {
+        _delete(id);
       } else {
-        return Container(
-          margin: EdgeInsets.fromLTRB(spacing_control, spacing_standard_new,
-              spacing_control, spacing_standard_new),
-          child: DottedBorder(
-            color: food_colorAccent,
-            strokeWidth: 1,
-            radius: Radius.circular(spacing_standard_new),
-            child: ClipRRect(
-              child: Container(
-                  width: width,
-                  padding: EdgeInsets.all(spacing_control),
-                  color: Color(0xFFF6F7FB),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Expanded(
-                        flex: 3,
-                        child: text(
-                          '${cat_model!.appliedCoupons![0]} - Applied Successfully',
-                        ),
-                      ),
-                      Expanded(
-                          flex: 1,
-                          child: InkWell(
-                            onTap: () async {
-                              removeCoupon();
-                            },
-                            child: text(sh_lbl_remove,
-                                textColor: food_colorAccent, isCentered: true),
-                          ))
-                    ],
-                  )),
-            ),
-          ),
-        );
+        double fnlamnt = double.parse(line_subtotal) * double.parse(qty);
+
+        CartPro car = CartPro(
+            id,
+            pro_id,
+            pro_name,
+            product_img,
+            variation_id,
+            variation_name,
+            variation_value,
+            quantitys,
+            line_subtotal,
+            fnlamnt.toString());
+
+        final rowsAffected = await dbHelper.update(car);
+        setState(() {});
+        // _showMessageInScaffold('updated $rowsAffected row(s)');
       }
     }
 
-    VariationName(int pos) {
-      if (cat_model!.cart![pos]!.variationId.runtimeType == int) {
-        return Container();
-      } else if (cat_model!.cart![pos]!.variationId.runtimeType == String) {
-        if (cat_model!.cart![pos]!.variationId != '') {
-          return ListView.builder(
-            physics: NeverScrollableScrollPhysics(),
-            scrollDirection: Axis.vertical,
-            itemCount: cat_model!.cart![pos]!.variations!.length,
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                // onTap: () async{
-                // SharedPreferences prefs = await SharedPreferences.getInstance();
-                // prefs.setString('pro_id', latestModel.data[index].id);
-                // launchScreen(context, ProductDetailScreen.tag);
-                // },
-                child: Wrap(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.fromLTRB(8, 2, 8, 2),
-                      decoration: BoxDecoration(
-                          color: pro_back,
-                          borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(0),
-                              topLeft: Radius.circular(0))),
-                      child: Wrap(
-                        children: [
-                          Container(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  cat_model!.cart![pos]!.variations![index]!
-                                      .attributeName!,
-                                  style: TextStyle(
-                                      color: sh_textColorPrimary,
-                                      fontSize: 14,
-                                      fontFamily: 'Medium'),
-                                ),
-                                Text(" : "),
-                                Text(
-                                  cat_model!.cart![pos]!.variations![index]!
-                                      .attributeValue!,
-                                  style: TextStyle(
-                                      color: sh_textColorPrimary,
-                                      fontSize: 14,
-                                      fontFamily: 'Medium'),
-                                ),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              );
-            },
-          );
-        } else {
-          return Container();
-        }
-      }
-    }
 
     CartPrice(int pos) {
-      var myprice2 = double.parse(cat_model!.cart![pos]!.productPrice!);
+      var myprice2 = double.parse(cartPro[pos].line_subtotal!);
       var myprice = myprice2.toStringAsFixed(2);
 
-      return text(currency! + myprice + " " + cat_model!.currency!,
+      return text(currency! + myprice + " " + "USD",
           textColor: sh_app_black, fontFamily: fontBold, fontSize: 14.0);
     }
 
-    Cart(CartModel models, int positions, animation, bool rsize) {
+    Cart(List<CartPro> models, int positions, animation, bool rsize) {
       // toast(positions.toString());
       if (rsize) {
         return Container(
@@ -845,7 +652,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                         borderRadius:
                             BorderRadius.all(Radius.circular(spacing_standard_new)),
                         child: Image.network(
-                          cat_model!.cart![positions]!.productImage!,
+                          cartPro[positions].product_img!,
                           fit: BoxFit.fill,
                           height: width * _height,
                         ),
@@ -868,13 +675,13 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            cat_model!.cart![positions]!.productName!,
+                            cartPro[positions].product_name!,
                             style: TextStyle(
                                 color: sh_black,
                                 fontSize: 16,
                                 fontFamily: fontSemibold),
                           ),
-                          Container(child: VariationName(positions)),
+
                           SizedBox(
                             height: 4,
                           ),
@@ -890,47 +697,71 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                               });
 
                               UpdateCart(
-                                  cat_model!.cart![positions]!.productId!,
-                                  cat_model!.cart![positions]!.quantity
+                                  cartPro[positions].product_id!,
+                                  cartPro[positions].quantity
                                       .toString(),
                                   "REMOVE",
-                                  cat_model!.cart![positions]!.variationId!);
-                              if (cat_model!.cart![positions]!.quantity == 1) {
+                                  cartPro[positions].variation_id!);
+                              _update(
+                                  cartPro[positions].id,
+                                  cartPro[positions].product_id,
+                                  cartPro[positions].product_name,
+                                  cartPro[positions].product_img,
+                                  cartPro[positions].variation_id,
+                                  cartPro[positions].variation_name,
+                                  cartPro[positions].variation_value,
+                                  cartPro[positions].quantity,
+                                  cartPro[positions].line_subtotal,
+                                  cartPro[positions].line_total,
+                                  "REMOVE");
+                              if (cartPro[positions].quantity == 1) {
                                 if (positions > 0) {
                                   if (positions ==
-                                      cat_model!.cart!.length - 1) {
+                                      cartPro.length - 1) {
                                     listKey.currentState!.removeItem(
                                         positions,
-                                        (_, animation) => Cart(cat_model!,
+                                        (_, animation) => Cart(cartPro,
                                             positions, animation, true),
                                         duration:
                                             const Duration(milliseconds: 500));
                                   } else {
                                     listKey.currentState!.removeItem(
                                         positions,
-                                        (_, animation) => Cart(cat_model!,
+                                        (_, animation) => Cart(cartPro,
                                             positions, animation, true),
                                         duration:
                                             const Duration(milliseconds: 500));
-                                    cat_model!.cart!.removeAt(positions);
+                                    cartPro.removeAt(positions);
                                   }
                                 } else {
-                                  cat_model!.cart!.removeAt(positions);
+                                  cartPro.removeAt(positions);
 
                                   listKey.currentState!.removeItem(
                                       positions,
-                                      (_, animation) => Cart(cat_model!,
+                                      (_, animation) => Cart(cartPro,
                                           positions, animation, true),
                                       duration:
                                           const Duration(milliseconds: 500));
                                 }
                               } else {
                                 UpdateCart(
-                                    cat_model!.cart![positions]!.productId!,
-                                    cat_model!.cart![positions]!.quantity
+                                    cartPro[positions].product_id!,
+                                    cartPro[positions].quantity
                                         .toString(),
                                     "REMOVE",
-                                    cat_model!.cart![positions]!.variationId!);
+                                    cartPro[positions].variation_id!);
+                                _update(
+                                    cartPro[positions].id,
+                                    cartPro[positions].product_id,
+                                    cartPro[positions].product_name,
+                                    cartPro[positions].product_img,
+                                    cartPro[positions].variation_id,
+                                    cartPro[positions].variation_name,
+                                    cartPro[positions].variation_value,
+                                    cartPro[positions].quantity,
+                                    cartPro[positions].line_subtotal,
+                                    cartPro[positions].line_total,
+                                    "REMOVE");
                               }
                             },
                             child: Container(
@@ -988,7 +819,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                         borderRadius:
                             BorderRadius.all(Radius.circular(spacing_standard_new)),
                         child: Image.network(
-                          cat_model!.cart![positions]!.productImage!,
+                          cartPro[positions].product_img!,
                           fit: BoxFit.fill,
                           height: width * 0.26,
                         ),
@@ -1003,13 +834,12 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            cat_model!.cart![positions]!.productName!,
+                            cartPro[positions].product_name!,
                             style: TextStyle(
                                 color: sh_colorPrimary2,
                                 fontSize: 14,
                                 fontFamily: fontBold),
                           ),
-                          Container(child: VariationName(positions)),
                           SizedBox(
                             height: 4,
                           ),
@@ -1027,47 +857,71 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                               });
 
                               UpdateCart(
-                                  cat_model!.cart![positions]!.productId!,
-                                  cat_model!.cart![positions]!.quantity
+                                  cartPro[positions].product_id!,
+                                  cartPro[positions].quantity
                                       .toString(),
                                   "REMOVE",
-                                  cat_model!.cart![positions]!.variationId!);
-                              if (cat_model!.cart![positions]!.quantity == 1) {
+                                  cartPro[positions].variation_id!);
+                              _update(
+                                  cartPro[positions].id,
+                                  cartPro[positions].product_id,
+                                  cartPro[positions].product_name,
+                                  cartPro[positions].product_img,
+                                  cartPro[positions].variation_id,
+                                  cartPro[positions].variation_name,
+                                  cartPro[positions].variation_value,
+                                  cartPro[positions].quantity,
+                                  cartPro[positions].line_subtotal,
+                                  cartPro[positions].line_total,
+                                  "REMOVE");
+                              if (cartPro[positions].quantity == 1) {
                                 if (positions > 0) {
                                   if (positions ==
-                                      cat_model!.cart!.length - 1) {
+                                      cartPro.length - 1) {
                                     listKey.currentState!.removeItem(
                                         positions,
-                                        (_, animation) => Cart(cat_model!,
+                                        (_, animation) => Cart(cartPro,
                                             positions, animation, true),
                                         duration:
                                             const Duration(milliseconds: 500));
                                   } else {
                                     listKey.currentState!.removeItem(
                                         positions,
-                                        (_, animation) => Cart(cat_model!,
+                                        (_, animation) => Cart(cartPro,
                                             positions, animation, true),
                                         duration:
                                             const Duration(milliseconds: 500));
-                                    cat_model!.cart!.removeAt(positions);
+                                    cartPro.removeAt(positions);
                                   }
                                 } else {
-                                  cat_model!.cart!.removeAt(positions);
+                                  cartPro.removeAt(positions);
 
                                   listKey.currentState!.removeItem(
                                       positions,
-                                      (_, animation) => Cart(cat_model!,
+                                      (_, animation) => Cart(cartPro,
                                           positions, animation, true),
                                       duration:
                                           const Duration(milliseconds: 500));
                                 }
                               } else {
                                 UpdateCart(
-                                    cat_model!.cart![positions]!.productId!,
-                                    cat_model!.cart![positions]!.quantity
+                                    cartPro[positions].product_id!,
+                                    cartPro[positions].quantity
                                         .toString(),
                                     "REMOVE",
-                                    cat_model!.cart![positions]!.variationId!);
+                                    cartPro[positions].variation_id!);
+                                _update(
+                                    cartPro[positions].id,
+                                    cartPro[positions].product_id,
+                                    cartPro[positions].product_name,
+                                    cartPro[positions].product_img,
+                                    cartPro[positions].variation_id,
+                                    cartPro[positions].variation_name,
+                                    cartPro[positions].variation_value,
+                                    cartPro[positions].quantity,
+                                    cartPro[positions].line_subtotal,
+                                    cartPro[positions].line_total,
+                                    "REMOVE");
                               }
                             },
                             child: Container(
@@ -1099,12 +953,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       }
     }
 
-
      TotalPrice() {
       var myprice2;
       if (first2) {
 
-        myprice2 = double.parse(cat_model!.total.toString());
+        myprice2 = double.parse(fl_total.toString());
         var myprice = myprice2.toStringAsFixed(2);
 toast(myprice+"1");
         return Row(
@@ -1114,7 +967,7 @@ toast(myprice+"1");
                 fontSize: textSizeMedium,
                 fontFamily: fontBold,
                 textColor: sh_colorPrimary2),
-            text(currency! + myprice + " " + cat_model!.currency!,
+            text(currency! + myprice + " " + "USD",
                 fontSize: textSizeMedium,
                 fontFamily: fontBold,
                 textColor: sh_black),
@@ -1123,11 +976,11 @@ toast(myprice+"1");
 
 
 
-        myprice2 = double.parse(cat_model!.total.toString());
+
       } else {
 
         if(selectedShipingIndex==-1){
-          myprice2 = double.parse(cat_model!.total.toString());
+          myprice2 = double.parse(fl_total.toString());
           var myprice = myprice2.toStringAsFixed(2);
           // toast(myprice+"2");
 
@@ -1138,7 +991,7 @@ toast(myprice+"1");
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_colorPrimary2),
-              text(currency! + myprice + " " + cat_model!.currency!,
+              text(currency! + myprice + " " + "USD",
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_black),
@@ -1150,7 +1003,7 @@ toast(myprice+"1");
           double total;
           double rate = double.parse(newShipmentModel!
               .methods![selectedShipingIndex!]!.settings!.cost!.value!);
-          total = double.parse(cat_model!.total!) + rate;
+          total = fl_total + rate;
           total_amount = total.toString();
 
           // SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -1168,7 +1021,7 @@ toast(myprice+"1");
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_colorPrimary2),
-              text(currency! + myprice + " " + cat_model!.currency!,
+              text(currency! + myprice + " " + "USD",
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_black),
@@ -1310,23 +1163,17 @@ toast(myprice+"1");
                     newShipmentModel!.methods![selectedShipingIndex!]!.title!);
 
                 prefs.setString('payment_method',
-                    paymentModel!.data![selectedPaymentIndex!]!.id!);
+                    staticpaymentListModel[selectedPaymentIndex!].id!);
                 prefs.setString('payment_type',
-                    paymentModel!.data![selectedPaymentIndex!]!.title!);
-                prefs.setString('publish_key',
-                    paymentModel!.data![selectedPaymentIndex!]!
-                        .publishableKey!);
-                prefs.setString('secret_key',
-                    paymentModel!.data![selectedPaymentIndex!]!.secretKey!);
-                if (paymentModel!.data![selectedPaymentIndex!]!.testmode!) {
-                  prefs.setString('testmode', "True");
-                } else {
+                    staticpaymentListModel[selectedPaymentIndex!].title!);
+                prefs.setString('publish_key','');
+                prefs.setString('secret_key','');
+                // if (paymentModel!.data![selectedPaymentIndex!]!.testmode!) {
+                //   prefs.setString('testmode', "True");
+                // } else {
                   prefs.setString('testmode', "False");
-                }
+                // }
 
-                // GetShip(newShipmentModel!.methods![selectedShipingIndex]!.id!
-                //     .toString());
-                // launchScreen(context, NewConfirmScreen.tag);
                 fetchSeller();
               }
             }
@@ -1359,21 +1206,18 @@ toast(myprice+"1");
                   //     newShipmentModel!.methods![selectedShipingIndex!]!.title!);
 
                   prefs.setString('payment_method',
-                      paymentModel!.data![selectedPaymentIndex!]!.id!);
+                      staticpaymentListModel[selectedPaymentIndex!].id!);
                   prefs.setString('payment_type',
-                      paymentModel!.data![selectedPaymentIndex!]!.title!);
-                  prefs.setString('publish_key',
-                      paymentModel!.data![selectedPaymentIndex!]!
-                          .publishableKey!);
-                  prefs.setString('secret_key',
-                      paymentModel!.data![selectedPaymentIndex!]!.secretKey!);
-                  if (paymentModel!.data![selectedPaymentIndex!]!.testmode!) {
-                    prefs.setString('testmode', "True");
-                  } else {
+                      staticpaymentListModel[selectedPaymentIndex!].title!);
+                  prefs.setString('publish_key','');
+                  prefs.setString('secret_key','');
+                  // if (paymentModel!.data![selectedPaymentIndex!]!.testmode!) {
+                  //   prefs.setString('testmode', "True");
+                  // } else {
                     prefs.setString('testmode', "False");
-                  }
+                  // }
                   // print("mypricess"+cat_model!.total.toString());
-                  prefs.setString("total_amnt", cat_model!.total.toString());
+                  prefs.setString("total_amnt", fl_total.toString());
                   prefs.setString("delivery_status", "no");
                   // GetShip(newShipmentModel!.methods![selectedShipingIndex]!.id!
                   //     .toString());
@@ -1473,7 +1317,7 @@ toast(myprice+"1");
                   // GetShip(newShipmentModel!.methods![selectedShipingIndex]!.id!
                   //     .toString());
                   // print("mypricess"+cat_model!.total.toString());
-                  prefs.setString("total_amnt", cat_model!.total.toString());
+                  prefs.setString("total_amnt", fl_total.toString());
                   prefs.setString("delivery_status", "no");
                   // launchScreen(context, NewConfirmScreen.tag);
                   fetchSeller();
@@ -1657,18 +1501,7 @@ toast(myprice+"1");
     }
 
     ListValidation() {
-      if (cat_model!.cart == null) {
-        return Container(
-          alignment: Alignment.center,
-          child: Text(
-            'Your Cart is currently empty',
-            style: TextStyle(
-                fontSize: 16,
-                color: sh_textColorPrimary,
-                fontWeight: FontWeight.bold),
-          ),
-        );
-      } else if (cat_model!.cart!.length == 0) {
+      if (cartPro.length == 0) {
         return Container(
           alignment: Alignment.center,
           child: Text(
@@ -1694,9 +1527,9 @@ toast(myprice+"1");
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  initialItemCount: cat_model!.cart!.length,
+                  initialItemCount: cartPro.length,
                   itemBuilder: (context, index, animation) {
-                    return Cart(cat_model!, index, animation,
+                    return Cart(cartPro, index, animation,
                         false); // Refer step 3
                   },
                 ),
@@ -1833,7 +1666,7 @@ toast(myprice+"1");
                                             selectedShipingIndex = index;
                                             double total;
                                             double rate = double.parse(newShipmentModel!.methods![index]!.settings!.cost!.value!);
-                                            total = double.parse(cat_model!.total!) + rate;
+                                            total = fl_total + rate;
                                             total_amount = total.toString();
                                             GetShip(newShipmentModel!.methods![selectedShipingIndex!]!.id!.toString());
                                           });
@@ -1871,9 +1704,7 @@ toast(myprice+"1");
                                                             .settings!
                                                             .cost!
                                                             .value!);
-                                                    total = double.parse(
-                                                        cat_model!
-                                                            .total!) +
+                                                    total = fl_total +
                                                         rate;
                                                     total_amount = total
                                                         .toString();
@@ -1956,14 +1787,14 @@ toast(myprice+"1");
                                 fontFamily: fontBold,
                                 textColor: sh_colorPrimary2),
 
-                            FutureBuilder<PaymentModel?>(
+                            FutureBuilder<List<StaticPaymentModel>?>(
                               future: fetchPaymentmy,
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
                                   return PaymentWidget(
                                     selectedPaymentIndex:
                                     selectedPaymentIndex,
-                                    paymentModel: paymentModel,
+                                    paymentModel: staticpaymentListModel,
                                     onSelectionChanged: (selectedList) async{
                                       SharedPreferences prefs = await SharedPreferences.getInstance();
                                       prefs.setInt('payment_index', selectedList);
@@ -2130,8 +1961,8 @@ toast(myprice+"1");
                 height: height-153,
                 width: width,
                 color: sh_white,
-                child: FutureBuilder<CartModel?>(
-                    future: fetchAlbummy,
+                child: FutureBuilder<List<CartPro>?>(
+                    future: fetchAlbum(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return
@@ -2339,23 +2170,6 @@ crossAxisAlignment: CrossAxisAlignment.start,
 
                                       },
                                       activeColor: sh_colorPrimary2),
-                                  Text("Cash on delivery"),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 4,
-                              ),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: <Widget>[
-                                  Radio(
-                                      value: 1,
-                                      groupValue: 1,
-                                      onChanged: (int? value) {
-
-                                      },
-                                      activeColor: sh_colorPrimary2),
                                   Text("Credit/Debit Card"),
                                 ],
                               ),
@@ -2490,7 +2304,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
   }
 
   CartFinalTotal() {
-    var myprice2 = double.parse(cat_model!.total.toString());
+    var myprice2 = double.parse(fl_total.toString());
     var myprice = myprice2.toStringAsFixed(2);
     return text("Total: " + currency! + myprice,
         textColor: sh_app_black,
@@ -2562,7 +2376,7 @@ class groceryButtonState extends State<groceryButton> {
 
 class PaymentWidget extends StatefulWidget {
   int? selectedPaymentIndex;
-  PaymentModel? paymentModel;
+  List<StaticPaymentModel>? paymentModel;
   Function(int)? onSelectionChanged;
 
   PaymentWidget({Key? key, this.selectedPaymentIndex,this.paymentModel, this.onSelectionChanged})
@@ -2610,7 +2424,7 @@ class _PaymentWidgetState extends State<PaymentWidget> {
                       });
                     },
                     activeColor: sh_colorPrimary2),
-                Text(widget.paymentModel!.data![index]!.title!),
+                Text(widget.paymentModel![index].title!),
               ],
             ),
           ),
@@ -2629,7 +2443,7 @@ class _PaymentWidgetState extends State<PaymentWidget> {
             return Single2(setState2, index);
           },
           shrinkWrap: true,
-          itemCount: widget.paymentModel!.data!.length,
+          itemCount: widget.paymentModel!.length,
         ),
       );
       //   Wrap(

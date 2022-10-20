@@ -687,7 +687,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "\$" + myprice + " " + pro_det_model!.currency!,
+            "\$" + myprice + " " + "USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontBold,
@@ -835,7 +835,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return Row(
         children: [
           Text(
-            "\$" + myprice + " " + pro_det_model!.currency!,
+            "\$" + myprice + " " + "USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontBold,
@@ -857,7 +857,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return Row(
         children: [
           Text(
-            "\$" + myprice + " " + pro_det_model!.currency!,
+            "\$" + myprice + " " + "USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontMedium,
@@ -1073,7 +1073,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             "\$" +
                                 myprice +
                                 " " +
-                                pro_det_model!.currency!,
+                                "USD",
                             style: TextStyle(
                                 color: sh_black,
                                 fontSize: 15,

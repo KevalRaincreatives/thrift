@@ -8,6 +8,7 @@ import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:thrift/model/AdvModel.dart';
+import 'package:thrift/model/StaticCategoryModel.dart';
 import 'package:thrift/model/CategoryModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:thrift/model/CheckUserModel.dart';
@@ -150,16 +151,16 @@ class _HomeFragmentState extends State<HomeFragment> {
       var response;
       if (filter_str == 'Newest to Oldest') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100&country=$user_country"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100"));
       } else if (filter_str == 'Oldest to Newest') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=asc&per_page=100&country=$user_country"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=asc&per_page=100"));
       } else if (filter_str == 'Price High to Low') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=desc&per_page=100&country=$user_country"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=desc&per_page=100"));
       } else if (filter_str == 'Price Low to High') {
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=asc&per_page=100&country=$user_country"));
+            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=asc&per_page=100"));
       }
       print('HomeFragment products Response status2: ${response.statusCode}');
       print('HomeFragment products Response body2: ${response.body}');
@@ -168,14 +169,12 @@ class _HomeFragmentState extends State<HomeFragment> {
       productListModel.clear();
       final jsonResponse = json.decode(response.body);
       for (Map i in jsonResponse) {
-        if (i["display_product"] == true) {
+        if (i["product_country"] == user_country) {
           productListModel.add(ProductListModel.fromJson(i));
         }
-
       }
       if (productListModel.length > 0) {
-        prefs.setString(
-            "fnl_currency", productListModel[0].currency.toString());
+        prefs.setString("fnl_currency", "USD");
       }
 
       return productListModel;
@@ -372,7 +371,7 @@ class _HomeFragmentState extends State<HomeFragment> {
       return Row(
         children: [
           Text(
-            "\$" + myprice+ " "+productListModel[index].currency!,
+            "\$" + myprice+ " "+"USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: 'Medium',
@@ -960,8 +959,9 @@ class T2Drawer extends StatefulWidget {
 
 class T2DrawerState extends State<T2Drawer> {
   var selectedItem = -1;
-  CategoryModel? categoryListModel;
-  Future<CategoryModel?>? fetchAlbumMain;
+
+  Future<List<StaticCategoryModel>?>? fetchAlbumMain;
+  List<StaticCategoryModel> staticcategoryListModel=[];
 
   @override
   void initState() {
@@ -969,25 +969,24 @@ class T2DrawerState extends State<T2Drawer> {
     fetchAlbumMain=fetchAlbum();
   }
 
-  Future<CategoryModel?> fetchAlbum() async {
+  Future<List<StaticCategoryModel>?> fetchAlbum() async {
+    
     try {
 
-        final client = RetryClient(http.Client());
-        var response;
-        try {
-          response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woo_product_categories"));
-        } finally {
-          client.close();
-        }
-
-        print('HomeFragment categories Response status2: ${response.statusCode}');
-        print('HomeFragment categories Response body2: ${response.body}');
-        final jsonResponse = json.decode(response.body);
-        categoryListModel = new CategoryModel.fromJson(jsonResponse);
+staticcategoryListModel.add(new StaticCategoryModel(id: 191,name: "Appliances"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 195,name: "Bags"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 43,name: "Bottoms"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 162,name: "Dresses"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 193,name: "Electronics"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 190,name: "Home Decor"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 189,name: "Jackets\/Hoodies"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 192,name: "Jewellery"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 194,name: "Purses"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 188,name: "Shoes"));
+staticcategoryListModel.add(new StaticCategoryModel(id: 170,name: "Tops"));
 
 
-      return categoryListModel;
+      return staticcategoryListModel;
     } catch (e) {
 
       print('caught error $e');
@@ -1030,26 +1029,8 @@ class T2DrawerState extends State<T2Drawer> {
                             fontFamily: 'Bold')),
                   ),
                 ),
-                // Container(
-                //   width: MediaQuery.of(context).size.width,
-                //   decoration: BoxDecoration(
-                //     boxShadow: <BoxShadow>[
-                //       BoxShadow(
-                //           color: sh_app_background,
-                //           blurRadius: 15.0,
-                //           offset: Offset(0.0, 0.75)
-                //       )
-                //     ],
-                //   ),
-                //   child: Padding(
-                //     padding: const EdgeInsets.fromLTRB(18.0,20,0,16),
-                //     child: Text("Main Menu",style: TextStyle(color: sh_colorPrimary2,fontSize: 22,fontFamily: 'Bold')),
-                //   ),
-                // ),
-                //      Container(height: 0.5,
-                //      color: sh_colorPrimary2,),
 
-                FutureBuilder<CategoryModel?>(
+                FutureBuilder<List<StaticCategoryModel>?>(
                   future: fetchAlbumMain,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
@@ -1060,7 +1041,7 @@ class T2DrawerState extends State<T2Drawer> {
                           // NeverScrollableScrollPhysics(),
 
                           scrollDirection: Axis.vertical,
-                          itemCount: categoryListModel!.categories!.length,
+                          itemCount: staticcategoryListModel.length,
                           shrinkWrap: true,
                           itemBuilder: (context, index) {
                             return GestureDetector(
@@ -1068,15 +1049,15 @@ class T2DrawerState extends State<T2Drawer> {
                                   SharedPreferences prefs =
                                   await SharedPreferences.getInstance();
                                   prefs.setString('cat_id',
-                                      categoryListModel!.categories![index]!.id.toString());
+                                      staticcategoryListModel[index].id.toString());
                                   prefs.setString('cat_names',
-                                      categoryListModel!.categories![index]!.name.toString());
+                                      staticcategoryListModel[index].name.toString());
                                   launchScreen(context, ProductlistScreen.tag);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.fromLTRB(
                                       18.0, 12, 12, 12),
-                                  child: Text(  unescape.convert(categoryListModel!.categories![index]!.name!),
+                                  child: Text(  unescape.convert(staticcategoryListModel[index].name!),
                                       style: TextStyle(
                                           color: sh_colorPrimary2,
                                           fontSize: 15.sp,

@@ -33,11 +33,9 @@ class AccountFragment extends StatefulWidget {
 
 class _AccountFragmentState extends State<AccountFragment> {
   CheckUserModel? checkUserModel;
-  Future<CheckUserModel?>? fetchUserStatus2Main;
 
   @override
   void initState() {
-    fetchUserStatus2Main=fetchUserStatus2();
 
     super.initState();
 
@@ -84,38 +82,6 @@ class _AccountFragmentState extends State<AccountFragment> {
       print('caught error $e');
     }
   }
-
-  Future<CheckUserModel?> fetchUserStatus2() async {
-    EasyLoading.show(status: 'Please wait...');
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      var response = await http.get(Uri.parse(
-        "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
-          ,headers: headers);
-
-
-      print('AccountFragment check_seller_status Response status2: ${response.statusCode}');
-      print('AccountFragment check_seller_status Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-      checkUserModel = new CheckUserModel.fromJson(jsonResponse);
-      prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
-      EasyLoading.dismiss();
-      return checkUserModel;
-    } catch (e) {
-      EasyLoading.dismiss();
-      print('caught error $e');
-    }
-  }
-
 
   int? cart_count;
   Future<String?> fetchtotal() async {

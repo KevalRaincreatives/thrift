@@ -194,7 +194,72 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  void _insert() async {
+    // row to insert
+    if (myvariation_name.length > 2) {
+      myvariation_name = myvariation_name.substring(1);
+      myvariation_value = myvariation_value.substring(1);
+    }
+    print(myvariation_name);
+    print(myvariation_value);
 
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? variation_id = prefs.getString('variant_id');
+
+    final allRows = await dbHelper.queryAllRows();
+    cartPro.clear();
+    allRows.forEach((row) => cartPro.add(CartPro.fromJson(row)));
+    if ((cartPro.singleWhereOrNull(
+          (it) => it.product_id == pro_det_model!.id.toString(),
+    )) !=
+        null) {
+        print('Already exists!');
+        int chk = 0;
+        for (var i = 0; i < cartPro.length; i++) {
+          if (cartPro[i].product_id == pro_det_model!.id.toString()) {
+            chk == i;
+          }
+        }
+        int dd = int.parse(cartPro[chk].quantity!) + 1;
+
+        double fnlamnt = double.parse(cartPro[chk].line_subtotal!) *
+            double.parse(dd.toString());
+
+        CartPro car = CartPro(
+            cartPro[chk].id,
+            cartPro[chk].product_id,
+            cartPro[chk].product_name,
+            cartPro[chk].product_img,
+            cartPro[chk].variation_id,
+            cartPro[chk].variation_name,
+            cartPro[chk].variation_value,
+            dd.toString(),
+            cartPro[chk].line_subtotal,
+            fnlamnt.toString());
+        final rowsAffected = await dbHelper.update(car);
+
+
+      // print('Already exists!');
+    } else {
+      print('Added!');
+      Map<String, dynamic> row = {
+        DatabaseHelper.columnProductId: pro_det_model!.id.toString(),
+        DatabaseHelper.columnProductName: pro_det_model!.name.toString(),
+        DatabaseHelper.columnProductImage:
+        pro_det_model!.images![0]!.src.toString(),
+        DatabaseHelper.columnVariationId: variation_id,
+        DatabaseHelper.columnVariationName: myvariation_name,
+        DatabaseHelper.columnVariationValue: myvariation_value,
+        DatabaseHelper.columnQuantity: "1",
+        DatabaseHelper.columnLine_subtotal: pro_det_model!.price.toString(),
+        DatabaseHelper.columnLine_total: pro_det_model!.price.toString(),
+      };
+      CartPro car = CartPro.fromJson(row);
+      final id = await dbHelper.insert(car);
+    }
+
+    // toast('inserted row id: $id');
+  }
 
   Future<ProductDetailModel?> AddCart() async {
 //    Dialogs.showLoadingDialog(context, _keyLoader);
@@ -249,6 +314,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             prefs.setInt("cart_count", addCartModel!.cart!.length);
             cart_count == addCartModel!.cart!.length;
           }
+
+
           // ct_changel = true;
           // _incrementCounter();
 
@@ -677,7 +744,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "\$" + myprice + " " + pro_det_model!.currency!,
+            "\$" + myprice + " " + "USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontBold,
@@ -847,7 +914,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return Row(
         children: [
           Text(
-            "\$" + myprice + " " + pro_det_model!.currency!,
+            "\$" + myprice + " " + "USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: fontMedium,
@@ -1065,7 +1132,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             "\$" +
                                 myprice +
                                 " " +
-                                pro_det_model!.currency!,
+                                "USD",
                             style: TextStyle(
                                 color: sh_black,
                                 fontSize: 15,
@@ -1491,6 +1558,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                                       .getInstance();
 
                                               prefs.setString("variant_id", "");
+
                                               AddCart();
                                               ct_changel = true;
                                               cart_count==1;
