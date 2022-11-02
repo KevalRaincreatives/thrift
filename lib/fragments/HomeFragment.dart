@@ -51,7 +51,8 @@ class HomeFragment extends StatefulWidget {
   _HomeFragmentState createState() => _HomeFragmentState();
 }
 
-class _HomeFragmentState extends State<HomeFragment> {
+class _HomeFragmentState extends State<HomeFragment>
+    with AutomaticKeepAliveClientMixin<HomeFragment> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   late List<ItemModel> menuItems;
   CustomPopupMenuController _controller = CustomPopupMenuController();
@@ -70,6 +71,7 @@ class _HomeFragmentState extends State<HomeFragment> {
   Future<String?>? fetchDetailsMain;
   Future<List<ProductListModel>?>? fetchAlbumMain;
   int timer = 800, offset = 0;
+
   @override
   void initState() {
     menuItems = [
@@ -78,12 +80,14 @@ class _HomeFragmentState extends State<HomeFragment> {
       ItemModel('Price High to Low'),
       ItemModel('Price Low to High'),
     ];
-    fetchDetailsMain=fetchDetails();
+    fetchDetailsMain = fetchDetails();
     fetchAdv();
     // fetchAlbumMain=fetchAlbum();
     super.initState();
   }
 
+  @override
+  bool get wantKeepAlive => true;
 
   Future<String?> fetchDetails() async {
     try {
@@ -105,7 +109,7 @@ class _HomeFragmentState extends State<HomeFragment> {
 
       print('Token : ${token}');
 
-      if(adv_image=='0') {
+      if (adv_image == '0') {
         Map<String, String> headers = {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -121,12 +125,10 @@ class _HomeFragmentState extends State<HomeFragment> {
         print('HomeFragment get_ads Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
 
-
-
         advModel = new AdvModel.fromJson(jsonResponse);
 
         prefs.setString("adv_image", "1");
-        if(advModel!.data!=null) {
+        if (advModel!.data != null) {
           showDialog(
             context: context,
             builder: (BuildContext context) => CustomDialog(advModel!.data!),
@@ -147,7 +149,6 @@ class _HomeFragmentState extends State<HomeFragment> {
       // String? user_country = "Barbados";
       // toast(cat_id);
 
-
       var response;
       if (filter_str == 'Newest to Oldest') {
         response = await http.get(Uri.parse(
@@ -164,7 +165,6 @@ class _HomeFragmentState extends State<HomeFragment> {
       }
       print('HomeFragment products Response status2: ${response.statusCode}');
       print('HomeFragment products Response body2: ${response.body}');
-
 
       productListModel.clear();
       final jsonResponse = json.decode(response.body);
@@ -196,19 +196,25 @@ class _HomeFragmentState extends State<HomeFragment> {
         'Authorization': 'Bearer $token',
       };
 
-      print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId");
-      var response = await http.get(Uri.parse(
-          "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
-      ,headers: headers);
+      print(
+          "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId");
+      var response = await http.get(
+          Uri.parse(
+            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",
+          ),
+          headers: headers);
 
-      print('HomeFragment check_seller_status Response status2: ${response.statusCode}');
-      print('HomeFragment check_seller_status Response body2: ${response.body}');
+      print(
+          'HomeFragment check_seller_status Response status2: ${response.statusCode}');
+      print(
+          'HomeFragment check_seller_status Response body2: ${response.body}');
 
       final jsonResponse = json.decode(response.body);
       checkUserModel = new CheckUserModel.fromJson(jsonResponse);
-      prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
+      prefs.setString(
+          'is_store_owner', checkUserModel!.is_store_owner.toString());
       EasyLoading.dismiss();
-      if(checkUserModel!.is_store_owner==0){
+      if (checkUserModel!.is_store_owner == 0) {
         showGeneralDialog(
             barrierColor: Colors.black.withOpacity(0.5),
             transitionBuilder: (context, a1, a2, widget) {
@@ -221,13 +227,13 @@ class _HomeFragmentState extends State<HomeFragment> {
                         borderRadius: BorderRadius.circular(16.0)),
                     title: Center(
                         child: Text(
-                          'You are not a seller yet!',
-                          style: TextStyle(
-                              color: sh_colorPrimary2,
-                              fontSize: 18,
-                              fontFamily: 'Bold'),
-                          textAlign: TextAlign.center,
-                        )),
+                      'You are not a seller yet!',
+                      style: TextStyle(
+                          color: sh_colorPrimary2,
+                          fontSize: 18,
+                          fontFamily: 'Bold'),
+                      textAlign: TextAlign.center,
+                    )),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -289,8 +295,7 @@ class _HomeFragmentState extends State<HomeFragment> {
             pageBuilder: (context, animation1, animation2) {
               return Container();
             });
-      }
-      else if (checkUserModel!.is_store_owner==1) {
+      } else if (checkUserModel!.is_store_owner == 1) {
         // launchScreen(context, BecameSellerScreen.tag);
         Navigator.push(
           context,
@@ -298,10 +303,10 @@ class _HomeFragmentState extends State<HomeFragment> {
             builder: (context) => CreateProductScreen(),
           ),
         ).then((_) => setState(() {}));
-      } else if (checkUserModel!.is_store_owner==2) {
-        toast("Your Seller Registration is Pending. You will be notified once approved.");
+      } else if (checkUserModel!.is_store_owner == 2) {
+        toast(
+            "Your Seller Registration is Pending. You will be notified once approved.");
       }
-
 
       return checkUserModel;
     } catch (e) {
@@ -313,9 +318,9 @@ class _HomeFragmentState extends State<HomeFragment> {
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
 
@@ -325,10 +330,8 @@ class _HomeFragmentState extends State<HomeFragment> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
@@ -371,7 +374,7 @@ class _HomeFragmentState extends State<HomeFragment> {
       return Row(
         children: [
           Text(
-            "\$" + myprice+ " "+"USD",
+            "\$" + myprice + " " + "USD",
             style: TextStyle(
                 color: sh_black,
                 fontFamily: 'Medium',
@@ -381,9 +384,8 @@ class _HomeFragmentState extends State<HomeFragment> {
       );
     }
 
-
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
           height: 44,
@@ -391,10 +393,13 @@ class _HomeFragmentState extends State<HomeFragment> {
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
+          badgeContent: Text(
+            cart_count.toString(),
+            style: TextStyle(color: sh_white, fontSize: 8),
+          ),
           child: Image.asset(
             sh_new_cart,
             height: 44,
@@ -407,24 +412,24 @@ class _HomeFragmentState extends State<HomeFragment> {
     }
 
     MyBadge() {
-return FutureBuilder<String?>(
-  future: fetchtotal(),
-  builder: (context, snapshot) {
-    if (snapshot.hasData) {
-      return BadgeCount();
-    } else if (snapshot.hasError) {
-      return Text("${snapshot.error}");
-    }
-    // By default, show a loading spinner.
-    return CircularProgressIndicator();
-  },
-);
+      return FutureBuilder<String?>(
+        future: fetchtotal(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return BadgeCount();
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+          // By default, show a loading spinner.
+          return CircularProgressIndicator();
+        },
+      );
     }
 
     listView() {
-      if(productListModel.length == 0){
+      if (productListModel.length == 0) {
         return Container(
-          height: height-350,
+          height: height - 350,
           alignment: Alignment.center,
           child: Center(
             child: Text(
@@ -436,7 +441,7 @@ return FutureBuilder<String?>(
             ),
           ),
         );
-      }else {
+      } else {
         return Expanded(
           child: AnimationLimiter(
             child: GridView.count(
@@ -446,73 +451,68 @@ return FutureBuilder<String?>(
               mainAxisSpacing: 10.0,
               children: List.generate(
                 productListModel.length,
-                    (int index) {
-                  return AnimationConfiguration
-                      .staggeredGrid(
+                (int index) {
+                  return AnimationConfiguration.staggeredGrid(
                     position: index,
-                    duration:
-                    const Duration(milliseconds: 375),
+                    duration: const Duration(milliseconds: 375),
                     columnCount: 2,
                     child: ScaleAnimation(
                       child: FadeInAnimation(
                         child: InkWell(
                           onTap: () async {
                             SharedPreferences prefs =
-                            await SharedPreferences
-                                .getInstance();
-                            prefs.setString(
-                                'pro_id',
-                                productListModel[index]
-                                    .id
-                                    .toString());
+                                await SharedPreferences.getInstance();
+                            prefs.setString('pro_id',
+                                productListModel[index].id.toString());
+                            List<String> myimages = [];
+                            for (var i = 0;
+                                productListModel[index].images!.length > i;
+                                i++) {
+                              myimages.add(
+                                  productListModel[index].images![i]!.src!);
+                            }
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: productListModel[index].images,)),).then((value) {   setState(() {
-                              // refresh state
-                            });});
+                                  builder: (context) => ProductDetailScreen(
+                                        proName: productListModel[index].name,
+                                        proPrice: productListModel[index].price,
+                                        proImage: myimages,
+                                      )),
+                            ).then((value) {
+                              setState(() {
+                                // refresh state
+                              });
+                            });
                           },
                           child: Container(
-                            decoration: boxDecoration4(
-                                showShadow: false),
+                            decoration: boxDecoration4(showShadow: false),
                             // margin: EdgeInsets.only(left: 16, bottom: 16),
                             // padding: EdgeInsets.fromLTRB(spacing_standard,spacing_standard,spacing_standard,spacing_control_half),
                             // padding:
                             // EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
                             child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .stretch,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: <Widget>[
                                 NewImagevw(index),
                                 SizedBox(
                                   height: 6,
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets
-                                      .only(
-                                      left:
-                                      0,
-                                      right:
-                                      spacing_standard),
+                                  padding: const EdgeInsets.only(
+                                      left: 0, right: spacing_standard),
                                   child: Column(
                                     crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                        CrossAxisAlignment.start,
                                     children: <Widget>[
                                       Text(
-                                        productListModel[
-                                        index]
-                                            .name!,
+                                        productListModel[index].name!,
                                         maxLines: 1,
                                         style: TextStyle(
-                                            color:
-                                            sh_app_black,
-                                            fontFamily:
-                                            fontBold,
-                                            fontSize:
-                                            textSizeMedium),
+                                            color: sh_app_black,
+                                            fontFamily: fontBold,
+                                            fontSize: textSizeMedium),
                                       ),
                                       SizedBox(
                                         height: 4,
@@ -537,7 +537,6 @@ return FutureBuilder<String?>(
           ),
         );
       }
-
     }
 
     Widget setUserForm() {
@@ -565,7 +564,10 @@ return FutureBuilder<String?>(
                     color: sh_white, fontSize: 20, fontFamily: 'TitleCursive'),
               );
             }
-            return Center(child: CircularProgressIndicator(color: sh_white,));
+            return Center(
+                child: CircularProgressIndicator(
+              color: sh_white,
+            ));
           },
         ),
         iconTheme: IconThemeData(color: sh_white),
@@ -574,22 +576,25 @@ return FutureBuilder<String?>(
             children: [
               GestureDetector(
                 onTap: () async {
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
                   prefs.setInt("shiping_index", -2);
                   prefs.setInt("payment_index", -2);
                   // launchScreen(context, CartScreen.tag);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            CartScreen()),).then((value) {   setState(() {
-                    // refresh state
-                  });});
+                    MaterialPageRoute(builder: (context) => CartScreen()),
+                  ).then((value) {
+                    setState(() {
+                      // refresh state
+                    });
+                  });
                 },
                 child: MyBadge(),
-
               ),
-              SizedBox(width: 16,)
+              SizedBox(
+                width: 16,
+              )
             ],
           ),
         ],
@@ -598,13 +603,13 @@ return FutureBuilder<String?>(
       return Stack(children: <Widget>[
         Container(
           color: sh_colorPrimary2,
-            height: 40,
-            width: width,
+          height: 40,
+          width: width,
           // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
         ),
         // Background with gradient
         Container(
-          margin: EdgeInsets.fromLTRB(0, 40, 0, 0),
+            margin: EdgeInsets.fromLTRB(0, 40, 0, 0),
             height: 120,
             width: width,
             child: Image.asset(sh_upper2, fit: BoxFit.fill)
@@ -617,7 +622,7 @@ return FutureBuilder<String?>(
           right: 0.0,
           child: Container(
             // color: sh_green,
-            padding: const EdgeInsets.fromLTRB(15,spacing_xxLarge,15,0),
+            padding: const EdgeInsets.fromLTRB(15, spacing_xxLarge, 15, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -627,19 +632,24 @@ return FutureBuilder<String?>(
                   // mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     InkWell(
-                      onTap: (){
+                      onTap: () {
                         _scaffoldKey.currentState!.openDrawer();
                       },
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(0.0,2,0,2),
-                        child: IconButton(onPressed: () {
-                          _scaffoldKey.currentState!.openDrawer();
-                        }, icon: new Image.asset(sh_newmenu,height: 20,width: 20,),
-                            // tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                        padding: const EdgeInsets.fromLTRB(0.0, 2, 0, 2),
+                        child: IconButton(
+                          onPressed: () {
+                            _scaffoldKey.currentState!.openDrawer();
+                          },
+                          icon: new Image.asset(
+                            sh_newmenu,
+                            height: 20,
+                            width: 20,
+                          ),
+                          // tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
                         ),
                       ),
                     ),
-
                     Padding(
                       padding: const EdgeInsets.all(1.0),
                       child: FutureBuilder<String?>(
@@ -649,10 +659,15 @@ return FutureBuilder<String?>(
                             return Text(
                               profile_name!,
                               style: TextStyle(
-                                  color: sh_white, fontSize: 22, fontFamily: 'TitleCursive'),
+                                  color: sh_white,
+                                  fontSize: 22,
+                                  fontFamily: 'TitleCursive'),
                             );
                           }
-                          return Center(child: CircularProgressIndicator(color: sh_white,));
+                          return Center(
+                              child: CircularProgressIndicator(
+                            color: sh_white,
+                          ));
                         },
                       ),
                     )
@@ -660,22 +675,22 @@ return FutureBuilder<String?>(
                 ),
                 GestureDetector(
                   onTap: () async {
-                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
                     prefs.setInt("shiping_index", -2);
                     prefs.setInt("payment_index", -2);
                     // launchScreen(context, CartScreen.tag);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              CartScreen()),).then((value) {   setState(() {
-                      // refresh state
-                    });});
+                      MaterialPageRoute(builder: (context) => CartScreen()),
+                    ).then((value) {
+                      setState(() {
+                        // refresh state
+                      });
+                    });
                   },
                   child: MyBadge(),
-
                 ),
-
               ],
             ),
           ),
@@ -732,7 +747,6 @@ return FutureBuilder<String?>(
                         child: Icon(
                           Icons.search,
                           color: sh_colorPrimary2,
-
                         ),
                       ),
                       fillColor: sh_text_back,
@@ -762,23 +776,27 @@ return FutureBuilder<String?>(
                     children: [
                       CustomPopupMenu(
                         child: Wrap(
-                          children: [Row(
-                            children: [
-                              Image.asset(
-                                sh_menu_filter,
-                                color: sh_colorPrimary2,
-                                height: 22,
-                                width: 16,
-                                fit: BoxFit.fill,
-                              ),
-                              SizedBox(width: 12,),
-                              Text(
-                                filter_str!,
-                                style: TextStyle(
-                                    color: sh_colorPrimary2, fontSize: 13),
-                              )
-                            ],
-                          )],
+                          children: [
+                            Row(
+                              children: [
+                                Image.asset(
+                                  sh_menu_filter,
+                                  color: sh_colorPrimary2,
+                                  height: 22,
+                                  width: 16,
+                                  fit: BoxFit.fill,
+                                ),
+                                SizedBox(
+                                  width: 12,
+                                ),
+                                Text(
+                                  filter_str!,
+                                  style: TextStyle(
+                                      color: sh_colorPrimary2, fontSize: 13),
+                                )
+                              ],
+                            )
+                          ],
                         ),
                         menuBuilder: () => ClipRRect(
                           borderRadius: BorderRadius.circular(5),
@@ -797,7 +815,7 @@ return FutureBuilder<String?>(
                                           _controller.hideMenu();
                                           setState(() {
                                             toast("Please wait..");
-                                            filter_str=item.title;
+                                            filter_str = item.title;
                                           });
                                         },
                                         child: Container(
@@ -852,13 +870,14 @@ return FutureBuilder<String?>(
                               highlightColor: Colors.grey[100]!,
                               direction: ShimmerDirection.ltr,
                               child: GridView.builder(
-                                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                                      maxCrossAxisExtent: 200,
-                                      crossAxisSpacing: 20,
-                                      mainAxisSpacing: 20),
+                                  gridDelegate:
+                                      SliverGridDelegateWithMaxCrossAxisExtent(
+                                          maxCrossAxisExtent: 200,
+                                          crossAxisSpacing: 20,
+                                          mainAxisSpacing: 20),
                                   itemCount: 8,
                                   itemBuilder: (BuildContext ctx, index) {
-                                    offset +=50;
+                                    offset += 50;
                                     timer = 800 + offset;
                                     // print(timer);
                                     return Padding(
@@ -885,7 +904,6 @@ return FutureBuilder<String?>(
           ),
         ),
         // Positioned to take only AppBar size
-
       ]);
     }
 
@@ -924,11 +942,10 @@ return FutureBuilder<String?>(
         //   ),
         // ),
       ),
-
       body: StreamProvider<NetworkStatus>(
         initialData: NetworkStatus.Online,
         create: (context) =>
-        NetworkStatusService().networkStatusController.stream,
+            NetworkStatusService().networkStatusController.stream,
         child: NetworkAwareWidget(
           onlineChild: setUserForm(),
           offlineChild: Container(
@@ -944,7 +961,6 @@ return FutureBuilder<String?>(
           ),
         ),
       ),
-
       drawer: T2Drawer(),
     );
   }
@@ -961,34 +977,41 @@ class T2DrawerState extends State<T2Drawer> {
   var selectedItem = -1;
 
   Future<List<StaticCategoryModel>?>? fetchAlbumMain;
-  List<StaticCategoryModel> staticcategoryListModel=[];
+  List<StaticCategoryModel> staticcategoryListModel = [];
 
   @override
   void initState() {
     super.initState();
-    fetchAlbumMain=fetchAlbum();
+    fetchAlbumMain = fetchAlbum();
   }
 
   Future<List<StaticCategoryModel>?> fetchAlbum() async {
-    
     try {
-
-staticcategoryListModel.add(new StaticCategoryModel(id: 191,name: "Appliances"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 195,name: "Bags"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 43,name: "Bottoms"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 162,name: "Dresses"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 193,name: "Electronics"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 190,name: "Home Decor"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 189,name: "Jackets\/Hoodies"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 192,name: "Jewellery"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 194,name: "Purses"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 188,name: "Shoes"));
-staticcategoryListModel.add(new StaticCategoryModel(id: 170,name: "Tops"));
-
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 191, name: "Appliances"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 195, name: "Bags"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 43, name: "Bottoms"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 162, name: "Dresses"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 193, name: "Electronics"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 190, name: "Home Decor"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 189, name: "Jackets\/Hoodies"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 192, name: "Jewellery"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 194, name: "Purses"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 188, name: "Shoes"));
+      staticcategoryListModel
+          .add(new StaticCategoryModel(id: 170, name: "Tops"));
 
       return staticcategoryListModel;
     } catch (e) {
-
       print('caught error $e');
     }
   }
@@ -1018,7 +1041,8 @@ staticcategoryListModel.add(new StaticCategoryModel(id: 170,name: "Tops"));
                   shadowColor: Colors.grey.shade200,
                   color: sh_text_back,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(topRight: Radius.circular(36)),
+                    borderRadius:
+                        BorderRadius.only(topRight: Radius.circular(36)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(18.0, 16, 0, 16),
@@ -1029,7 +1053,6 @@ staticcategoryListModel.add(new StaticCategoryModel(id: 170,name: "Tops"));
                             fontFamily: 'Bold')),
                   ),
                 ),
-
                 FutureBuilder<List<StaticCategoryModel>?>(
                   future: fetchAlbumMain,
                   builder: (context, snapshot) {
@@ -1047,24 +1070,32 @@ staticcategoryListModel.add(new StaticCategoryModel(id: 170,name: "Tops"));
                             return GestureDetector(
                                 onTap: () async {
                                   SharedPreferences prefs =
-                                  await SharedPreferences.getInstance();
-                                  prefs.setString('cat_id',
-                                      staticcategoryListModel[index].id.toString());
-                                  prefs.setString('cat_names',
-                                      staticcategoryListModel[index].name.toString());
+                                      await SharedPreferences.getInstance();
+                                  prefs.setString(
+                                      'cat_id',
+                                      staticcategoryListModel[index]
+                                          .id
+                                          .toString());
+                                  prefs.setString(
+                                      'cat_names',
+                                      staticcategoryListModel[index]
+                                          .name
+                                          .toString());
                                   launchScreen(context, ProductlistScreen.tag);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.fromLTRB(
                                       18.0, 12, 12, 12),
-                                  child: Text(  unescape.convert(staticcategoryListModel[index].name!),
+                                  child: Text(
+                                      unescape.convert(
+                                          staticcategoryListModel[index].name!),
                                       style: TextStyle(
                                           color: sh_colorPrimary2,
                                           fontSize: 15.sp,
                                           fontFamily: 'Bold')),
                                 )
-                              // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
-                            );
+                                // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
+                                );
                           },
                         ),
                       );
@@ -1074,81 +1105,87 @@ staticcategoryListModel.add(new StaticCategoryModel(id: 170,name: "Tops"));
                       highlightColor: Colors.grey[100]!,
                       direction: ShimmerDirection.ltr,
                       child: Container(
-                        padding: EdgeInsets.fromLTRB(12,12,50,12),
+                        padding: EdgeInsets.fromLTRB(12, 12, 50, 12),
                         child: Column(
                           children: [
                             Container(
                                 child: InkWell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child:                             Container(
-                                      width: double.infinity,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
-                            SizedBox(height: 10,),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 12.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )),
+                            SizedBox(
+                              height: 10,
+                            ),
                             Container(
                                 child: InkWell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child:                             Container(
-                                      width: double.infinity,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
-                            SizedBox(height: 10,),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 12.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )),
+                            SizedBox(
+                              height: 10,
+                            ),
                             Container(
                                 child: InkWell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child:                             Container(
-                                      width: double.infinity,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
-                            SizedBox(height: 10,),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 12.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )),
+                            SizedBox(
+                              height: 10,
+                            ),
                             Container(
                                 child: InkWell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child:                             Container(
-                                      width: double.infinity,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
-                            SizedBox(height: 10,),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 12.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )),
+                            SizedBox(
+                              height: 10,
+                            ),
                             Container(
                                 child: InkWell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        18.0, 12, 12, 12),
-                                    child:                             Container(
-                                      width: double.infinity,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 12.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )),
                           ],
                         ),
-
                       ),
                     );
                   },
                 ),
-
                 SizedBox(height: 30),
               ],
             ),
@@ -1220,21 +1257,20 @@ class CustomDialog extends StatelessWidget {
       ),
       elevation: 0.0,
       backgroundColor: Colors.transparent,
-      child: dialogContent(context,yourData),
+      child: dialogContent(context, yourData),
     );
   }
 }
 
-dialogContent(BuildContext context,String myimage) {
+dialogContent(BuildContext context, String myimage) {
   return Container(
       width: MediaQuery.of(context).size.width,
       child: Stack(
         children: <Widget>[
           ClipRRect(
             child: Image.network(
-              // t3_ic_pizza_dialog,
-                myimage
-            ),
+                // t3_ic_pizza_dialog,
+                myimage),
             borderRadius: BorderRadius.circular(8),
           ),
           Column(
@@ -1245,7 +1281,10 @@ dialogContent(BuildContext context,String myimage) {
                 onTap: () {
                   Navigator.pop(context);
                 },
-                child: Container(padding: EdgeInsets.all(16), alignment: Alignment.centerRight, child: Icon(Icons.close, color: Colors.white)),
+                child: Container(
+                    padding: EdgeInsets.all(16),
+                    alignment: Alignment.centerRight,
+                    child: Icon(Icons.close, color: Colors.white)),
               ),
 //              Container(
 //                alignment: Alignment.bottomCenter,

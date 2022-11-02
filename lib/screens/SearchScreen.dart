@@ -268,7 +268,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
-
     Imagevw4(int index) {
       if (productListModel[index].images!.length < 1) {
         return ClipRRect(
@@ -368,7 +367,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
                 textColor: sh_textColorPrimary,
                 fontFamily: fontMedium,
                 fontSize: textSizeMedium),
-            text("Try a diffetent keyword", fontFamily: fontMedium,
+            text("Try a different keyword", fontFamily: fontMedium,
                 fontSize: textSizeSMedium)
           ],
         );
@@ -396,10 +395,17 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
                       onTap: () async{
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         prefs.setString('pro_id', productListModel[index].id.toString());
+                        List<String> myimages = [];
+                        for (var i = 0;
+                        productListModel[index].images!.length > i;
+                        i++) {
+                          myimages.add(
+                              productListModel[index].images![i]!.src!);
+                        }
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: productListModel[index].images,)));
+                                builder: (context) => ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: myimages,)));
                       },
                       child: Container(
                         decoration: boxDecoration4(showShadow: false),
@@ -453,7 +459,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
         ),
       )
     ;}
-
 
     Widget setUserForm() {
       AppBar appBar = AppBar(
@@ -538,7 +543,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
     }
 
     return Scaffold(
-
       body: SafeArea(child:
       FutureBuilder<String?>(
         future: fetchaddMain,
@@ -575,5 +579,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=ins
 
       ),
     );
+
   }
 }

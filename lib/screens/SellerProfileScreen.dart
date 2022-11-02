@@ -228,6 +228,112 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       );
     }
 
+    void _openCustomDialog2() {
+      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+          transitionBuilder: (context, a1, a2, widget) {
+            return Transform.scale(
+              scale: a1.value,
+              child: Opacity(
+                opacity: a1.value,
+                child: AlertDialog(
+                  shape: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0)),
+                  title: Center(child: Text('Do you want to report this seller $seller_name?',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 8,),
+
+                      Center(child: Text('Why are you Reporting?',style: TextStyle(color: sh_colorPrimary2,fontSize: 15,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                      SizedBox(height: 16,),
+                      Container(
+                        color: Colors.transparent,
+                        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                        child: TextFormField(
+                          maxLines: 5,
+                          style: TextStyle(
+                              color: sh_colorPrimary2,
+                              fontSize: textSizeMedium,
+                              fontFamily: "Bold"),
+                          decoration: InputDecoration(
+                            filled: true,
+                            hintMaxLines: 5,
+                            fillColor: sh_text_back,
+                            contentPadding:
+                            EdgeInsets.fromLTRB(16, 16, 16, 16),
+                            hintText: "Type Report",
+                            hintStyle:
+                            TextStyle(color: sh_colorPrimary2),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                  color: sh_transparent, width: 0.7),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                  color: sh_transparent, width: 0.7),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16,),
+                      InkWell(
+                        onTap: () async {
+                          // BecameSeller();
+                          toast("Your report has successfully submited");
+
+                          Navigator.of(context, rootNavigator: true).pop();
+                          // setState(() {
+                          //   _isVisible = false;
+                          //   _isVisible_success = true;
+                          // });
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width*.7,
+                          padding: EdgeInsets.only(
+                              top: 6, bottom: 10),
+                          decoration: boxDecoration(
+                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                          child: text("Report",
+                              fontSize: 16.0,
+                              textColor: sh_white,
+                              isCentered: true,
+                              fontFamily: 'Bold'),
+                        ),
+                      ),
+                      SizedBox(height: 10,),
+                      InkWell(
+                        onTap: () async {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width*.7,
+                          padding: EdgeInsets.only(
+                              top: 6, bottom: 10),
+                          decoration: boxDecoration(
+                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                          child: text("Cancel",
+                              fontSize: 16.0,
+                              textColor: sh_colorPrimary2,
+                              isCentered: true,
+                              fontFamily: 'Bold'),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+          transitionDuration: Duration(milliseconds: 200),
+          barrierDismissible: false,
+          barrierLabel: '',
+          context: context,
+          pageBuilder: (context, animation1, animation2) {
+            return Container();
+          });
+    }
 
     Widget setUserForm() {
       AppBar appBar = AppBar(
@@ -356,7 +462,34 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                 print(rating);
                               },
                             ),
+                            SizedBox(height: 10,),
+                            Wrap(
+                              children: [InkWell(
+                                onTap: () async {
+                                  _openCustomDialog2();
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.fromLTRB(
+                                      8,6,6,6),
+                                  decoration: boxDecoration(
+                                      bgColor: sh_colorPrimary2, radius: 4, showShadow: true),
+                                  child:
+                                  Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      text("Report",
+                                          fontSize: 11.0,
+                                          textColor: sh_white,
+                                          isCentered: true,
+                                          fontFamily: 'Bold'),
+                                      Image.asset(sh_report_pro,height: 12,width: 12,fit: BoxFit.fill,)
+                                    ],
+                                  ),
+                                ),
+                              )],
+                            )
                           ],
+
                         ),
                       );
                     }
@@ -403,7 +536,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   },
                 ),
                 SizedBox(
-                  height: 26,
+                  height: 20,
                 ),
                 Container(height: .5,color: sh_colorPrimary2,),
                 SizedBox(height: 16,),
@@ -454,10 +587,17 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                         onTap: () async{
                                           SharedPreferences prefs = await SharedPreferences.getInstance();
                                           prefs.setString('pro_id', productListModel!.products![index]!.data!.id.toString());
+                                          List<String> myimages = [];
+                                          for (var i = 0;
+                                          productListModel!.products![index]!.data!.images!.length > i;
+                                          i++) {
+                                            myimages.add(
+                                                productListModel!.products![index]!.data!.images![i]!.src!);
+                                          }
                                           Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                  builder: (context) => ProductDetailScreen()));
+                                                  builder: (context) => ProductDetailScreen(proName: productListModel!.products![index]!.data!.name,proPrice: productListModel!.products![index]!.data!.price,proImage: myimages,)));
                                         },
                                         child: Container(
                                           decoration: boxDecoration4(showShadow: false),

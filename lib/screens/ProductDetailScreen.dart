@@ -19,6 +19,7 @@ import 'package:thrift/model/GetVariantModel.dart';
 import 'package:thrift/model/MyVariant.dart';
 import 'package:thrift/model/ProductDetailModel.dart';
 import 'package:thrift/model/ProductListModel.dart';
+import 'package:thrift/model/ProductListModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:thrift/model/ProductSellerModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -34,7 +35,7 @@ import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   static String tag = '/ProductDetailScreen';
-  List<ProductListModelImages?>? proImage;
+  List<String>? proImage;
   final String? proName,proPrice;
 
   // ProductListModel? product;
@@ -495,31 +496,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(height: 8,),
-                      InkWell(
-                        onTap: () async {
-                          // BecameSeller();
-                          toast("Your report has successfully submited");
 
-                          Navigator.of(context, rootNavigator: true).pop();
-                          // setState(() {
-                          //   _isVisible = false;
-                          //   _isVisible_success = true;
-                          // });
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
-                          decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
-                          child: text("Report",
-                              fontSize: 16.0,
-                              textColor: sh_white,
-                              isCentered: true,
-                              fontFamily: 'Bold'),
-                        ),
-                      ),
-                      SizedBox(height: 16,),
                       Center(child: Text('Why are you Reporting?',style: TextStyle(color: sh_colorPrimary2,fontSize: 15,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
                       SizedBox(height: 16,),
                       Container(
@@ -554,7 +531,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                       SizedBox(height: 16,),
+                      InkWell(
+                        onTap: () async {
+                          // BecameSeller();
+                          toast("Your report has successfully submited");
 
+                          Navigator.of(context, rootNavigator: true).pop();
+                          // setState(() {
+                          //   _isVisible = false;
+                          //   _isVisible_success = true;
+                          // });
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width*.7,
+                          padding: EdgeInsets.only(
+                              top: 6, bottom: 10),
+                          decoration: boxDecoration(
+                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                          child: text("Report",
+                              fontSize: 16.0,
+                              textColor: sh_white,
+                              isCentered: true,
+                              fontFamily: 'Bold'),
+                        ),
+                      ),
+                      SizedBox(height: 10,),
+                      InkWell(
+                        onTap: () async {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width*.7,
+                          padding: EdgeInsets.only(
+                              top: 6, bottom: 10),
+                          decoration: boxDecoration(
+                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                          child: text("Cancel",
+                              fontSize: 16.0,
+                              textColor: sh_colorPrimary2,
+                              isCentered: true,
+                              fontFamily: 'Bold'),
+                        ),
+                      )
                     ],
                   ),
                 ),
@@ -562,7 +580,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             );
           },
           transitionDuration: Duration(milliseconds: 200),
-          barrierDismissible: true,
+          barrierDismissible: false,
           barrierLabel: '',
           context: context,
           pageBuilder: (context, animation1, animation2) {
@@ -598,7 +616,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                               child: PhotoView(
                                   imageProvider: NetworkImage(
-                                    widget.proImage![index]!.src!,
+                                    widget.proImage![index],
                               ))
                               // Image.network(
                               //     pro_det_model!.images![index]!.src!,
@@ -682,7 +700,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                         child: FadeInImage.assetNetwork(
                             placeholder: 'images/tenor.gif',
-                            image: widget.proImage![index]!.src!,
+                            image: widget.proImage![index],
                             fit: BoxFit.fitWidth),
                       ),
                     ),
@@ -716,12 +734,34 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               bottom:0.0,
               right: 0.0,
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: new IconButton(
-                    icon: new Image.asset(sh_report_pro,height: 20,width: 20,fit: BoxFit.fill,),
-                    onPressed: () {
-                      _openCustomDialog2();
-                    }),
+                padding: const EdgeInsets.fromLTRB(16.0,16,10,18),
+                child:                       InkWell(
+                  onTap: () async {
+                    _openCustomDialog2();
+                  },
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(
+                        6,6,2,6),
+                    decoration: boxDecoration(
+                        bgColor: sh_colorPrimary2, radius: 8, showShadow: true),
+                    child:
+                    Row(
+                      children: [
+                        text("Report",
+                            fontSize: 10.0,
+                            textColor: sh_white,
+                            isCentered: true,
+                            fontFamily: 'Bold'),
+                        Image.asset(sh_report_pro,height: 12,width: 12,fit: BoxFit.fill,)
+                      ],
+                    ),
+                  ),
+                ),
+                // new IconButton(
+                //     icon: new Image.asset(sh_report_pro,height: 20,width: 20,fit: BoxFit.fill,),
+                //     onPressed: () {
+                //       _openCustomDialog2();
+                //     }),
               ),
             )
           ],
@@ -1558,7 +1598,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                                       .getInstance();
 
                                               prefs.setString("variant_id", "");
-
+                                              _insert();
                                               AddCart();
                                               ct_changel = true;
                                               cart_count==1;

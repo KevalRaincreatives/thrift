@@ -186,7 +186,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       newShipmentModel = new NewShipmentModel.fromJson(jsonResponse);
       first2 = false;
       if(prefs.getInt("shiping_index")!=null && prefs.getInt("shiping_index")!=-2){
-        // toast("ad");
         selectedShipingIndex=prefs.getInt("shiping_index");
       }else{
 
@@ -268,10 +267,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       staticpaymentListModel.add(new StaticPaymentModel(id: 'wipay_credit',title: "Credit\/Debit Card"));
 
       if(prefs.getInt("payment_index")!=null && prefs.getInt("payment_index")!=-2){
-        // toast("cd");
         selectedPaymentIndex=prefs.getInt("payment_index");
       }else{
-        // toast("dd");
         selectedPaymentIndex=-1;
       }
       return staticpaymentListModel;
@@ -444,7 +441,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       // setState(() {});
       // if(prefs.getInt('cart_count')!=null){
       // int cart_tot=prefs.getInt('cart_count')!-1;
-      prefs.setInt("cart_count", prefs.getInt('cart_count')!-1);
+      // prefs.setInt("cart_count", prefs.getInt('cart_count')!-1);
       EasyLoading.dismiss();
 
 //      print(cat_model.data);
@@ -544,7 +541,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pro_id = cartPro[0].product_id;
-      // toast(pro_id);
       // print(
       //     "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id");
       Response response = await get(Uri.parse(
@@ -574,6 +570,8 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     void _delete(id) async {
       // Assuming that the number of rows is the id for the last row.
       final rowsDeleted = await dbHelper.delete(id);
+
+
       setState(() {});
       // _showMessageInScaffold('deleted $rowsDeleted row(s): row $id');
     }
@@ -623,12 +621,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       var myprice2 = double.parse(cartPro[pos].line_subtotal!);
       var myprice = myprice2.toStringAsFixed(2);
 
-      return text(currency! + myprice + " " + "USD",
+      return text("\$" + myprice + " " + "USD",
           textColor: sh_app_black, fontFamily: fontBold, fontSize: 14.0);
     }
 
     Cart(List<CartPro> models, int positions, animation, bool rsize) {
-      // toast(positions.toString());
       if (rsize) {
         return Container(
           color: sh_white,
@@ -959,7 +956,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
         myprice2 = double.parse(fl_total.toString());
         var myprice = myprice2.toStringAsFixed(2);
-toast(myprice+"1");
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
@@ -967,7 +963,7 @@ toast(myprice+"1");
                 fontSize: textSizeMedium,
                 fontFamily: fontBold,
                 textColor: sh_colorPrimary2),
-            text(currency! + myprice + " " + "USD",
+            text("\$" + myprice + " " + "USD",
                 fontSize: textSizeMedium,
                 fontFamily: fontBold,
                 textColor: sh_black),
@@ -982,7 +978,6 @@ toast(myprice+"1");
         if(selectedShipingIndex==-1){
           myprice2 = double.parse(fl_total.toString());
           var myprice = myprice2.toStringAsFixed(2);
-          // toast(myprice+"2");
 
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -991,7 +986,7 @@ toast(myprice+"1");
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_colorPrimary2),
-              text(currency! + myprice + " " + "USD",
+              text("\$" + myprice + " " + "USD",
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_black),
@@ -1013,7 +1008,6 @@ toast(myprice+"1");
           myprice2 = double.parse(total_amount!);
           var myprice = myprice2.toStringAsFixed(2);
 
-          // toast(myprice +"3");
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
@@ -1021,7 +1015,7 @@ toast(myprice+"1");
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_colorPrimary2),
-              text(currency! + myprice + " " + "USD",
+              text("\$" + myprice + " " + "USD",
                   fontSize: textSizeMedium,
                   fontFamily: fontBold,
                   textColor: sh_black),
@@ -1517,6 +1511,7 @@ toast(myprice+"1");
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24,0,24,70.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 SizedBox(
@@ -1868,9 +1863,214 @@ toast(myprice+"1");
                       return Text("${snapshot.error}");
                     }
                     // By default, show a loading spinner.
-                    return Center(child: CircularProgressIndicator());
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+
+                        Row(
+                          mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Delivery",
+                              style: TextStyle(
+                                  color: sh_colorPrimary2,
+                                  fontSize: 14,
+                                  fontFamily: fontBold),
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "No",
+                                  style: TextStyle(
+                                      color: sh_colorPrimary2,
+                                      fontSize: 14,
+                                      fontFamily: fontBold),
+                                ),
+                                Switch(
+                                  value: true,
+                                  onChanged: (value)  {
+
+                                  },
+                                  activeTrackColor: sh_btn_color,
+                                  activeColor: sh_colorPrimary2,
+                                ),
+                                Text(
+                                  "Yes",
+                                  style: TextStyle(
+                                      color: sh_colorPrimary2,
+                                      fontSize: 14,
+                                      fontFamily: fontBold),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                        Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          enabled: true,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemBuilder: (_, __) => Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Radio(
+                                    value: 1,
+                                    groupValue: 1,
+                                    onChanged: (int? value) async{},
+
+                                    activeColor:
+                                    sh_colorPrimary2,
+                                    // hoverColor: sh_btn_color,
+
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Container(
+                                          width: double.infinity,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                                        ),
+                                        Container(
+                                          width: double.infinity,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                                        ),
+                                        Container(
+                                          width: 40.0,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            itemCount: 1,
+                          ),
+                        ),
+                        text("Payment Method",
+                            fontSize: textSizeSMedium,
+                            fontFamily: fontBold,
+                            textColor: sh_colorPrimary2),
+                        SizedBox(
+                          height: spacing_middle,
+                        ),
+
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Radio(
+                                value: 1,
+                                groupValue: 1,
+                                onChanged: (int? value) {
+
+                                },
+                                activeColor: sh_colorPrimary2),
+                            Text("Credit/Debit Card"),
+                          ],
+                        ),
+                        SizedBox(
+                          height: spacing_middle,
+                        ),
+                        text("Delivered to",
+                            fontSize: textSizeSMedium,
+                            fontFamily: fontBold,
+                            textColor: sh_colorPrimary2),
+                        Container(
+                          alignment: Alignment.center,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'No Address Found',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: sh_colorPrimary2,
+                                      fontFamily: 'Bold',
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(
+                                  height: 12,
+                                ),
+                                InkWell(
+                                  onTap: () async {
+
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.all(6.0),
+
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: sh_colorPrimary2),
+                                      color: sh_white,
+                                      borderRadius: BorderRadius.circular(10.0),
+                                      // boxShadow: true
+                                    ),
+
+                                    child: text("Add New Address",
+                                        textColor: sh_colorPrimary2,
+                                        isCentered: true,
+                                        fontSize: 12.0,
+                                        fontFamily: 'Bold'),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    text("Total",
+                                        fontSize: textSizeMedium,
+                                        fontFamily: fontBold,
+                                        textColor: sh_colorPrimary2),
+                                    text("\$" + '55.00' + " " + 'USD',
+                                        fontSize: textSizeMedium,
+                                        fontFamily: fontBold,
+                                        textColor: sh_black),
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  padding: EdgeInsets.only(top: 6, bottom: 10),
+                                  decoration: boxDecoration(
+                                      bgColor: sh_btn_color, radius: 10, showShadow: true),
+                                  child: text("Checkout",
+                                      fontSize: 16.0,
+                                      textColor: sh_colorPrimary2,
+                                      isCentered: true,
+                                      fontFamily: 'Bold'),
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+
+                      ],
+                    );
                   },
                 ),
+
               ],
             ),
           ),
@@ -2297,7 +2497,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
     var myprice2 = double.parse(fl_total.toString());
     var myprice = myprice2.toStringAsFixed(2);
 
-    return text("Total: " + currency! + myprice,
+    return text("Total: " + "\$" + myprice,
         textColor: sh_app_black,
         fontFamily: 'Bold',
         fontSize: textSizeLargeMedium);
@@ -2306,7 +2506,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
   CartFinalTotal() {
     var myprice2 = double.parse(fl_total.toString());
     var myprice = myprice2.toStringAsFixed(2);
-    return text("Total: " + currency! + myprice,
+    return text("Total: " + "\$" + myprice,
         textColor: sh_app_black,
         fontFamily: 'Bold',
         fontSize: textSizeLargeMedium);

@@ -556,7 +556,7 @@ class ProductListSellerModelProductsDataAttributes {
   }
 }
 
-class ProductListSellerModelProductsDataImages {
+class ProductListModelImages {
 /*
 {
   "id": 2839,
@@ -579,7 +579,7 @@ class ProductListSellerModelProductsDataImages {
   String? name;
   String? alt;
 
-  ProductListSellerModelProductsDataImages({
+  ProductListModelImages({
     this.id,
     this.dateCreated,
     this.dateCreatedGmt,
@@ -589,7 +589,7 @@ class ProductListSellerModelProductsDataImages {
     this.name,
     this.alt,
   });
-  ProductListSellerModelProductsDataImages.fromJson(Map<String, dynamic> json) {
+  ProductListModelImages.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toInt();
     dateCreated = json['date_created']?.toString();
     dateCreatedGmt = json['date_created_gmt']?.toString();
@@ -884,7 +884,7 @@ class ProductListSellerModelProductsData {
   int? parentId;
   String? purchaseNote;
   List<ProductListModelCategories?>? categories;
-  List<ProductListSellerModelProductsDataImages?>? images;
+  List<ProductListModelImages?>? images;
   int? menuOrder;
   String? priceHtml;
   List<int?>? relatedIds;
@@ -1006,9 +1006,9 @@ class ProductListSellerModelProductsData {
     purchaseNote = json['purchase_note']?.toString();
     if (json['images'] != null) {
     final v = json['images'];
-    final arr0 = <ProductListSellerModelProductsDataImages>[];
+    final arr0 = <ProductListModelImages>[];
     v.forEach((v) {
-    arr0.add(ProductListSellerModelProductsDataImages.fromJson(v));
+    arr0.add(ProductListModelImages.fromJson(v));
     });
     images = arr0;
     }

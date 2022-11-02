@@ -26,7 +26,7 @@ class SettingFragment extends StatefulWidget {
   _SettingFragmentState createState() => _SettingFragmentState();
 }
 
-class _SettingFragmentState extends State<SettingFragment> {
+class _SettingFragmentState extends State<SettingFragment> with AutomaticKeepAliveClientMixin<SettingFragment>{
   bool _isVisible = true;
   bool _isVisible_success = false;
   String? user_selected_country;
@@ -44,6 +44,9 @@ class _SettingFragmentState extends State<SettingFragment> {
     countrydetail = fetchcountry();
     // fetchaddMain=fetchadd();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   Future<String?> fetchadd() async {
     try {

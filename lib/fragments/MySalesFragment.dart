@@ -22,7 +22,7 @@ class MySalesFragment extends StatefulWidget {
   _MySalesFragmentState createState() => _MySalesFragmentState();
 }
 
-class _MySalesFragmentState extends State<MySalesFragment> {
+class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAliveClientMixin<MySalesFragment>{
   OrderListModel? orderListModel;
   String? productPerRow,
       showDiscountPrice,
@@ -36,6 +36,8 @@ class _MySalesFragmentState extends State<MySalesFragment> {
     fetchOrderMain=fetchOrder();
 
   }
+  @override
+  bool get wantKeepAlive => true;
 
   Future<OrderListModel?> fetchOrder() async {
     try {

@@ -512,9 +512,15 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                     // Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
                     // SharedPreferences prefs = await SharedPreferences.getInstance();
                     prefs.setString('pro_id', productListModel!.products![index]!.data!.id.toString());
-
+                    List<String> myimages = [];
+                    for (var i = 0;
+                    productListModel!.products![index]!.data!.images!.length > i;
+                    i++) {
+                      myimages.add(
+                          productListModel!.products![index]!.data!.images![i]!.src!);
+                    }
                     Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => productListModel!.products![index]!.data!.stockStatus=="instock" ? ProductUpdateScreen() : ProductDetailScreen()),
+                      MaterialPageRoute(builder: (context) => productListModel!.products![index]!.data!.stockStatus=="instock" ? ProductUpdateScreen() : ProductDetailScreen(proName: productListModel!.products![index]!.data!.name,proPrice: productListModel!.products![index]!.data!.price,proImage: myimages)),
                     ).then((_) => setState(() {}));
                   },
                   child: Container(

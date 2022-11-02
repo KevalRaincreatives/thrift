@@ -31,8 +31,11 @@ class AccountFragment extends StatefulWidget {
   _AccountFragmentState createState() => _AccountFragmentState();
 }
 
-class _AccountFragmentState extends State<AccountFragment> {
+class _AccountFragmentState extends State<AccountFragment> with AutomaticKeepAliveClientMixin<AccountFragment>{
   CheckUserModel? checkUserModel;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {

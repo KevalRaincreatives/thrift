@@ -345,10 +345,17 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
                                   SharedPreferences prefs = await SharedPreferences.getInstance();
                                   prefs.setString(
                                       'pro_id', productListModel[index].id.toString());
+                                  List<String> myimages = [];
+                                  for (var i = 0;
+                                  productListModel[index].images!.length > i;
+                                  i++) {
+                                    myimages.add(
+                                        productListModel[index].images![i]!.src!);
+                                  }
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: productListModel[index].images,)));
+                                          builder: (context) => ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: myimages,)));
                                 },
                                 child: Container(
                                   width: w * .9,

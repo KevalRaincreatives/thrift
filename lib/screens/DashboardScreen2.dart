@@ -59,7 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   CheckUserModel? checkUserModel;
   int timer = 800, offset = 0;
   Future<String?>? fetchuserstatus;
-  String? is_store_owner;
+String? is_store_owner;
 
   @override
   void initState() {
@@ -605,7 +605,7 @@ class T2DrawerState extends State<T2Drawer> {
       onTap: () async{
         toast(pos.toString());
         if(pos==1){
-          launchScreen(context, MyProfileScreen.tag);
+         launchScreen(context, MyProfileScreen.tag);
         }else if(pos==2){
           launchScreen(context, OrderListScreen.tag);
         }else if(pos==3){

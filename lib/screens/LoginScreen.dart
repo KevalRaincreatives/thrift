@@ -144,13 +144,36 @@ class _LoginScreenState extends State<LoginScreen> {
         cart_model = new CartModel.fromJson(jsonResponse);
         if (cart_model!.cart == null) {
           prefs.setInt("cart_count", 0);
+          await dbHelper.cleanDatabase();
         }else if (cart_model!.cart!.length == 0) {
           prefs.setInt("cart_count", 0);
+          await dbHelper.cleanDatabase();
         }else{
           prefs.setInt("cart_count", cart_model!.cart!.length);
+
+          await dbHelper.cleanDatabase();
+          for (var i = 0; i < cart_model!.cart!.length; i++) {
+            Map<String, dynamic> row = {
+              DatabaseHelper.columnProductId: cart_model!.cart![i]!.productId.toString(),
+              DatabaseHelper.columnProductName: cart_model!.cart![i]!.productName.toString(),
+              DatabaseHelper.columnProductImage:
+              cart_model!.cart![i]!.productImage!.toString(),
+              DatabaseHelper.columnVariationId: "",
+              DatabaseHelper.columnVariationName: "",
+              DatabaseHelper.columnVariationValue: "",
+              DatabaseHelper.columnQuantity: "1",
+              DatabaseHelper.columnLine_subtotal: cart_model!.cart![i]!.lineSubtotal.toString(),
+              DatabaseHelper.columnLine_total: cart_model!.cart![i]!.lineTotal.toString(),
+            };
+            CartPro car = CartPro.fromJson(row);
+            final id = await dbHelper.insert(car);
+          }
+
+
+
         }
       }
-SaveToken();
+// SaveToken();
 
       return cart_model;
     } catch (e) {

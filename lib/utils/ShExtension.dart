@@ -123,6 +123,14 @@ BoxDecoration boxDecoration({double radius = spacing_middle, Color color = Color
       borderRadius: BorderRadius.all(Radius.circular(radius)));
 }
 
+BoxDecoration boxDecoration8({double radius = spacing_middle, Color color = Colors.transparent, Color bgColor = sh_white, var showShadow = false}) {
+  return BoxDecoration(
+      color: bgColor,
+      boxShadow: showShadow ? [BoxShadow(color: sh_shadow_color, blurRadius: 10, spreadRadius: 2)] : [BoxShadow(color: Colors.transparent)],
+      border: Border.all(color: color),
+      borderRadius: BorderRadius.all(Radius.circular(radius)));
+}
+
 BoxDecoration boxDecoration4({double radius = 0, Color color = Colors.transparent, Color bgColor = sh_white, var showShadow = false}) {
   return BoxDecoration(
       color: bgColor,
