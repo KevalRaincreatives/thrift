@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/CouponErrorModel.dart';
 import 'package:thrift/model/CouponModel.dart';
 import 'package:thrift/screens/OfferModel.dart';
@@ -11,7 +11,7 @@ import 'package:http/http.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
-
+import 'package:thrift/api_service/Url.dart';
 class OfferListScreen extends StatefulWidget {
   final int? cat_title;
 
@@ -38,7 +38,7 @@ class _OfferListScreenState extends State<OfferListScreen> {
       };
 
       Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/coupons'),
+          Uri.parse('${Url.BASE_URL}wp-json/wc/v3/coupons'),
           headers: headers);
 
       final jsonResponse = json.decode(response.body);
@@ -75,7 +75,7 @@ class _OfferListScreenState extends State<OfferListScreen> {
       print(msg);
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/apply_coupon'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/apply_coupon'),
           headers: headers,
           body: msg);
       print('Response status2: ${response.statusCode}');
@@ -88,7 +88,7 @@ class _OfferListScreenState extends State<OfferListScreen> {
         Navigator.pop(context, 0);
       } else {
         couponErrorModel = new CouponErrorModel.fromJson(jsonResponse);
-        toast(couponErrorModel!.error);
+        toast(couponErrorModel!.error!);
       }
       EasyLoading.dismiss();
 

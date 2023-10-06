@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
@@ -35,7 +35,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final msg = jsonEncode({"email": email});
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/wooapp_reset_password'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/wooapp_reset_password'),
           headers: headers,
           body: msg);
 

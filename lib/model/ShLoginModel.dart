@@ -85,6 +85,7 @@ class ShLoginModelData {
   String? token;
   int? is_store_owner;
   String? country;
+  String? verified;
 
   ShLoginModelData({
     this.ID,
@@ -99,7 +100,8 @@ class ShLoginModelData {
     this.displayName,
     this.token,
     this.is_store_owner,
-    this.country
+    this.country,
+    this.verified
   });
   ShLoginModelData.fromJson(Map<String, dynamic> json) {
     ID = json["ID"]?.toString();
@@ -115,6 +117,7 @@ class ShLoginModelData {
     token = json["token"]?.toString();
     is_store_owner= json["is_store_owner"];
     country= json["country"];
+    verified= json["verified"];
   }
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = Map<String, dynamic>();
@@ -131,6 +134,7 @@ class ShLoginModelData {
     data["token"] = token;
     data["is_store_owner"]=is_store_owner;
     data["country"]=country;
+    data["verified"]=verified;
     return data;
   }
 }

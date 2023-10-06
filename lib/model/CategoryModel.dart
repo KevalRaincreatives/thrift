@@ -48,7 +48,7 @@ class CategoryModel {
     this.success,
     this.categories,
   });
-  CategoryModel.fromJson(Map<String, dynamic> json) {
+  CategoryModel.fromJson(Map<dynamic, dynamic> json) {
     success = json['success'];
     if (json['categories'] != null) {
       final v = json['categories'];

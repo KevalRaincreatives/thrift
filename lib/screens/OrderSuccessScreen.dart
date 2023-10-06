@@ -1,7 +1,8 @@
 import 'dart:convert';
-
+import 'package:flutter_html/flutter_html.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
 import 'package:thrift/screens/OrderListScreen.dart';
@@ -12,6 +13,9 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
+
+import '../database/database_hepler.dart';
+import '../provider/home_product_provider.dart';
 
 
 class OrderSuccessScreen extends StatefulWidget {
@@ -25,11 +29,15 @@ class OrderSuccessScreen extends StatefulWidget {
 class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
   String? order_proname,order_proprice,order_proimage;
   Future<String?>? fetchaddMain;
+  final dbHelper = DatabaseHelper.instance;
 
   @override
   void initState() {
     AddPushNotification();
     fetchaddMain=fetchadd();
+    final postMdl = Provider.of<HomeProductListProvider>(context, listen: false);
+    postMdl.getHomeProduct('Newest to Oldest',true);
+    dbHelper.cleanDatabase();
     super.initState();
   }
 
@@ -49,7 +57,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
       final msg = jsonEncode({"order_id": ord_id,"seller_id": fnl_seller});
 
       var response = await http.post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/send_push_notification_order'),headers: headers,
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/send_push_notification_order'),headers: headers,
           body: msg
       );
 
@@ -80,7 +88,13 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
   }
 
   Future<bool> _onWillPop()  async{
-    launchScreen(context, DashboardScreen.tag);
+    // launchScreen(context, DashboardScreen.tag);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+          builder: (BuildContext context) => DashboardScreen(selectedTab: 0,)),
+      ModalRoute.withName('/DashboardScreen'),
+    );
     return false;
   }
 
@@ -205,15 +219,31 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                         SizedBox(
                           height: 10,
                         ),
-                        Text(
-                          order_proname!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                        Html(
+                          data: order_proname!,
+                          style: {
+                            "body": Style(
+                              maxLines: 2,
+                              textOverflow: TextOverflow.ellipsis,
+                              // alignment: Alignment.center,
+                              textAlign: TextAlign.center,
+                              margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                              fontSize: FontSize(16.0),
+                              fontWeight: FontWeight.bold,
                               color: sh_colorPrimary2,
                               fontFamily: fontBold,
-                              fontSize: textSizeMedium),
+                            ),
+                          },
                         ),
+                        // Text(
+                        //   order_proname!,
+                        //   maxLines: 2,
+                        //   overflow: TextOverflow.ellipsis,
+                        //   style: TextStyle(
+                        //       color: sh_colorPrimary2,
+                        //       fontFamily: fontBold,
+                        //       fontSize: textSizeMedium),
+                        // ),
                         SizedBox(
                           height: 4,
                         ),
@@ -344,8 +374,16 @@ launchScreen(context, DashboardScreen.tag);
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        launchScreen(context, DashboardScreen.tag);
+                      child: IconButton(onPressed: () async{
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        prefs.setInt("cart_count", 0);
+                        Navigator.of(context).pop(ConfirmAction.CANCEL);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OrderListScreen(),
+                          ),
+                        );
                       }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 

@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/OrderListModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -55,7 +56,7 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
       };
 
       Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_vendor_order'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/view_vendor_order'),
           headers: headers);
 
       final jsonResponse = json.decode(response.body);
@@ -64,7 +65,8 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
       orderListModel = new OrderListModel.fromJson(jsonResponse);
 
       return orderListModel;
-    } catch (e) {
+    } on Exception catch (e) {
+
       print('caught error $e');
     }
   }
@@ -482,7 +484,6 @@ class _VendorOrderListScreenState extends State<VendorOrderListScreen> {
         ),
       ]);
     }
-
 
     return Scaffold(
 

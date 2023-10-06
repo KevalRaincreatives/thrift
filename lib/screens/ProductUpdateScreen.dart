@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as i;
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
-
+import 'package:firebase_performance/firebase_performance.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +13,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 import 'package:thrift/model/AddProCategoryModel.dart';
 import 'package:thrift/model/AddProMetaModel.dart';
@@ -36,6 +38,9 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
+
+import '../provider/home_product_provider.dart';
+import '../provider/seller_profile_provider.dart';
 
 
 class ProductUpdateScreen extends StatefulWidget {
@@ -82,7 +87,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
   int? cart_count;
   var maxLength = 500;
   var textLength = 0;
-
+  Trace traceUpdateProduct = FirebasePerformance.instance.newTrace('UpdateProduct');
+  Trace traceAddProductImage = FirebasePerformance.instance.newTrace('add_product_images');
+  Trace traceEditEstPrice = FirebasePerformance.instance.newTrace('edit_estimated_retail_price');
 
   @override
   void initState() {
@@ -118,15 +125,15 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woo_product_categories"));
+              "${Url.BASE_URL}wp-json/wooapp/v3/woo_product_categories"));
         } finally {
           client.close();
         }
         // categoryListModel!.categories!.clear();
         categoryListModel2.clear();
 
-        print('ProductUpdateScreen products Response status2: ${response.statusCode}');
-        print('ProductUpdateScreen products Response body2: ${response.body}');
+        print('ProductUpdateScreen woo_product_categories Response status2: ${response.statusCode}');
+        print('ProductUpdateScreen woo_product_categories Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         categoryListModel = new CategoryModel.fromJson(jsonResponse);
 
@@ -162,9 +169,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       fetchAttribute();
 
       return categoryListModel2;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
-//      return orderListModel;
+
       print('caught error $e');
     }
   }
@@ -180,7 +187,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/attributes"));
+              "${Url.BASE_URL}wp-json/wooapp/v3/attributes"));
         } finally {
           client.close();
         }
@@ -199,9 +206,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         // _form==null;
       });
       return attributeModel;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
-//      return orderListModel;
+
       print('caught error $e');
     }
   }
@@ -220,7 +227,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       };
 
       var response = await http.get(Uri.parse(
-          'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_estimated_retail_price?product_id=$pro_id'),headers: headers);
+          '${Url.BASE_URL}wp-json/wooapp/v3/view_estimated_retail_price?product_id=$pro_id'),headers: headers);
       final jsonResponse = json.decode(response.body);
       print('ProductUpdateScreen view_estimated_retail_price Response status2: ${response.statusCode}');
       print('ProductUpdateScreen view_estimated_retail_price Response body2: ${response.body}');
@@ -229,13 +236,15 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
 
 
       return estPriceModel;
-    } catch (e) {
+    } on Exception catch (e) {
+
 
       print('caught error $e');
     }
   }
 
   Future<CreateProModel?> AddProduct() async {
+    await traceUpdateProduct.start();
     EasyLoading.show(status: 'Please wait...');
     try {
       addProMetaModel
@@ -285,7 +294,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
 
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id?_method=PUT'),
+              '${Url.BASE_URL}wp-json/wc/v3/products/$pro_id?_method=PUT'),
           body: body,
           headers: headers);
 
@@ -297,15 +306,17 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       // EasyLoading.dismiss();
       toast("Product Update Successfully");
       ItemAdd(pro_id!);
-
+      await traceUpdateProduct.stop();
       return createProModel;
-    } catch (e) {
-      EasyLoading.dismiss();
+    }   catch (e) {
+      await traceUpdateProduct.stop();
+
       print('caught error $e');
     }
   }
 
   Future<String?> AddEstPrice(String prodId) async {
+    await traceEditEstPrice.start();
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
@@ -330,7 +341,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       print(body);
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/edit_estimated_retail_price'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/edit_estimated_retail_price'),
           body: body,
           headers: headers);
 
@@ -342,17 +353,20 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
 
       // EasyLoading.dismiss();
       // toast("Image Uploaded Successfully");
-
+      await traceEditEstPrice.stop();
       Navigator.pop(context);
 
       return "cat_model";
-    } catch (e) {
+    }on Exception catch (e) {
+      await traceEditEstPrice.stop();
       EasyLoading.dismiss();
+
       print('caught error $e');
     }
   }
 
   Future<String?> AddPhoto(String prodId) async {
+    await traceAddProductImage.start();
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
@@ -378,7 +392,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       print(body);
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_product_images'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/add_product_images'),
           body: body,
           headers: headers);
 
@@ -392,10 +406,17 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
         EasyLoading.dismiss();
         Navigator.pop(context);
       }
+      final postMdl = Provider.of<HomeProductListProvider>(context, listen: false);
+      postMdl.getHomeProduct('Newest to Oldest',true);
 
+      final postMdl2 = Provider.of<SellerProfileProvider>(context, listen: false);
+      postMdl2.getProduct('Newest to Oldest');
+      await traceAddProductImage.stop();
       return "cat_model";
-    } catch (e) {
+    } on Exception catch (e) {
+      await traceAddProductImage.stop();
       EasyLoading.dismiss();
+
       print('caught error $e');
     }
   }
@@ -426,7 +447,7 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       print(body);
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/delete_product_image'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/delete_product_image'),
           body: body,
           headers: headers);
 
@@ -447,8 +468,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       // Navigator.pop(context);
 
       return "cat_model";
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
+
       print('caught error $e');
     }
   }
@@ -476,9 +498,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
       String? pro_id = prefs.getString('seller_pro_id');
       // toast(pro_id);
       print(
-          "https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id");
+          "${Url.BASE_URL}/wp-json/wc/v3/products/$pro_id");
       var response = await http.get(Uri.parse(
-          'https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id'));
+          '${Url.BASE_URL}/wp-json/wc/v3/products/$pro_id'));
       final jsonResponse = json.decode(response.body);
       print('ProductUpdateScreen products Response status2: ${response.statusCode}');
       print('ProductUpdateScreen products Response body2: ${response.body}');
@@ -506,8 +528,9 @@ class _ProductUpdateScreenState extends State<ProductUpdateScreen> {
 
 
       return pro_det_model;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
+
       print('caught error $e');
     }
   }

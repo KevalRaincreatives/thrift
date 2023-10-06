@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sizer/sizer.dart';
 import 'package:thrift/database/CartPro.dart';
@@ -104,7 +104,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       if (prefs.getString("address_pos") == null) {
         address_pos = 0;
       } else {
-        address_pos = prefs.getString("address_pos").toInt();
+        address_pos = int.parse(prefs.getString("address_pos")!);
       }
       Map<String, String> headers = {
         'Content-Type': 'application/json',
@@ -115,10 +115,10 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await get(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/list_shipping_addres'),
           headers: headers);
       print(
-          "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres");
+          "${Url.BASE_URL}wp-json/wooapp/v3/list_shipping_addres");
 
       print('CartScreen list_shipping_addres Response status2: ${response.statusCode}');
       print('CartScreen list_shipping_addres Response body2: ${response.body}');
@@ -169,7 +169,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await get(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_shipping_methods?country=$user_country'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/get_shipping_methods?country=$user_country'),
           headers: headers);
       // EasyLoading.dismiss();
       print('CartScreen get_shipping_methods Response status2: ${response.statusCode}');
@@ -250,7 +250,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_shipping_charge'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/add_shipping_charge'),
           headers: headers,
           body: msg);
       EasyLoading.dismiss();
@@ -294,7 +294,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await get(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_payment_method/?country=$user_country'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/list_payment_method/?country=$user_country'),
           headers: headers);
       final jsonResponse = json.decode(response.body);
 
@@ -368,7 +368,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
         Response response = await get(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
+                '${Url.BASE_URL}wp-json/wooapp/v3/woocart?country=$user_country'),
             headers: headers);
 
         print('CartScreen woocart Response status2: ${response.statusCode}');
@@ -435,7 +435,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/remove_cart_item'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/remove_cart_item'),
           headers: headers,
           body: msg);
       print('CartScreen remove_cart_item Response status2: ${response.statusCode}');
@@ -484,7 +484,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
         response = await post(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/remove_cart_item'),
+                '${Url.BASE_URL}wp-json/wooapp/v3/remove_cart_item'),
             headers: headers,
             body: msg);
       } else {
@@ -496,7 +496,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         print(msg);
         response = await post(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/update_cart'),
+                '${Url.BASE_URL}wp-json/wooapp/v3/update_cart'),
             headers: headers,
             body: msg);
       }
@@ -541,7 +541,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/apply_coupon'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/apply_coupon'),
           headers: headers,
           body: msg);
       print('CartScreen apply_coupon Response status2: ${response.statusCode}');
@@ -555,7 +555,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         setState(() {});
       } else {
         couponErrorModel = new CouponErrorModel.fromJson(jsonResponse);
-        toast(couponErrorModel!.error);
+        toast(couponErrorModel!.error!);
       }
       EasyLoading.dismiss();
 
@@ -586,7 +586,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/remove_coupon'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/remove_coupon'),
           headers: headers,
           body: msg);
       print('CartScreen remove_coupon Response status2: ${response.statusCode}');
@@ -655,9 +655,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       String? pro_id = cat_model!.cart![0]!.productId;
       // toast(pro_id);
       // print(
-      //     "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id");
+      //     "${Url.BASE_URL}wp-json/wooapp/v3/get_product_seller?product_id=$pro_id");
       Response response = await get(Uri.parse(
-          'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id'));
+          '${Url.BASE_URL}wp-json/wooapp/v3/get_product_seller?product_id=$pro_id'));
       final jsonResponse = json.decode(response.body);
 
       print('CartScreen get_product_seller Response status2: ${response.statusCode}');

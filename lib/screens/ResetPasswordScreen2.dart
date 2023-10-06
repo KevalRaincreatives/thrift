@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
@@ -39,7 +39,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       jsonEncode({"email": email, "otp": code, "new_password": password});
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/set_new_password'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/set_new_password'),
           headers: headers,
           body: msg);
 

@@ -1,11 +1,12 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/ReviewModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
+import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
@@ -45,10 +46,10 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
       String? seller_id = prefs.getString('seller_id');
       // toast(cat_id);
 
-      print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id");
+      print("${Url.BASE_URL}wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id");
       var response;
         response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
+            "${Url.BASE_URL}wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
       print('SellerReviewScreen seller_reviews Response status2: ${response.statusCode}');
       print('SellerReviewScreen seller_reviews Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
@@ -264,9 +265,22 @@ class _SellerReviewScreenState extends State<SellerReviewScreen> {
           GestureDetector(
             onTap: () async{
               SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.setInt("shiping_index", -2);
-              prefs.setInt("payment_index", -2);
-              launchScreen(context, CartScreen.tag);
+              String? UserId = prefs.getString('UserId');
+              String? token = prefs.getString('token');
+              if (UserId != null && UserId != '') {
+                prefs.setInt("shiping_index", -2);
+                prefs.setInt("payment_index", -2);
+                launchScreen(context, CartScreen.tag);
+              }else{
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginScreen(),
+                  ),
+                );
+              }
+
+
             },
             child: Image.asset(
               sh_new_cart,

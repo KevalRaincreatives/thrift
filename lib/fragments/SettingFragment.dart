@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/CheckUserModel.dart';
 import 'package:thrift/model/UserDelModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
+import 'package:thrift/provider/home_product_provider.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/CustomerSupportScreen.dart';
 import 'package:thrift/screens/FAQScreen.dart';
@@ -18,7 +20,10 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart' ;
 import 'package:badges/badges.dart';
-
+import 'package:thrift/api_service/Url.dart';
+import 'package:provider/provider.dart';
+import '../utils/ShExtension.dart';
+import '../database/database_hepler.dart';
 class SettingFragment extends StatefulWidget {
   const SettingFragment({Key? key}) : super(key: key);
 
@@ -31,17 +36,19 @@ class _SettingFragmentState extends State<SettingFragment> with AutomaticKeepAli
   bool _isVisible_success = false;
   String? user_selected_country;
   List<CountryParishModel>? countryModel;
-  CountryParishModel? countryNewModel;
+  // CountryParishModel? countryNewModel;
   CountryParishModelDataCountries? selectedValue;
-  Future<CountryParishModel?>? countrydetail;
+  // Future<CountryParishModel?>? countrydetail;
   CheckUserModel? checkUserModel;
   Future<String?>? fetchaddMain;
   UserDelModel? userDelModel;
-
+  final dbHelper = DatabaseHelper.instance;
   @override
   void initState() {
     super.initState();
-    countrydetail = fetchcountry();
+    final postMdl = Provider.of<HomeProductListProvider>(context, listen: false);
+    postMdl.getHomeProduct('Newest to Oldest',false);
+    // countrydetail = fetchcountry();
     // fetchaddMain=fetchadd();
   }
 
@@ -73,7 +80,7 @@ class _SettingFragmentState extends State<SettingFragment> with AutomaticKeepAli
         };
 
         Response response = await get(
-            Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/empty_cart'),
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/empty_cart'),
             headers: headers);
 
 
@@ -92,10 +99,10 @@ class _SettingFragmentState extends State<SettingFragment> with AutomaticKeepAli
 
 //      print(cat_model.data);
       return "cat_model";
-    } catch (e) {
+    }on Exception catch (e) {
       EasyLoading.dismiss();
+
       print('caught error $e');
-      // return cat_model;
     }
   }
 
@@ -116,7 +123,7 @@ class _SettingFragmentState extends State<SettingFragment> with AutomaticKeepAli
         };
 
         Response response = await get(
-            Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/thrift_user_activation?user_id=$UserId'),
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/thrift_user_activation?user_id=$UserId'),
             headers: headers);
 
 
@@ -124,11 +131,11 @@ class _SettingFragmentState extends State<SettingFragment> with AutomaticKeepAli
         print('SettingFragment thrift_user_activation Response body2: ${response.body}');
         final jsonResponse = json.decode(response.body);
         userDelModel = new UserDelModel.fromJson(jsonResponse);
-if(userDelModel!.success!){
-  _openCustomDialog5();
-}else{
-  toast("Something went wrong");
-}
+        if(userDelModel!.success!){
+          _openCustomDialog5();
+        }else{
+          toast("Something went wrong");
+        }
 
       }
 
@@ -139,35 +146,35 @@ if(userDelModel!.success!){
 
 //      print(cat_model.data);
       return userDelModel;
-    } catch (e) {
+    }on Exception catch (e) {
       EasyLoading.dismiss();
+
       print('caught error $e');
-      // return cat_model;
     }
   }
 
-  Future<CountryParishModel?> fetchcountry() async {
-    try {
-      Map<String, String> headers = {'Content-Type': 'application/json'};
-
-      // Response response =
-      // await get('http://54.245.123.190//gotspotz//wp-json/v3/woocountries');
-
-      var response = await http
-          .get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/countries'));
-
-      print('SettingFragment countries Response status2: ${response.statusCode}');
-      print('SettingFragment countries Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-      countryNewModel = new CountryParishModel.fromJson(jsonResponse);
-      print('Caught error ');
-
-      return countryNewModel;
-//      return jsonResponse.map((job) => new CountryModel.fromJson(job)).toList();
-    } catch (e) {
-      print('Caught error $e');
-    }
-  }
+//   Future<CountryParishModel?> fetchcountry() async {
+//     try {
+//       Map<String, String> headers = {'Content-Type': 'application/json'};
+//
+//       // Response response =
+//       // await get('http://54.245.123.190//gotspotz//wp-json/v3/woocountries');
+//
+//       var response = await http
+//           .get(Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/countries'));
+//
+//       print('SettingFragment countries Response status2: ${response.statusCode}');
+//       print('SettingFragment countries Response body2: ${response.body}');
+//       final jsonResponse = json.decode(response.body);
+//       countryNewModel = new CountryParishModel.fromJson(jsonResponse);
+//       print('Caught error ');
+//
+//       return countryNewModel;
+// //      return jsonResponse.map((job) => new CountryModel.fromJson(job)).toList();
+//     } catch (e) {
+//       print('Caught error $e');
+//     }
+//   }
 
   void _openCustomDialog3(CountryParishModelDataCountries newVal) {
     showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
@@ -190,13 +197,20 @@ if(userDelModel!.success!){
                         Navigator.of(context, rootNavigator: true).pop();
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         prefs.setString('user_selected_country', newVal.country!);
-                        toast(newVal.country);
-                        EmptyCart(newVal);
+                        toast(newVal.country!);
+                        String? UserId = prefs.getString('UserId');
+                        String? token = prefs.getString('token');
+                        final postMdl = Provider.of<HomeProductListProvider>(context, listen: false);
+                        postMdl.getHomeProduct('Newest to Oldest',true);
+                        dbHelper.cleanDatabase();
+                        if (UserId != null && UserId != '') {
+                          // _openCustomDialog2();
+                        }else {
+                          // dbHelper.cleanDatabase();
+                          EmptyCart(newVal);
 
-                        // setState(() {
-                        //   selectedValue = newVal;
-                        //
-                        // });
+                        }
+
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width*.7,
@@ -308,7 +322,7 @@ if(userDelModel!.success!){
         barrierLabel: '',
         context: context,
         pageBuilder: (context, animation1, animation2) {
-      return Container();
+          return Container();
         });
   }
 
@@ -431,7 +445,7 @@ if(userDelModel!.success!){
                             fontFamily: "Bold"),
                         decoration: InputDecoration(
                           filled: true,
-hintMaxLines: 5,
+                          hintMaxLines: 5,
                           fillColor: sh_text_back,
                           contentPadding:
                           EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -475,39 +489,54 @@ hintMaxLines: 5,
       String? UserId = prefs.getString('UserId');
       String? token = prefs.getString('token');
 
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
 
-      var response = await http.get(Uri.parse(
-        "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
-          ,headers: headers);
+      if (UserId != null && UserId != '') {
+        Map<String, String> headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        };
 
-      print('SettingFragment check_seller_status Response status2: ${response.statusCode}');
-      print('SettingFragment check_seller_status Response body2: ${response.body}');
+        var response = await http.get(Uri.parse(
+          "${Url.BASE_URL}wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
+            ,headers: headers);
 
-      final jsonResponse = json.decode(response.body);
-      checkUserModel = new CheckUserModel.fromJson(jsonResponse);
-      prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
-      EasyLoading.dismiss();
-      if(checkUserModel!.is_store_owner==0){
-        launchScreen(context, ProfileScreen.tag);
-      } else if (checkUserModel!.is_store_owner==1) {
-        launchScreen(context, SellerEditProfileScreen.tag);
-      } else if (checkUserModel!.is_store_owner==2) {
-        launchScreen(context, ProfileScreen.tag);
+        print('SettingFragment check_seller_status Response status2: ${response.statusCode}');
+        print('SettingFragment check_seller_status Response body2: ${response.body}');
+
+        final jsonResponse = json.decode(response.body);
+        checkUserModel = new CheckUserModel.fromJson(jsonResponse);
+        prefs.setString('is_store_owner', checkUserModel!.is_store_owner.toString());
+        EasyLoading.dismiss();
+        if(checkUserModel!.is_store_owner==0){
+          launchScreen(context, ProfileScreen.tag);
+        } else if (checkUserModel!.is_store_owner==1) {
+          launchScreen(context, SellerEditProfileScreen.tag);
+        } else if (checkUserModel!.is_store_owner==2) {
+          launchScreen(context, ProfileScreen.tag);
+        }
+      }else{
+        EasyLoading.dismiss();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginScreen(),
+          ),
+        );
       }
 
+
+
       return checkUserModel;
-    } catch (e) {
+    }on Exception catch (e) {
       EasyLoading.dismiss();
+
       print('caught error $e');
     }
   }
 
   int? cart_count;
+
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -664,8 +693,21 @@ hintMaxLines: 5,
                             ),
                           ),
                           InkWell(
-                            onTap: () {
-                              _openCustomDialog();
+                            onTap: () async{
+                              SharedPreferences prefs = await SharedPreferences.getInstance();
+                              String? UserId = prefs.getString('UserId');
+                              String? token = prefs.getString('token');
+                              if (UserId != null && UserId != '') {
+                                _openCustomDialog();
+                              }else{
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LoginScreen(),
+                                  ),
+                                );
+                              }
+                              // _openCustomDialog();
                             },
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(18.0,12,12,12),
@@ -697,74 +739,63 @@ hintMaxLines: 5,
                             },
                           ),
                           SizedBox(height: 12,),
-                          FutureBuilder<CountryParishModel?>(
-                            future: countrydetail,
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return Padding(
-                                  padding: const EdgeInsets.fromLTRB(18.0,12,12,0),
-                                  child: Container(
-                                    decoration: boxDecoration(
-                                        bgColor: sh_btn_color, radius: 22, showShadow: true),
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(16.0,0,16,0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          Flexible(
-                                            child: DropdownButton<CountryParishModelDataCountries?>(
-                                              underline: Container(),
-                                              // decoration: InputDecoration(
-                                              //     labelText: 'Change Country'
-                                              // ),
-                                              isExpanded: true,
-                                              items: countryNewModel!.data!.countries!.map((item) {
-                                                return new DropdownMenuItem(
-                                                  child: Text(
-                                                    item!.country!,
-                                                    style: TextStyle(
-                                                        color: sh_textColorPrimary,
-                                                        fontFamily: fontRegular,
-                                                        fontSize: textSizeMedium),
-                                                  ),
-                                                  value: item,
-                                                );
-                                              }).toList(),
-                                              hint: Text('Select Country'),
-                                              value: selectedValue,
-                                              onChanged: (CountryParishModelDataCountries? newVal) async{
-                                                SharedPreferences prefs = await SharedPreferences.getInstance();
-                                                // prefs.setString('user_selected_country', newVal.country!);
-                                                if(prefs.getString('user_selected_country')==newVal!.country){
-                                                  setState(() {
-                                                    selectedValue = newVal;
+                          Consumer<HomeProductListProvider>(builder: ((context, value, child) {
+                            return Padding(
+                                padding: const EdgeInsets.fromLTRB(18.0,12,12,0),
+                                child: Container(
+                                  decoration: boxDecoration(
+                                      bgColor: sh_btn_color, radius: 22, showShadow: true),
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(16.0,0,16,0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        Flexible(
+                                          child: DropdownButton<CountryParishModelDataCountries?>(
+                                            underline: Container(),
+                                            // decoration: InputDecoration(
+                                            //     labelText: 'Change Country'
+                                            // ),
+                                            isExpanded: true,
+                                            items: value.countryNewModel!.data!.countries!.map((item) {
+                                              return new DropdownMenuItem(
+                                                child: Text(
+                                                  item!.country!,
+                                                  style: TextStyle(
+                                                      color: sh_textColorPrimary,
+                                                      fontFamily: fontRegular,
+                                                      fontSize: textSizeMedium),
+                                                ),
+                                                value: item,
+                                              );
+                                            }).toList(),
+                                            hint: Text('Select Country'),
+                                            value: selectedValue,
+                                            onChanged: (CountryParishModelDataCountries? newVal) async{
+                                              SharedPreferences prefs = await SharedPreferences.getInstance();
+                                              // prefs.setString('user_selected_country', newVal.country!);
+                                              if(prefs.getString('user_selected_country')==newVal!.country){
+                                                setState(() {
+                                                  selectedValue = newVal;
 
-                                                  });
-                                                }else {
-                                                  _openCustomDialog3(newVal);
-                                                }
-                                                // setState(() {
-                                                //   selectedValue = newVal;
-                                                //
-                                                // });
-                                              },
-                                            ),
+                                                });
+                                              }else {
+                                                _openCustomDialog3(newVal);
+                                              }
+                                              // setState(() {
+                                              //   selectedValue = newVal;
+                                              //
+                                              // });
+                                            },
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                  )
+                                  ),
                                 )
-                                  ;
-                              } else if (snapshot.hasError) {
-                                return Text("${snapshot.error}");
-                              }
-                              // By default, show a loading spinner.
-                              return Container(
-                                  child: Center(child: Text("Please Wait"))
-                                  );
-                            },
-                          ),
+                            );
+                          } )),
+
 
 
                         ],
@@ -848,15 +879,38 @@ hintMaxLines: 5,
                     GestureDetector(
                       onTap: () async {
                         SharedPreferences prefs = await SharedPreferences.getInstance();
-                        prefs.setInt("shiping_index", -2);
-                        prefs.setInt("payment_index", -2);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                        String? UserId = prefs.getString('UserId');
+                        String? token = prefs.getString('token');
+                        if (UserId != null && UserId != '') {
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    CartScreen()),).then((value) {   setState(() {
+                            // refresh state
+                          });});
+                        }else{
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          // launchScreen(context, CartScreen.tag);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CartScreen()),
+                          ).then((value) {
+                            setState(() {
+                              // refresh state
+                            });
+                          });
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => LoginScreen(),
+                          //   ),
+                          // );
+                        }
+
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),

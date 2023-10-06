@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/retry.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/CartModel.dart';
 import 'package:thrift/model/SettingModel.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
@@ -240,7 +239,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         // Else only enable it in non-debug builds.
         // You could additionally extend this to allow users to opt-in.
         await FirebaseCrashlytics.instance
-            .setCrashlyticsCollectionEnabled(!kDebugMode);
+            .setCrashlyticsCollectionEnabled(true);
       }
 
       if (_kShouldTestAsyncErrorOnInit) {
@@ -266,11 +265,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         };
 
         // Response response = await get(
-        //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart'),
+        //     Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/woocart'),
         //     headers: headers);
         var response = await http.get(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
+                '${Url.BASE_URL}wp-json/wooapp/v3/woocart?country=$user_country'),
             headers: headers);
 
         print('Response status2: ${response.statusCode}');

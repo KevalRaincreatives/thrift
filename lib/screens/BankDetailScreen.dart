@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:badges/badges.dart';
@@ -5,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/ViewProModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -15,7 +17,7 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
-
+import 'package:thrift/api_service/Url.dart';
 
 class BankDetailScreen extends StatefulWidget {
   static String tag = '/BankDetailScreen';
@@ -77,7 +79,7 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/v3/view_profile_picture'),
+              '${Url.BASE_URL}wp-json/v3/view_profile_picture'),
           headers: headers,
           body: msg);
       print('BankDetailScreen view_profile_picture Response status2: ${response.statusCode}');
@@ -92,8 +94,28 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
       otherCont.text=viewProModel!.otherDetails.toString();
 
       return viewProModel;
-    } catch (e) {
-      // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
+    }on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        ViewProfilePicMain = ViewProfilePic();
+        fetchaddMain = fetchadd();
+      });} );
       print('caught error $e');
     }
   }
@@ -140,7 +162,7 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/v3/update_account_details'),
+              '${Url.BASE_URL}wp-json/v3/update_account_details'),
           headers: headers,
           body: msg);
       print('BankDetailScreen update_account_details Response status2: ${response.statusCode}');
@@ -152,8 +174,8 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
       Navigator.pop(context);
       // order_det_model = new OrderDetailModel.fromJson(jsonResponse);
       return null;
-    } catch (e) {
-      EasyLoading.dismiss();
+    }on Exception catch (e) {
+toast(e.toString());
       print('caught error $e');
     }
   }

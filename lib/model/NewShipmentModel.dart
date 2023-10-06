@@ -4,7 +4,7 @@
 class NewShipmentModelMethodsLinksDescribes {
 /*
 {
-  "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones/"
+  "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones/"
 }
 */
 
@@ -26,7 +26,7 @@ class NewShipmentModelMethodsLinksDescribes {
 class NewShipmentModelMethodsLinksCollection {
 /*
 {
-  "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods"
+  "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods"
 }
 */
 
@@ -48,7 +48,7 @@ class NewShipmentModelMethodsLinksCollection {
 class NewShipmentModelMethodsLinksSelf {
 /*
 {
-  "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods/1"
+  "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods/1"
 }
 */
 
@@ -72,17 +72,17 @@ class NewShipmentModelMethodsLinks {
 {
   "self": [
     {
-      "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods/1"
+      "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods/1"
     }
   ],
   "collection": [
     {
-      "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods"
+      "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods"
     }
   ],
   "describes": [
     {
-      "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones/"
+      "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones/"
     }
   ]
 }
@@ -480,17 +480,17 @@ class NewShipmentModelMethods {
   "_links": {
     "self": [
       {
-        "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods/1"
+        "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods/1"
       }
     ],
     "collection": [
       {
-        "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods"
+        "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods"
       }
     ],
     "describes": [
       {
-        "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones/"
+        "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones/"
       }
     ]
   }
@@ -605,17 +605,17 @@ class NewShipmentModel {
       "_links": {
         "self": [
           {
-            "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods/1"
+            "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods/1"
           }
         ],
         "collection": [
           {
-            "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones//methods"
+            "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones//methods"
           }
         ],
         "describes": [
           {
-            "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping/zones/"
+            "href": "${Url.BASE_URL}wp-json/wc/v3/shipping/zones/"
           }
         ]
       }

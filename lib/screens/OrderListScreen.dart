@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:flutter_html/flutter_html.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/OrderListModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -17,9 +19,11 @@ import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
 
+import '../provider/order_provider.dart';
 
 class OrderListScreen extends StatefulWidget {
   static String tag = '/OrderListScreen';
+
   const OrderListScreen({Key? key}) : super(key: key);
 
   @override
@@ -27,49 +31,53 @@ class OrderListScreen extends StatefulWidget {
 }
 
 class _OrderListScreenState extends State<OrderListScreen> {
-  OrderListModel? orderListModel;
+  // OrderListModel? orderListModel;
   String? productPerRow,
       showDiscountPrice,
-      showShortDesc,currency_symbol,price_decimal_sep,price_num_decimals;
+      showShortDesc,
+      currency_symbol,
+      price_decimal_sep,
+      price_num_decimals;
   String? sh_app_bars;
-  Future<OrderListModel?>? fetchOrderMain;
+
+  // Future<OrderListModel?>? fetchOrderMain;
 
   @override
   void initState() {
     super.initState();
-    fetchOrderMain=fetchOrder();
-
+    final emp_pd = Provider.of<OrderProvider>(context, listen: false);
+    emp_pd.getOrderList();
   }
 
+  // Future<OrderListModel?> fetchOrder() async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     // String UserId = prefs.getString('UserId');
+  //     String? token = prefs.getString('token');
+  //
+  //     Map<String, String> headers = {
+  //       'Content-Type': 'application/json',
+  //       'Accept': 'application/json',
+  //       'Authorization': 'Bearer $token',
+  //     };
+  //
+  //     Response response = await get(
+  //         Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/view_user_order'),
+  //         headers: headers);
+  //
+  //     final jsonResponse = json.decode(response.body);
+  //     print('OrderListScreen view_user_order Response status2: ${response.statusCode}');
+  //     print('OrderListScreen view_user_order Response body2: ${response.body}');
+  //     orderListModel = new OrderListModel.fromJson(jsonResponse);
+  //
+  //     return orderListModel;
+  //   }   on Exception catch (e) {
+  //
+  //     print('caught error $e');
+  //   }
+  // }
 
-  Future<OrderListModel?> fetchOrder() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_user_order'),
-          headers: headers);
-
-      final jsonResponse = json.decode(response.body);
-      print('OrderListScreen view_user_order Response status2: ${response.statusCode}');
-      print('OrderListScreen view_user_order Response body2: ${response.body}');
-      orderListModel = new OrderListModel.fromJson(jsonResponse);
-
-      return orderListModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
-
-  Future<bool> _onWillPop() async{
+  Future<bool> _onWillPop() async {
     // Navigator.pushAndRemoveUntil(
     //   context,
     //   MaterialPageRoute(
@@ -79,18 +87,22 @@ class _OrderListScreenState extends State<OrderListScreen> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? is_store_owner = prefs.getString('is_store_owner');
-    if(is_store_owner=='1') {
+    if (is_store_owner == '1') {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-            builder: (BuildContext context) => DashboardScreen(selectedTab: 3,)),
+            builder: (BuildContext context) => DashboardScreen(
+                  selectedTab: 3,
+                )),
         ModalRoute.withName('/DashboardScreen'),
       );
-    }else{
+    } else {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-            builder: (BuildContext context) => DashboardScreen(selectedTab: 2,)),
+            builder: (BuildContext context) => DashboardScreen(
+                  selectedTab: 2,
+                )),
         ModalRoute.withName('/DashboardScreen'),
       );
     }
@@ -99,15 +111,15 @@ class _OrderListScreenState extends State<OrderListScreen> {
   }
 
   int? cart_count;
+
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
-
 
       return '';
     } catch (e) {
@@ -122,52 +134,42 @@ class _OrderListScreenState extends State<OrderListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery
-        .of(context)
-        .size
-        .width;
-    var height = MediaQuery
-        .of(context)
-        .size
-        .height;
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
     toCurrencyFormat({var format = '\$'}) {
       return format + this;
     }
 
-    OrderDate(int index) {
-      String order_status=orderListModel!.data![index]!.order_status!;
+    OrderDate(int index, orderListModel) {
+      String order_status = orderListModel!.data![index]!.order_status!;
       String hh = orderListModel!.data![index]!.postTitle!.substring(13);
       String dd = hh.substring(0, hh.length - 10);
-      return text(
-          dd +
-              "\n Order Status: $order_status",
+      return text(dd + "\n Order Status: $order_status",
           maxLine: 2,
           fontSize: textSizeSMedium2,
           textColor: sh_textColorPrimary);
-
-
     }
 
-    CartPrice(int index){
-      var myprice2 =double.parse(orderListModel!.data![index]!.total.toString());
+    CartPrice(int index, orderListModel) {
+      var myprice2 =
+          double.parse(orderListModel!.data![index]!.total.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
-      if(price_decimal_sep==',') {
+      if (price_decimal_sep == ',') {
         myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
+      } else {
+        myprice3 = myprice;
       }
-      return                           text7("Total : \$" +
-          myprice3 +" "+orderListModel!.currency!,
+      return text7("Total : \$" + myprice3 + " " + orderListModel!.currency!,
           textColor: sh_app_txt_color,
           fontFamily: fontBold,
           fontSize: textSizeMedium);
     }
 
-    listView() {
-      if(orderListModel!.data!.length == 0){
+    listView(orderListModel) {
+      if (orderListModel!.data!.length == 0) {
         return Container(
-          height: height-130,
+          height: height - 130,
           alignment: Alignment.center,
           child: Center(
             child: Text(
@@ -179,7 +181,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
             ),
           ),
         );
-      }else {
+      } else {
         return ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
@@ -189,18 +191,17 @@ class _OrderListScreenState extends State<OrderListScreen> {
             return InkWell(
               onTap: () async {
                 SharedPreferences prefs = await SharedPreferences.getInstance();
-                prefs.setString('order_id',
-                    orderListModel!.data![index]!.ID!.toString());
+                prefs.setString(
+                    'order_id', orderListModel!.data![index]!.ID!.toString());
                 prefs.commit();
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            OrderDetailScreen()));
+                        builder: (context) => OrderDetailScreen()));
               },
               child: Container(
                 margin: EdgeInsets.fromLTRB(26, 20, 26, 0),
-                padding: EdgeInsets.fromLTRB(16,10.0,16,10),
+                padding: EdgeInsets.fromLTRB(16, 10.0, 16, 10),
                 decoration: BoxDecoration(
                   border: Border.all(color: sh_colorPrimary2),
                   color: sh_white,
@@ -215,17 +216,33 @@ class _OrderListScreenState extends State<OrderListScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            text7("ID :#" +
-                                orderListModel!.data![index]!.ID.toString(),
+                            text7(
+                                "ID :#" +
+                                    orderListModel!.data![index]!.ID.toString(),
                                 textColor: sh_textColorPrimary,
                                 fontFamily: fontSemibold,
                                 fontSize: textSizeMedium),
                             // SizedBox(height: 2),
-                            text7(orderListModel!.data![index]!.products![0]!.name!,
-                                textColor: sh_app_txt_color,
-                                fontFamily: fontSemibold,
-                                fontSize: textSizeMedium),
-                            CartPrice(index),
+                            Html(
+                              data: orderListModel!
+                                  .data![index]!.products![0]!.name!,
+                              style: {
+                                "body": Style(
+                                  maxLines: 2,
+                                  margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                  fontSize: FontSize(16.0),
+                                  color: sh_app_txt_color,
+                                  fontFamily: fontSemibold,
+                                ),
+                              },
+                            ),
+                            // text7(
+                            //     orderListModel!
+                            //         .data![index]!.products![0]!.name!,
+                            //     textColor: sh_app_txt_color,
+                            //     fontFamily: fontSemibold,
+                            //     fontSize: textSizeMedium),
+                            CartPrice(index, orderListModel),
                             // text7("Total : $currency_symbol" +
                             //     orderListModel!.data![index]!.total.toString(),
                             //     textColor: sh_colorPrimary,
@@ -238,19 +255,17 @@ class _OrderListScreenState extends State<OrderListScreen> {
                               child: IntrinsicHeight(
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
-                                  crossAxisAlignment: CrossAxisAlignment
-                                      .stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: <Widget>[
                                     Expanded(
                                       child: Column(
                                         mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                            MainAxisAlignment.spaceBetween,
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                            CrossAxisAlignment.stretch,
                                         children: <Widget>[
-                                          OrderDate(index)
-
-
+                                          OrderDate(index, orderListModel)
                                         ],
                                       ),
                                     )
@@ -271,11 +286,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
       }
     }
 
-
-
-
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
           height: 44,
@@ -283,10 +295,13 @@ class _OrderListScreenState extends State<OrderListScreen> {
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
+          badgeContent: Text(
+            cart_count.toString(),
+            style: TextStyle(color: sh_white, fontSize: 8),
+          ),
           child: Image.asset(
             sh_new_cart,
             height: 44,
@@ -305,7 +320,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
         title: Text(
           sh_lbl_my_orders,
           style:
-          TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
+              TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
@@ -332,8 +347,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
             height: 120,
             width: width,
             child: Image.asset(sh_upper2, fit: BoxFit.fill)
-          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-        ),
+            // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+            ),
         //Above card
 
         Container(
@@ -352,62 +367,63 @@ class _OrderListScreenState extends State<OrderListScreen> {
                     child: Column(
                       children: <Widget>[
                         // TopBar(t1_Listing),
-                        FutureBuilder<OrderListModel?>(
-                          future: fetchOrderMain,
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              return listView();
-                            }
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              enabled: true,
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                scrollDirection: Axis.vertical,
-                                itemBuilder: (_, __) => Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Container(
-                                        width: double.infinity,
-                                        height: 10.0,
-                                        color: Colors.white,
+                        Consumer<OrderProvider>(
+                            builder: ((context, order_value, child) {
+                          return order_value.loader
+                              ? Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  enabled: true,
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    scrollDirection: Axis.vertical,
+                                    itemBuilder: (_, __) => Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Container(
+                                            width: double.infinity,
+                                            height: 10.0,
+                                            color: Colors.white,
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 5.0),
+                                          ),
+                                          Container(
+                                            width: double.infinity,
+                                            height: 10.0,
+                                            color: Colors.white,
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 5.0),
+                                          ),
+                                          Container(
+                                            width: 40.0,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 5.0),
+                                          ),
+                                          Container(
+                                            width: 40.0,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                        ],
                                       ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 5.0),
-                                      ),
-                                      Container(
-                                        width: double.infinity,
-                                        height: 10.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 5.0),
-                                      ),
-                                      Container(
-                                        width: 40.0,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 5.0),
-                                      ),
-                                      Container(
-                                        width: 40.0,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                    ],
+                                    ),
+                                    itemCount: 6,
                                   ),
-                                ),
-                                itemCount: 6,
-                              ),
-                            );
-                          },
-                        ),
+                                )
+                              : listView(order_value.orderListModel);
+                        })),
 
                         Container(
                           height: 16,
@@ -426,7 +442,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(10,18,16,0),
+            padding: const EdgeInsets.fromLTRB(10, 18, 16, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -435,32 +451,46 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
-                      child: IconButton(onPressed: () async{
-
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
-                        String? is_store_owner = prefs.getString('is_store_owner');
-      if(is_store_owner=='1') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DashboardScreen(selectedTab: 3),
-          ),
-        );
-      }else{
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DashboardScreen(selectedTab: 2),
-          ),
-        );
-      }
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                      padding: const EdgeInsets.fromLTRB(1.0, 2, 6, 2),
+                      child: IconButton(
+                          onPressed: () async {
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            String? is_store_owner =
+                                prefs.getString('is_store_owner');
+                            if (is_store_owner == '1') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      DashboardScreen(selectedTab: 3),
+                                ),
+                              );
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      DashboardScreen(selectedTab: 2),
+                                ),
+                              );
+                            }
+                          },
+                          icon: Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          )),
                     ),
-
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
-                      child: Text(sh_lbl_my_orders,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
+                      padding: const EdgeInsets.fromLTRB(0, 6, 6, 6.0),
+                      child: Text(
+                        sh_lbl_my_orders,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontFamily: 'TitleCursive'),
+                      ),
                     )
                   ],
                 ),
@@ -468,16 +498,18 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        ).then((value) {
+                          setState(() {
+                            // refresh state
+                          });
+                        });
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),
@@ -491,7 +523,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
                           return CircularProgressIndicator();
                         },
                       ),
-
                     ),
                     // SizedBox(width: 16,)
                   ],
@@ -503,15 +534,13 @@ class _OrderListScreenState extends State<OrderListScreen> {
       ]);
     }
 
-
     return Scaffold(
-
       body: WillPopScope(
           onWillPop: _onWillPop,
           child: StreamProvider<NetworkStatus>(
             initialData: NetworkStatus.Online,
             create: (context) =>
-            NetworkStatusService().networkStatusController.stream,
+                NetworkStatusService().networkStatusController.stream,
             child: NetworkAwareWidget(
               onlineChild: SafeArea(child: setUserForm()),
               offlineChild: Container(
@@ -528,6 +557,5 @@ class _OrderListScreenState extends State<OrderListScreen> {
             ),
           )),
     );
-
   }
 }

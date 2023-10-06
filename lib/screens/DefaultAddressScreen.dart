@@ -1,8 +1,8 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/AddressListModel.dart';
 import 'package:thrift/screens/AddNewAddressScreen.dart';
 import 'package:thrift/screens/ShipmentScreen.dart';
@@ -53,9 +53,9 @@ class _DefaultAddressScreenState extends State<DefaultAddressScreen> {
       print(token);
 
       Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/list_shipping_addres'),
           headers: headers);
-      print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres");
+      print("${Url.BASE_URL}wp-json/wooapp/v3/list_shipping_addres");
 
       print('DefaultAddressScreen list_shipping_addres Response status2: ${response.statusCode}');
       print('DefaultAddressScreen list_shipping_addres Response body2: ${response.body}');

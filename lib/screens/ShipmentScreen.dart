@@ -1,9 +1,9 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/AddShipModel.dart';
 import 'package:thrift/model/ShipmentModel.dart';
 import 'package:thrift/screens/SelectPaymentScreen.dart';
@@ -42,7 +42,7 @@ class _ShipmentScreenState extends State<ShipmentScreen> {
       };
 
       Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/shipping_methods'),
+          Uri.parse('${Url.BASE_URL}wp-json/wc/v3/shipping_methods'),
           headers: headers);
       final jsonResponse = json.decode(response.body);
       print('ShipmentScreen shipping_methods Response status2: ${response.statusCode}');
@@ -80,7 +80,7 @@ class _ShipmentScreenState extends State<ShipmentScreen> {
       print(msg);
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_shipping_charge'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/add_shipping_charge'),
           headers: headers,
           body: msg);
       EasyLoading.dismiss();

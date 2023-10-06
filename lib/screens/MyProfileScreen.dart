@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/model/ProfileUpdateModel.dart';
 import 'package:thrift/screens/ChangePasswordScreen.dart';
@@ -18,6 +20,8 @@ import 'package:thrift/utils/ShStrings.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
+
+import '../provider/pro_det_provider.dart';
 
 
 class MyProfileScreen extends StatefulWidget {
@@ -47,7 +51,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   getLogout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('token', "");
-
+    Provider.of<ProductDetailProvider>(context, listen: false).setLoggedInStatus(false);
     Route route = MaterialPageRoute(
         builder: (context) => LoginScreen());
     Navigator.pushReplacement(context, route);
@@ -93,7 +97,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       //   headers: headers
       // );
 
-      var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
+      var response =await http.get(Uri.parse("${Url.BASE_URL}wp-json/wooapp/v3/profile"),
           headers: headers);
 
 
@@ -127,7 +131,28 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
 
       return profileModel;
-    } catch (e) {
+    } on Exception catch (e) {
+      EasyLoading.dismiss();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+fetchDetails();
+      });} );
       print('caught error $e');
     }
   }
@@ -165,7 +190,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       // String body = json.encode(data2);
 
       http.Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/edit_profile'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/edit_profile'),
           headers: headers,
           body: msg);
       EasyLoading.dismiss();
@@ -176,12 +201,14 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       print('MyProfileScreen edit_profile Response body2: ${response.body}');
 
       profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
-      toast(profileUpdateModel!.msg);
+      toast(profileUpdateModel!.msg!);
 
       // prefs.setString('login_name', firstname);
 
       return profileUpdateModel;
-    } catch (e) {
+    }on Exception catch (e) {
+      EasyLoading.dismiss();
+toast(e.toString());
       print('caught error $e');
     }
   }
@@ -231,7 +258,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       // String body = json.encode(data2);
 
       http.Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/become_a_seller'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/become_a_seller'),
           headers: headers,
           body: msg);
       EasyLoading.dismiss();
@@ -245,7 +272,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       // prefs.setString('login_name', firstname);
 
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
+      EasyLoading.dismiss();
+toast(e.toString());
       print('caught error $e');
     }
   }

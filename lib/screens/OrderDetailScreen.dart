@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:flutter_html/flutter_html.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/OrderDetailModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -17,10 +19,11 @@ import 'package:badges/badges.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
-
+import 'package:thrift/provider/order_provider.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   static String tag = '/OrderDetailScreen';
+
   const OrderDetailScreen({Key? key}) : super(key: key);
 
   @override
@@ -28,30 +31,34 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  OrderDetailModel? orderDetailModel;
+  // OrderDetailModel? orderDetailModel;
   String? productPerRow,
       showDiscountPrice,
-      showShortDesc,currency_symbol,price_decimal_sep,price_num_decimals;
+      showShortDesc,
+      currency_symbol,
+      price_decimal_sep,
+      price_num_decimals;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController controller5 = TextEditingController();
-  String pro_rating="";
+  String pro_rating = "";
   int? cart_count;
-  Future<OrderDetailModel?>? fetchOrderMain;
+
+  // Future<OrderDetailModel?>? fetchOrderMain;
 
   @override
   void initState() {
     super.initState();
-    fetchOrderMain=fetchOrder();
+    final emp_pd = Provider.of<OrderProvider>(context, listen: false);
+    emp_pd.getOrderDetails();
+    // fetchOrderMain=fetchOrder();
   }
-
-
 
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
 
@@ -61,43 +68,42 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
-
-  Future<OrderDetailModel?> fetchOrder() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-      String? order_id = prefs.getString('order_id');
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      final msg = jsonEncode({"order_id": order_id});
-      print(msg);
-
-      Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_order_detail'),
-          headers: headers,
-          body: msg);
-
-      final jsonResponse = json.decode(response.body);
-      print('OrderDetailScreen get_order_detail Response status2: ${response.statusCode}');
-      print('OrderDetailScreen get_order_detail Response body2: ${response.body}');
-      orderDetailModel = new OrderDetailModel.fromJson(jsonResponse);
-
-      return orderDetailModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
+  // Future<OrderDetailModel?> fetchOrder() async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     // String UserId = prefs.getString('UserId');
+  //     String? token = prefs.getString('token');
+  //     String? order_id = prefs.getString('order_id');
+  //
+  //     Map<String, String> headers = {
+  //       'Content-Type': 'application/json',
+  //       'Accept': 'application/json',
+  //       'Authorization': 'Bearer $token',
+  //     };
+  //
+  //     final msg = jsonEncode({"order_id": order_id});
+  //     print(msg);
+  //
+  //     Response response = await post(
+  //         Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/get_order_detail'),
+  //         headers: headers,
+  //         body: msg);
+  //
+  //     final jsonResponse = json.decode(response.body);
+  //     print('OrderDetailScreen get_order_detail Response status2: ${response.statusCode}');
+  //     print('OrderDetailScreen get_order_detail Response body2: ${response.body}');
+  //     orderDetailModel = new OrderDetailModel.fromJson(jsonResponse);
+  //
+  //     return orderDetailModel;
+  //   } on Exception catch (e) {
+  //
+  //     print('caught error $e');
+  //   }
+  // }
 
   Future<String?> ReviewSubmit(String pro_id) async {
     EasyLoading.show(status: 'Please wait...');
     try {
-
       // String email = emailCont.text;
       // String firstname = firstNameCont.text;
       // String lastname = lastNameCont.text;
@@ -110,7 +116,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       String? profile_name = prefs.getString("profile_name");
       String? OrderUserEmail = prefs.getString('OrderUserEmail');
 
-
       Map<String, String> headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -119,8 +124,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
       final msg = jsonEncode({
         "product_id": pro_id,
-        "review":controller5.text.toString(),
-        "reviewer":profile_name,
+        "review": controller5.text.toString(),
+        "reviewer": profile_name,
         "reviewer_email": OrderUserEmail,
         "rating": pro_rating
       });
@@ -130,7 +135,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       // String body = json.encode(data2);
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews'),
+          Uri.parse('${Url.BASE_URL}wp-json/wc/v3/products/reviews'),
           headers: headers,
           body: msg);
 
@@ -138,38 +143,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final jsonResponse = json.decode(response.body);
       EasyLoading.dismiss();
 
-      print('OrderDetailScreen reviews Response status2: ${response.statusCode}');
+      print(
+          'OrderDetailScreen reviews Response status2: ${response.statusCode}');
       print('OrderDetailScreen reviews Response body2: ${response.body}');
 
       toast("Review Submitted successfully");
       // becameSellerModel = new BecameSellerModel.fromJson(jsonResponse);
 
-
-
       // prefs.setString('login_name', firstname);
 
       return "becameSellerModel";
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
-
+toast(e.toString());
       print('caught error $e');
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery
-        .of(context)
-        .size
-        .width;
-    var height = MediaQuery
-        .of(context)
-        .size
-        .height;
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
 
-    CartPrice(int position){
-      var myprice2 =double.parse(orderDetailModel!.data!.products![position]!.total!);
+    CartPrice(int position,orderDetailModel) {
+      var myprice2 =
+          double.parse(orderDetailModel!.data!.products![position]!.total!);
       var myprice = myprice2.toStringAsFixed(2);
       // var myprice3;
       // if(price_decimal_sep==',') {
@@ -177,16 +175,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       // }else{
       //   myprice3=myprice;
       // }
-      return text(
-        "\$"+myprice+" "+orderDetailModel!.data!.currency!,
-        textColor: sh_colorPrimary2,
-        fontSize: 14.0,
-        fontFamily: 'Bold'
-      );
+      return text("\$" + myprice + " " + orderDetailModel!.data!.currency!,
+          textColor: sh_colorPrimary2, fontSize: 14.0, fontFamily: 'Bold');
     }
 
     void _openCustomDialogSold(String prod_id) {
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+      showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
             return Transform.scale(
               scale: a1.value,
@@ -195,11 +190,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Did you receive this product?\nPlease provide review of the product',style: TextStyle(color: sh_colorPrimary2,fontSize: 15,fontFamily: 'SemiBold'),textAlign: TextAlign.center,)),
+                  title: Center(
+                      child: Text(
+                    'Did you receive this product?\nPlease provide review of the product',
+                    style: TextStyle(
+                        color: sh_colorPrimary2,
+                        fontSize: 15,
+                        fontFamily: 'SemiBold'),
+                    textAlign: TextAlign.center,
+                  )),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-
                       Divider(
                         thickness: 0.5,
                       ),
@@ -219,7 +221,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           ),
                           onRatingUpdate: (rating) {
                             print(rating);
-                            pro_rating=rating.toString();
+                            pro_rating = rating.toString();
                             // toast(rating.toString());
                           },
                         ),
@@ -247,41 +249,43 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               border: InputBorder.none,
                               enabledBorder: OutlineInputBorder(
                                 borderSide:
-                                BorderSide(color: Colors.grey, width: 1),
+                                    BorderSide(color: Colors.grey, width: 1),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide:
-                                BorderSide(color: Colors.grey, width: 1),
+                                    BorderSide(color: Colors.grey, width: 1),
                               ),
                               filled: false,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(height: 20,),
+                      SizedBox(
+                        height: 20,
+                      ),
                       InkWell(
                         onTap: () async {
-            if (_formKey.currentState!.validate()) {
-              //   // TODO submit
+                          if (_formKey.currentState!.validate()) {
+                            //   // TODO submit
 
-              if(pro_rating==''){
-               toast("Please add a rating") ;
-              }else {
-                FocusScope.of(context).requestFocus(FocusNode());
-                Navigator.of(context, rootNavigator: true).pop();
+                            if (pro_rating == '') {
+                              toast("Please add a rating");
+                            } else {
+                              FocusScope.of(context).requestFocus(FocusNode());
+                              Navigator.of(context, rootNavigator: true).pop();
 
-                ReviewSubmit(prod_id);
-              }
-
-            }
+                              ReviewSubmit(prod_id);
+                            }
+                          }
                           // _openCustomDialog2();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                              bgColor: sh_colorPrimary2,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Submit",
                               fontSize: 16.0,
                               textColor: sh_white,
@@ -289,17 +293,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               fontFamily: 'Bold'),
                         ),
                       ),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       InkWell(
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                              bgColor: sh_btn_color,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Cancel",
                               fontSize: 16.0,
                               textColor: sh_colorPrimary2,
@@ -309,8 +316,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       )
                     ],
                   ),
-                )
-                ,
+                ),
               ),
             );
           },
@@ -323,7 +329,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           });
     }
 
-    ProductList() {
+    ProductList(orderDetailModel) {
       return ListView.builder(
           scrollDirection: Axis.vertical,
           itemCount: orderDetailModel!.data!.products!.length,
@@ -332,8 +338,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           itemBuilder: (context, index) {
             return Container(
               // margin: EdgeInsets.only(bottom: spacing_standard_new),
-              margin: EdgeInsets.fromLTRB(26, 0,
-                  26, spacing_standard_new),
+              margin: EdgeInsets.fromLTRB(26, 0, 26, spacing_standard_new),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -341,7 +346,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     flex: 1,
                     child: ClipRRect(
                       borderRadius:
-                      BorderRadius.all(Radius.circular(spacing_middle)),
+                          BorderRadius.all(Radius.circular(spacing_middle)),
                       child: Image.network(
                         orderDetailModel!.data!.products![index]!.image!,
                         fit: BoxFit.fill,
@@ -358,11 +363,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Text(
-                          orderDetailModel!.data!.products![index]!.name!,
-                          style: TextStyle(color: sh_colorPrimary2, fontSize: 16),
+                        Html(
+                          data: orderDetailModel!.data!.products![index]!.name!,
+                          style: {
+                            "body": Style(
+                              maxLines: 2,
+                              margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                              fontSize: FontSize(16.0),
+                              color: sh_colorPrimary2,
+                              fontFamily: fontRegular,
+                            ),
+                          },
                         ),
-                        CartPrice(index),
+                        // Text(
+                        //   orderDetailModel!.data!.products![index]!.name!,
+                        //   style:
+                        //       TextStyle(color: sh_colorPrimary2, fontSize: 16),
+                        // ),
+                        CartPrice(index,orderDetailModel),
                         // text(
                         //   "\$" + orderDetailModel!.data!.products![index]!.total!,
                         // ),
@@ -373,15 +391,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           padding: EdgeInsets.fromLTRB(
                               spacing_standard, 1, spacing_standard, 1),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6.0),
+                              borderRadius: BorderRadius.circular(6.0),
                               border:
-                              Border.all(color: sh_view_color, width: 1)),
+                                  Border.all(color: sh_view_color, width: 1)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               text(
                                   "Qty: " +
-                                      orderDetailModel!.data!.products![index]!.quantity
+                                      orderDetailModel!
+                                          .data!.products![index]!.quantity
                                           .toString(),
                                   textColor: sh_textColorPrimary,
                                   fontSize: textSizeSmall)
@@ -394,12 +413,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         InkWell(
                           onTap: () async {
                             // BecameSeller();
-                            _openCustomDialogSold(orderDetailModel!.data!.products![index]!.id!.toString());
+                            _openCustomDialogSold(orderDetailModel!
+                                .data!.products![index]!.id!
+                                .toString());
                           },
                           child: Container(
-                            padding: EdgeInsets.fromLTRB(8.0,4,8,4),
+                            padding: EdgeInsets.fromLTRB(8.0, 4, 8, 4),
                             decoration: boxDecoration(
-                                bgColor: sh_btn_color, radius: 6, showShadow: true),
+                                bgColor: sh_btn_color,
+                                radius: 6,
+                                showShadow: true),
                             child: text("Mark as received and review",
                                 fontSize: 13.0,
                                 textColor: sh_colorPrimary2,
@@ -407,7 +430,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 fontFamily: fontMedium),
                           ),
                         )
-
                       ],
                     ),
                   ),
@@ -418,50 +440,50 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           });
     }
 
-    CouponDet() {
-      if (orderDetailModel!.data!.coupons!.length > 0) {
-        var myprice2 =double.parse(orderDetailModel!.data!.coupons![0].amount.toString());
-        var myprice = myprice2.toStringAsFixed(2);
-        var myprice3;
-        if(price_decimal_sep==',') {
-          myprice3 = myprice.replaceAll('.', ',').toString();
-        }else{
-          myprice3=myprice;
-        }
+    // CouponDet() {
+    //   if (orderDetailModel!.data!.coupons!.length > 0) {
+    //     var myprice2 =double.parse(orderDetailModel!.data!.coupons![0].amount.toString());
+    //     var myprice = myprice2.toStringAsFixed(2);
+    //     var myprice3;
+    //     if(price_decimal_sep==',') {
+    //       myprice3 = myprice.replaceAll('.', ',').toString();
+    //     }else{
+    //       myprice3=myprice;
+    //     }
+    //
+    //
+    //     return Row(
+    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //       children: <Widget>[
+    //         text(sh_lbl_coupon_discount),
+    //         text("("+orderDetailModel!.data!.coupons![0].code!+")"+myprice3,
+    //             textColor: sh_textColorPrimary,
+    //             fontFamily: fontMedium),
+    //       ],
+    //     );
+    //
+    //   } else {
+    //     return Row(
+    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //       children: <Widget>[
+    //         text(sh_lbl_coupon_discount),
+    //         text('N/A',
+    //             textColor: sh_textColorPrimary,
+    //             fontFamily: fontMedium),
+    //       ],
+    //     );
+    //
+    //   }
+    // }
 
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            text(sh_lbl_coupon_discount),
-            text("("+orderDetailModel!.data!.coupons![0].code!+")"+myprice3,
-                textColor: sh_textColorPrimary,
-                fontFamily: fontMedium),
-          ],
-        );
-
-      } else {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            text(sh_lbl_coupon_discount),
-            text('N/A',
-                textColor: sh_textColorPrimary,
-                fontFamily: fontMedium),
-          ],
-        );
-
-      }
-    }
-
-    SubPrice(){
-      var myprice2 =double.parse(orderDetailModel!.data!.subTotal.toString());
+    SubPrice(orderDetailModel) {
+      var myprice2 = double.parse(orderDetailModel!.data!.subTotal.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
-      if(price_decimal_sep==',') {
+      if (price_decimal_sep == ',') {
         myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
+      } else {
+        myprice3 = myprice;
       }
 
       return Row(
@@ -479,20 +501,23 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               textColor: sh_textColorPrimary,
               fontSize: textSizeMedium,
               fontFamily: fontSemibold),
-          text("\$"+myprice+" "+orderDetailModel!.data!.currency!,
-              textColor: sh_colorPrimary2, fontFamily: fontMedium,fontSize: textSizeMedium),
+          text("\$" + myprice + " " + orderDetailModel!.data!.currency!,
+              textColor: sh_colorPrimary2,
+              fontFamily: fontMedium,
+              fontSize: textSizeMedium),
         ],
       );
     }
 
-    ShippingPrice(){
-      var myprice2 =double.parse(orderDetailModel!.data!.shippingTotal.toString());
+    ShippingPrice(orderDetailModel) {
+      var myprice2 =
+          double.parse(orderDetailModel!.data!.shippingTotal.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
-      if(price_decimal_sep==',') {
+      if (price_decimal_sep == ',') {
         myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
+      } else {
+        myprice3 = myprice;
       }
 
       return Row(
@@ -510,21 +535,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               textColor: sh_textColorPrimary,
               fontSize: textSizeMedium,
               fontFamily: fontSemibold),
-          text(
-              "\$"+myprice+" "+orderDetailModel!.data!.currency!,
-              textColor: sh_colorPrimary2, fontFamily: fontMedium,fontSize: textSizeMedium),
+          text("\$" + myprice + " " + orderDetailModel!.data!.currency!,
+              textColor: sh_colorPrimary2,
+              fontFamily: fontMedium,
+              fontSize: textSizeMedium),
         ],
       );
     }
 
-    TotalPrice(){
-      var myprice2 =double.parse(orderDetailModel!.data!.total.toString());
+    TotalPrice(orderDetailModel) {
+      var myprice2 = double.parse(orderDetailModel!.data!.total.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
-      if(price_decimal_sep==',') {
+      if (price_decimal_sep == ',') {
         myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
+      } else {
+        myprice3 = myprice;
       }
 
       return Row(
@@ -542,7 +568,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               textColor: sh_textColorPrimary,
               fontSize: textSizeMedium,
               fontFamily: fontSemibold),
-          text("\$"+myprice+" "+orderDetailModel!.data!.currency!,
+          text("\$" + myprice + " " + orderDetailModel!.data!.currency!,
               textColor: sh_colorPrimary2,
               fontFamily: fontBold,
               fontSize: textSizeMedium),
@@ -550,16 +576,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       );
     }
 
-
-    paymentDetail() {
+    paymentDetail(orderDetailModel) {
       return Container(
-        margin: EdgeInsets.only(
-            left: 26,
-            right: 26,
-            top: spacing_standard_new),
-        decoration:
-        BoxDecoration(
-        borderRadius: BorderRadius.circular(6),border: Border.all(color: sh_view_color, width: 1.0)),
+        margin: EdgeInsets.only(left: 26, right: 26, top: spacing_standard_new),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: sh_view_color, width: 1.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -585,7 +607,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   // SizedBox(
                   //   height: spacing_standard,
                   // ),
-                  SubPrice(),
+                  SubPrice(orderDetailModel),
                   // Row(
                   //   children: <Widget>[
                   //     text(sh_lbl_sub_total),
@@ -596,7 +618,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   SizedBox(
                     height: spacing_standard,
                   ),
-                  ShippingPrice(),
+                  ShippingPrice(orderDetailModel),
                   // Row(
                   //   children: <Widget>[
                   //     text(sh_lbl_shipping_charge),
@@ -609,7 +631,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   SizedBox(
                     height: spacing_standard,
                   ),
-                  TotalPrice(),
+                  TotalPrice(orderDetailModel),
 
                   // Row(
                   //   children: <Widget>[
@@ -621,7 +643,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   //   ],
                   // ),
                 ],
-
               ),
             ),
             SizedBox(
@@ -632,28 +653,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       );
     }
 
-    OrdDate() {
+    OrdDate(orderDetailModel) {
       var inputFormat = DateFormat("yyyy-MM-dd");
 
-
-      String date1 = inputFormat.parse(
-          orderDetailModel!.data!.dateCreated!.date!.substring(0, 10)).toString();
+      String date1 = inputFormat
+          .parse(orderDetailModel!.data!.dateCreated!.date!.substring(0, 10))
+          .toString();
       DateTime dateTime = DateTime.parse(date1);
       var outputFormat = DateFormat.yMMMMd('en_US').format(dateTime);
 
       String date2 = outputFormat.toString();
       return text(date2,
-          textColor: sh_textColorPrimary, fontFamily: fontMedium,fontSize: textSizeMedium);
+          textColor: sh_textColorPrimary,
+          fontFamily: fontMedium,
+          fontSize: textSizeMedium);
     }
 
-    TotalAmount(){
-      var myprice2 =double.parse(orderDetailModel!.data!.total!.toString());
+    TotalAmount(orderDetailModel) {
+      var myprice2 = double.parse(orderDetailModel!.data!.total!.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
-      if(price_decimal_sep==',') {
+      if (price_decimal_sep == ',') {
         myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
+      } else {
+        myprice3 = myprice;
       }
 
       return Row(
@@ -670,7 +693,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               textColor: sh_textColorPrimary,
               fontSize: textSizeMedium,
               fontFamily: fontSemibold),
-          text("\$"+myprice3+" "+orderDetailModel!.data!.currency!,
+          text("\$" + myprice3 + " " + orderDetailModel!.data!.currency!,
               textColor: sh_colorPrimary2,
               fontFamily: fontBold,
               fontSize: textSizeMedium),
@@ -678,16 +701,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       );
     }
 
-
-    orderDetail() {
+    orderDetail(orderDetailModel) {
       return Container(
-        margin: EdgeInsets.only(
-            left: 26,
-            right: 26),
-        decoration:
-        BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: sh_view_color, width: 1.0)),
+        margin: EdgeInsets.only(left: 26, right: 26),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: sh_view_color, width: 1.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -729,13 +748,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           textColor: sh_textColorPrimary,
                           fontSize: textSizeMedium,
                           fontFamily: fontSemibold),
-                      OrdDate()
+                      OrdDate(orderDetailModel)
                     ],
                   ),
                   SizedBox(
                     height: spacing_control_half,
                   ),
-                  TotalAmount(),
+                  TotalAmount(orderDetailModel),
                   // Row(
                   //   children: <Widget>[
                   //     text(sh_lbl_total_amount),
@@ -753,16 +772,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       );
     }
 
-    shippingDetail() {
+    shippingDetail(orderDetailModel) {
       return Container(
-        margin: EdgeInsets.only(
-            left: 26,
-            right: 26,
-            top: spacing_standard_new),
-        decoration:
-        BoxDecoration(
-          borderRadius: BorderRadius.circular(6)
-        ,border: Border.all(color: sh_view_color, width: 1.0)),
+        margin: EdgeInsets.only(left: 26, right: 26, top: spacing_standard_new),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: sh_view_color, width: 1.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -813,8 +828,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       );
     }
 
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
           height: 44,
@@ -822,10 +837,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
+          badgeContent: Text(
+            cart_count.toString(),
+            style: TextStyle(color: sh_white, fontSize: 8),
+          ),
           child: Container(
             child: Image.asset(
               sh_new_cart,
@@ -845,7 +863,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         title: Text(
           "Order Details",
           style:
-          TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
+              TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
@@ -872,8 +890,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             height: 120,
             width: width,
             child: Image.asset(sh_upper2, fit: BoxFit.fill)
-          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-        ),
+            // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+            ),
         //Above card
 
         Container(
@@ -885,33 +903,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: Container(
               width: width,
               height: height,
-              child: Center(
-                child: FutureBuilder<OrderDetailModel?>(
-                    future: fetchOrderMain,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return SingleChildScrollView(
-                          child: Column(
-                            children: <Widget>[
-                              // SizedBox(
-                              //   height: 16,
-                              // ),
-                              ProductList(),
-                              orderDetail(),
-                              shippingDetail(),
-                              paymentDetail(),
-                              SizedBox(
-                                height: 200,
-                              )
-                            ],
-                          ),
-                        );
-                      } else if (snapshot.hasError) {
-                        return Text("${snapshot.error}");
-                      }
-                      // return CircularProgressIndicator();
-                      // By default, show a loading spinner.
-                      return Shimmer.fromColors(
+              child: Center(child:
+                  Consumer<OrderProvider>(builder: ((context, data, child) {
+                return data.loader_det
+                    ? Shimmer.fromColors(
                         baseColor: Colors.grey[300]!,
                         highlightColor: Colors.grey[100]!,
                         enabled: true,
@@ -929,11 +924,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                     color: Colors.white,
                                   ),
                                   const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 8.0),
                                   ),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Container(
                                           width: double.infinity,
@@ -941,7 +938,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                           color: Colors.white,
                                         ),
                                         const Padding(
-                                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 8.0),
                                         ),
                                         Container(
                                           width: double.infinity,
@@ -949,7 +947,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                           color: Colors.white,
                                         ),
                                         const Padding(
-                                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 8.0),
                                         ),
                                         Container(
                                           width: 40.0,
@@ -961,42 +960,67 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                   )
                                 ],
                               ),
-                              SizedBox(height: 20,),
+                              SizedBox(
+                                height: 20,
+                              ),
                               Container(
-                                width: width*.3,
+                                width: width * .3,
                                 height: 8.0,
                                 color: Colors.white,
                               ),
-                              SizedBox(height: 10,),
+                              SizedBox(
+                                height: 10,
+                              ),
                               Container(
                                 width: double.infinity,
                                 height: 40.0,
                                 color: Colors.white,
                               ),
-                              SizedBox(height: 18,),
+                              SizedBox(
+                                height: 18,
+                              ),
                               Container(
-                                width: width*.3,
+                                width: width * .3,
                                 height: 8.0,
                                 color: Colors.white,
                               ),
-                              SizedBox(height: 10,),
+                              SizedBox(
+                                height: 10,
+                              ),
                               Container(
                                 width: double.infinity,
                                 height: 80.0,
                                 color: Colors.white,
                               ),
-
-                              SizedBox(height: 20,),
+                              SizedBox(
+                                height: 20,
+                              ),
                               Container(
                                 width: double.infinity,
                                 height: 100.0,
                                 color: Colors.white,
                               ),
-                            ],),
+                            ],
+                          ),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            // SizedBox(
+                            //   height: 16,
+                            // ),
+                            ProductList(data.orderDetailModel),
+                            orderDetail(data.orderDetailModel),
+                            shippingDetail(data.orderDetailModel),
+                            paymentDetail(data.orderDetailModel),
+                            SizedBox(
+                              height: 200,
+                            )
+                          ],
                         ),
                       );
-                    }),
-              ),
+              }))),
             ),
           ),
         ),
@@ -1006,7 +1030,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(10,18,10,0),
+            padding: const EdgeInsets.fromLTRB(10, 18, 10, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1015,15 +1039,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                      padding: const EdgeInsets.fromLTRB(1.0, 2, 6, 2),
+                      child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          )),
                     ),
-
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
-                      child: Text("Order Details",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
+                      padding: const EdgeInsets.fromLTRB(0, 6, 6, 6.0),
+                      child: Text(
+                        "Order Details",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontFamily: 'TitleCursive'),
+                      ),
                     )
                   ],
                 ),
@@ -1031,16 +1066,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        ).then((value) {
+                          setState(() {
+                            // refresh state
+                          });
+                        });
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),
@@ -1054,7 +1091,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           return CircularProgressIndicator();
                         },
                       ),
-
                     ),
                     // SizedBox(width: 16,)
                   ],
@@ -1067,11 +1103,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
 
     return Scaffold(
-      
       body: StreamProvider<NetworkStatus>(
         initialData: NetworkStatus.Online,
         create: (context) =>
-        NetworkStatusService().networkStatusController.stream,
+            NetworkStatusService().networkStatusController.stream,
         child: NetworkAwareWidget(
           onlineChild: SafeArea(child: setUserForm()),
           offlineChild: Container(
@@ -1088,6 +1123,5 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
       ),
     );
-
   }
 }

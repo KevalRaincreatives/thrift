@@ -1,10 +1,11 @@
 import 'dart:convert';
-
+import 'package:flutter/services.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/CouponErrorModel.dart';
 import 'package:thrift/model/CouponModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -90,7 +91,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       print(body);
 
       Response response = await post(
-        Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/wooapp_change_password'),
+        Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/wooapp_change_password'),
         headers: headers,
         body: body,
       );
@@ -163,6 +164,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             height: 20,
           ),
           TextFormField(
+            // inputFormatters: [
+            //   FilteringTextInputFormatter.deny(RegExp('[&]')),
+            // ],
             autofocus: false,
             obscureText: !this._showOldPassword,
             controller: oldpasswordCont,
@@ -174,6 +178,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             validator: (text) {
               if (text == null || text.isEmpty) {
                 return 'Please Enter Password';
+              }else if(!validateStructure(text)){
+                return 'Your password should not contain following\ncharacters: (){}[]|`¬¦ "£%^&*"<>:;#~-+=,';
               }
               return null;
             },
@@ -207,6 +213,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             height: 16,
           ),
           TextFormField(
+            // inputFormatters: [
+            //   FilteringTextInputFormatter.deny(RegExp('[&]')),
+            // ],
             autofocus: false,
             obscureText: !this._showPassword,
             controller: passwordCont,
@@ -218,6 +227,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             validator: (text) {
               if (text == null || text.isEmpty) {
                 return 'Please Enter Password';
+              }else if(!validateStructure(text)){
+                return 'Your password should not contain following\ncharacters: (){}[]|`¬¦ "£%^&*"<>:;#~-+=,';
               }
               return null;
             },
@@ -251,6 +262,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             height: 16,
           ),
           TextFormField(
+            // inputFormatters: [
+            //   FilteringTextInputFormatter.deny(RegExp('[&]')),
+            // ],
             autofocus: false,
             obscureText: !this._showCnfrmPassword,
             controller: confirmPasswordCont,
@@ -262,9 +276,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             validator: (text) {
               if (text == null || text.isEmpty) {
                 return 'Please Enter Confirm Password';
-              }
+              }else
               if (text != passwordCont.text) {
                 return 'Password Do Not Match';
+              }else if(!validateStructure(text)){
+                return 'Your password should not contain following\ncharacters: (){}[]|`¬¦ "£%^&*"<>:;#~-+=,';
               }
               return null;
             },

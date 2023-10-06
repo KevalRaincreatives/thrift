@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/retry.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/ShLoginErrorNewModel.dart';
 import 'package:thrift/model/ShLoginModel.dart';
 import 'package:thrift/model/SignUpErrorNewModel.dart';
@@ -46,14 +47,14 @@ bool singleTap = true;
 
 
       // Response response = await get(
-      //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/terms'));
+      //     Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/terms'));
 
       final client = RetryClient(http.Client());
       var response;
       try {
         response=await client.get(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/terms'));
+                '${Url.BASE_URL}wp-json/wooapp/v3/terms'));
       } finally {
         client.close();
       }
@@ -69,244 +70,11 @@ bool singleTap = true;
       print('TermsConditionScreen terms Response body2: ${response.body}');
 
       return termsModel;
-    } catch (e) {
+    }  on Exception catch (e) {
+
       print('caught error $e');
     }
   }
-
-
-Future<ShLoginModel?> SaveToken() async {
-  try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? device_id = prefs.getString('device_id');
-    String? UserId = prefs.getString('UserId');
-    String? token = prefs.getString('token');
-
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
-
-    final msg = jsonEncode({"device_id": device_id});
-
-    // Response response = await post(
-    //   Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_device'),
-    //   headers: headers,
-    //   body: msg,
-    // );
-    final client = RetryClient(http.Client());
-    var response;
-    try {
-      response=await client.post(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_device'),
-          headers: headers,
-          body: msg);
-    } finally {
-      client.close();
-    }
-
-
-    final jsonResponse = json.decode(response.body);
-    print('TermsConditionScreen add_device Response status2: ${response.statusCode}');
-    print('TermsConditionScreen add_device Response body2: ${response.body}');
-    // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
-
-    EasyLoading.dismiss();
-    launchScreen(context, DashboardScreen.tag);
-    // launchScreen(context, DashboardScreen.tag);
-    return cat_model;
-  } catch (e) {
-    EasyLoading.dismiss();
-    // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
-    print('caught error $e');
-  }
-}
-
-Future<ShLoginModel?> getLogin() async {
-  // EasyLoading.show(status: 'Please wait...');
-  try {
-    // String username = emailCont.text;
-    // String password = passwordCont.text;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? username = prefs.getString('sg_email');
-    String? password = prefs.getString('sg_password');
-
-    Map data = {
-      'username': username,
-      'password': password,
-    };
-    Map<String, String> headers = {'Content-Type': 'application/json'};
-    final msg = jsonEncode({"username": username, "password": password});
-
-    // Response response = await get(
-    //     'http://zoo.webstylze.com/wp-json/v3/login?username=$username&password=$password');
-    // dynamic response = await http
-    //     .post(Uri.parse('https://encros.rcstaging.co.in/wp-json/wooapp/v3/login'), body: {
-    //   "username": username,
-    //   "password": password
-    //   // "country_code":country_code
-    // });
-
-    final client = RetryClient(http.Client());
-    var response;
-    try {
-      response=await client.post(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/login'),
-          headers: headers,
-          body: msg);
-    } finally {
-      client.close();
-    }
-
-
-
-    final jsonResponse = json.decode(response.body);
-    print('TermsConditionScreen login Response status2: ${response.statusCode}');
-    print('TermsConditionScreen login Response body2: ${response.body}');
-    if (response.statusCode == 200) {
-
-
-      cat_model = new ShLoginModel.fromJson(jsonResponse);
-
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString('token', cat_model!.data!.token.toString());
-      prefs.setString('UserId', cat_model!.ID.toString());
-      prefs.setString('is_store_owner', cat_model!.data!.is_store_owner.toString());
-      prefs.setString('user_country', cat_model!.data!.country!);
-      prefs.setString('user_selected_country', cat_model!.data!.country!);
-      prefs.setString('vendor_country', cat_model!.data!.country!);
-
-      prefs.setString('profile_name',cat_model!.data!.userNicename!);
-      prefs.setString('OrderUserName', cat_model!.data!.displayName!);
-      prefs.setString('OrderUserEmail', cat_model!.data!.userEmail!);
-      prefs.commit();
-
-
-      SaveToken();
-
-
-    } else {
-      EasyLoading.dismiss();
-      err_model = new ShLoginErrorNewModel.fromJson(jsonResponse);
-
-      toast(err_model!.message);
-      // toast('Something Went Wrong');
-//        print("cat dta$cat_model");
-
-    }
-    return cat_model;
-  } catch (e) {
-    EasyLoading.dismiss();
-    print('caught error $e');
-  }
-}
-
-
-Future<SignUpNewModel?> getSetting() async {
-  // Dialogs.showLoadingDialog(context, _keyLoader);
-  EasyLoading.show(status: 'Loading...');
-  try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? first = prefs.getString('sg_first');
-    String? last = prefs.getString('sg_last');
-    String? email = prefs.getString('sg_email');
-    String? username = prefs.getString('sg_username');
-    String? password = prefs.getString('sg_password');
-    String? bl_country=prefs.getString('bl_country');
-    String phone=widget.fnlNumber!;
-    String country_code=widget.country_code!;
-
-    Map<String, String> headers = {'Content-Type': 'application/json'};
-
-    // Response response = await get(
-    //   'http://54.245.123.190/gotspotz/wp-json/wooapp/v3/registration?first_name=$first&last_name=$last&username=$username&email=$email&phone=$phone&password=$password',
-    //   headers: headers
-    // );
-    // dynamic response = await http.post(
-    //     Uri.parse('https://encros.rcstaging.co.in/wp-json/wooapp/v3/registration'),
-    //     body: {
-    //       "first_name": first,
-    //       "last_name": last,
-    //       "username": username,
-    //       "email": email,
-    //       "phone": phone,
-    //       "phone_code":country_code,
-    //       "password": password
-    //       // "country_code":country_code
-    //     });
-    final msg = jsonEncode(
-        {
-          "first_name": first,
-          "last_name": last,
-          "username": username,
-          "email": email,
-          "phone": phone,
-          "phone_code":country_code,
-          "password": password,
-          "billing_country": bl_country
-        });
-
-    print(msg);
-
-    final client = RetryClient(http.Client());
-    var response;
-    try {
-      response=await client.post(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/registration'),
-          headers: headers,
-          body: msg);
-    } finally {
-      client.close();
-    }
-
-
-    print('TermsConditionScreen registration Response status2: ${response.statusCode}');
-    print('TermsConditionScreen registration Response body2: ${response.body}');
-
-    final jsonResponse = json.decode(response.body);
-
-    // signup_model = new SignUpModel.fromJson(jsonResponse);
-    signup_model = new SignUpNewModel.fromJson(jsonResponse);
-    if(signup_model!.status=='Yes'){
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // prefs.setString('Login', "Yes");
-      // prefs.setString('login_email', email);
-      // prefs.setString('login_pass', password);
-      // prefs.setString('login_name', first);
-      // getLogin();
-      prefs.setString('Login', "Yes");
-      prefs.setString('login_email', email!);
-      prefs.setString('login_pass', password!);
-      prefs.setString('login_name', first!);
-      // prefs.setString('login_secret', signup_model!.secret!);
-      // toast('Success');
-      // getLogin();
-      // EasyLoading.dismiss();
-      // launchScreen(context, LoginScreen.tag);
-      getLogin();
-
-      // launchScreen(context, T2Dialog.tag);
-    }else{
-      EasyLoading.dismiss();
-      singleTap = true;
-      signup_error_model= new SignUpErrorNewModel.fromJson(jsonResponse);
-      toast(signup_error_model!.msg);
-    }
-
-    return null;
-  } catch (e) {
-    singleTap = true;
-    EasyLoading.dismiss();
-//      Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
-    print('caught error $e');
-  }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -381,64 +149,64 @@ Future<SignUpNewModel?> getSetting() async {
                       }),
                 ),
               ),
-              Expanded(
-                flex: 1,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Radio(
-                        value: 2,
-                        groupValue: val,
-                        onChanged: (int? value) {
-                          setState(() {
-                            val = value!;
-                          });
-                        },
-                        activeColor: sh_colorPrimary2,
-                      ),
-                      Text('I agree to the ',style: TextStyle(color: sh_black,fontSize: 13),),
-                      Text('Terms & Conditions',style: TextStyle(color: sh_colorPrimary2,fontSize: 13, decoration: TextDecoration.underline,),),
-                    ],
-                  )),
-              Expanded(
-                flex: 1,
-                  child: InkWell(
-                onTap: () async {
-                  if(val==2){
-                    if (singleTap) {
-                      // Do something here
-                      getSetting();
-                      setState(() {
-                        singleTap = false; // update bool
-                      });
-                    }
-
-                  }else{
-                    toast("Please agree to the terms & conditions");
-                  }
-                },
-                child: Container(
-                  width: MediaQuery.of(context).size.width*.5,
-                  margin: EdgeInsets.only(
-                      top: 4.0, bottom: 4.0),
-                  padding: EdgeInsets.only(
-                      top: spacing_standard, bottom: spacing_standard),
-                  decoration: boxDecoration(
-                      bgColor: sh_app_background, radius: 10, showShadow: true),
-                  child: text("Continue",
-                      textColor: sh_app_txt_color,
-                      isCentered: true,
-                      fontFamily: 'Bold'),
-                ),
-              )),
-              Expanded(
-                  flex: 1,
-                  child: InkWell(
-                    onTap: () async {
-                    },
-                    child: Container(
-                    ),
-                  ))
+              // Expanded(
+              //   flex: 1,
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       children: <Widget>[
+              //         Radio(
+              //           value: 2,
+              //           groupValue: val,
+              //           onChanged: (int? value) {
+              //             setState(() {
+              //               val = value!;
+              //             });
+              //           },
+              //           activeColor: sh_colorPrimary2,
+              //         ),
+              //         Text('I agree to the ',style: TextStyle(color: sh_black,fontSize: 13),),
+              //         Text('Terms & Conditions',style: TextStyle(color: sh_colorPrimary2,fontSize: 13, decoration: TextDecoration.underline,),),
+              //       ],
+              //     )),
+              // Expanded(
+              //   flex: 1,
+              //     child: InkWell(
+              //   onTap: () async {
+              //     if(val==2){
+              //       if (singleTap) {
+              //         // Do something here
+              //         getSetting();
+              //         setState(() {
+              //           singleTap = false; // update bool
+              //         });
+              //       }
+              //
+              //     }else{
+              //       toast("Please agree to the terms & conditions");
+              //     }
+              //   },
+              //   child: Container(
+              //     width: MediaQuery.of(context).size.width*.5,
+              //     margin: EdgeInsets.only(
+              //         top: 4.0, bottom: 4.0),
+              //     padding: EdgeInsets.only(
+              //         top: spacing_standard, bottom: spacing_standard),
+              //     decoration: boxDecoration(
+              //         bgColor: sh_app_background, radius: 10, showShadow: true),
+              //     child: text("Continue",
+              //         textColor: sh_app_txt_color,
+              //         isCentered: true,
+              //         fontFamily: 'Bold'),
+              //   ),
+              // )),
+              // Expanded(
+              //     flex: 1,
+              //     child: InkWell(
+              //       onTap: () async {
+              //       },
+              //       child: Container(
+              //       ),
+              //     ))
             ],
           ),
         ),

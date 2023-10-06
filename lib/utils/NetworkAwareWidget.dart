@@ -17,7 +17,7 @@ class NetworkAwareWidget extends StatelessWidget {
     if (networkStatus == NetworkStatus.Online) {
       return onlineChild;
     } else {
-      _showToastMessage("Offline");
+      // _showToastMessage("Offline");
       return offlineChild;
     }
 

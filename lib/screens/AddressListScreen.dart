@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/AddressListModel.dart';
 import 'package:thrift/model/ShAddress.dart';
@@ -17,7 +19,8 @@ import 'package:thrift/utils/ShStrings.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
-
+import 'package:thrift/api_service/Url.dart';
+import 'package:thrift/utils/error_dialogue.dart';
 
 class AddressListScreen extends StatefulWidget {
   static String tag = '/AddressListScreen';
@@ -61,7 +64,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
 
 
       Response response =
-      await get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres'), headers: headers);
+      await get(Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/list_shipping_addres'), headers: headers);
 
       final jsonResponse = json.decode(response.body);
       print('AddressListScreen list_shipping_addres Response status2: ${response.statusCode}');
@@ -81,7 +84,29 @@ class _AddressListScreenState extends State<AddressListScreen> {
       }
 
       return _addressModel;
-    } catch (e) {
+    } on Exception catch (e) {
+      // errorDialogue(context,e.toString());
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                fetchAddressMain=fetchAddress();
+              });
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show();
       print('caught error $e');
     }
   }
@@ -103,7 +128,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
       print(msg);
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/delete_shipping_addres'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/delete_shipping_addres'),
           headers: headers,
           body: msg);
 
@@ -117,8 +142,30 @@ class _AddressListScreenState extends State<AddressListScreen> {
       setState(() {});
 
       return _addressModel;
-    } catch (e) {
-      EasyLoading.dismiss();
+    }on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {
+        setState(() {
+          fetchAddressMain=fetchAddress();
+        });
+      });
       print('caught error $e');
     }
   }
@@ -160,7 +207,6 @@ class _AddressListScreenState extends State<AddressListScreen> {
       MaterialPageRoute(
           builder: (BuildContext context) => DashboardScreen(selectedTab: 0,)),
       ModalRoute.withName('/DashboardScreen'),
-
     );
     return false;
   }

@@ -2,6 +2,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 
@@ -42,6 +43,13 @@ back(var context) {
 //   // 812 is the layout height that designer use
 //   return (inputHeight / 812.0) * screenHeight;
 // }
+toast(String message){
+  Fluttertoast.showToast(msg: message,
+      backgroundColor: Colors.black,
+      textColor: Colors.white);
+}
+
+
 
 Widget text(var text, {var fontSize = textSizeLargeMedium, textColor = sh_app_black, var fontFamily = 'Regular', var isCentered = false, var maxLine = 1, var latterSpacing = 0.5}) {
   return Text(text,
@@ -122,6 +130,8 @@ BoxDecoration boxDecoration({double radius = spacing_middle, Color color = Color
       border: Border.all(color: color),
       borderRadius: BorderRadius.all(Radius.circular(radius)));
 }
+
+
 
 BoxDecoration boxDecoration8({double radius = spacing_middle, Color color = Colors.transparent, Color bgColor = sh_white, var showShadow = false}) {
   return BoxDecoration(

@@ -31,7 +31,7 @@ class ReviewModelReviewsHeaders {
 class ReviewModelReviewsDataLinksUp {
 /*
 {
-  "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/2879"
+  "href": "${Url.BASE_URL}wp-json/wc/v3/products/2879"
 }
 */
 
@@ -53,7 +53,7 @@ class ReviewModelReviewsDataLinksUp {
 class ReviewModelReviewsDataLinksCollection {
 /*
 {
-  "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews"
+  "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews"
 }
 */
 
@@ -75,7 +75,7 @@ class ReviewModelReviewsDataLinksCollection {
 class ReviewModelReviewsDataLinksSelf {
 /*
 {
-  "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews/71"
+  "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews/71"
 }
 */
 
@@ -99,17 +99,17 @@ class ReviewModelReviewsDataLinks {
 {
   "self": [
     {
-      "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews/71"
+      "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews/71"
     }
   ],
   "collection": [
     {
-      "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews"
+      "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews"
     }
   ],
   "up": [
     {
-      "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/2879"
+      "href": "${Url.BASE_URL}wp-json/wc/v3/products/2879"
     }
   ]
 }
@@ -233,17 +233,17 @@ class ReviewModelReviewsData {
   "_links": {
     "self": [
       {
-        "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews/71"
+        "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews/71"
       }
     ],
     "collection": [
       {
-        "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews"
+        "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews"
       }
     ],
     "up": [
       {
-        "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/2879"
+        "href": "${Url.BASE_URL}wp-json/wc/v3/products/2879"
       }
     ]
   }
@@ -324,17 +324,17 @@ class ReviewModelReviews {
       "_links": {
         "self": [
           {
-            "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews/71"
+            "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews/71"
           }
         ],
         "collection": [
           {
-            "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews"
+            "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews"
           }
         ],
         "up": [
           {
-            "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/2879"
+            "href": "${Url.BASE_URL}wp-json/wc/v3/products/2879"
           }
         ]
       }
@@ -403,17 +403,17 @@ class ReviewModel {
         "_links": {
           "self": [
             {
-              "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews/71"
+              "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews/71"
             }
           ],
           "collection": [
             {
-              "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews"
+              "href": "${Url.BASE_URL}wp-json/wc/v3/products/reviews"
             }
           ],
           "up": [
             {
-              "href": "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/2879"
+              "href": "${Url.BASE_URL}wp-json/wc/v3/products/2879"
             }
           ]
         }

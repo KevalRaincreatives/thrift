@@ -4,8 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:http/retry.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sizer/sizer.dart';
 import 'package:thrift/fragments/AccountFragment.dart';
@@ -29,9 +30,10 @@ import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:http/http.dart' as http;
-import 'package:thrift/utils/T3Dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
+
+import '../provider/pro_det_provider.dart';
 
 
 class DashboardScreen extends StatefulWidget {
@@ -73,16 +75,23 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   Future<String?> fetchUserStatus() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      is_store_owner=prefs.getString('is_store_owner');
-      if(prefs.getString('is_store_owner')=='0'){
-        fragments = [homeFragment, settingFragment, profileFragment];
-      }
-      else if (prefs.getString('is_store_owner')=='1') {
-        // toast("value");
-        // launchScreen(context, BecameSellerScreen.tag);
-        fragments = [homeFragment, settingFragment, mysalesFragment,profileFragment];
-        // Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
-      } else if (prefs.getString('is_store_owner')=='2') {
+      String? final_token = prefs.getString('token');
+      if (final_token != null && final_token != '') {
+        is_store_owner = prefs.getString('is_store_owner');
+        if (prefs.getString('is_store_owner') == '0') {
+          fragments = [homeFragment, settingFragment, profileFragment];
+        }
+        else if (prefs.getString('is_store_owner') == '1') {
+          // toast("value");
+          // launchScreen(context, BecameSellerScreen.tag);
+          fragments =
+          [homeFragment, settingFragment, mysalesFragment, profileFragment];
+          // Navigator.pushNamed(context, CreateProductScreen.tag).then((_) => setState(() {}));
+        } else if (prefs.getString('is_store_owner') == '2') {
+          fragments = [homeFragment, settingFragment, profileFragment];
+        }
+      }else{
+        prefs.setString("is_store_owner", '0');
         fragments = [homeFragment, settingFragment, profileFragment];
       }
 
@@ -107,7 +116,10 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
               child: Text('No'),
             ),
             TextButton(
-              onPressed: () => exit(0),
+              onPressed: () {
+                // call this to exit app
+                FlutterExitApp.exitApp();
+              },
               /*Navigator.of(context).pop(true)*/
               child: Text('Yes'),
             ),
@@ -135,8 +147,6 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
     return Sizer(
       builder: (context, orientation, deviceType) {
         return Scaffold(
-
-
             body: StreamProvider<NetworkStatus>(
               initialData: NetworkStatus.Online,
               create: (context) =>
@@ -152,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
                             alignment: Alignment.bottomLeft,
                             children: <Widget>[
                               fragments[widget.selectedTab],
-                              Container(
+                              SizedBox(
                                 height: 58,
                                 child: Stack(
                                   alignment: Alignment.centerLeft,
@@ -248,8 +258,6 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
                 ),
               ),
             )
-
-
         );
       },
     );
@@ -290,25 +298,18 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
           } else if (pos == 1) {
             SharedPreferences prefs = await SharedPreferences.getInstance();
             String? userid = prefs.getString('UserId');
-            if (userid != null && userid != '') {
+            // if (userid != null && userid != '') {
               widget.selectedTab = pos;
               setState(() {});
-            } else {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => ShSignIn(screen_name: 'ShHomeScreen'),
-              //   ),
-              // );
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginScreen(),
-                ),
-              );
-
-            }
+            // } else {
+            //   Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //       builder: (context) => LoginScreen(),
+            //     ),
+            //   );
+            //
+            // }
           }
         },
         child: Container(
@@ -616,6 +617,7 @@ class T2DrawerState extends State<T2Drawer> {
           // String UserId = prefs.getString('UserId');
           prefs.setString('final_token', '');
           prefs.setString('token', '');
+          Provider.of<ProductDetailProvider>(context, listen: false).setLoggedInStatus(false);
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(

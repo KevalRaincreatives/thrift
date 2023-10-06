@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
+import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/screens/ProductDetailScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
@@ -15,6 +19,8 @@ import 'package:thrift/utils/ShExtension.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
+
+import '../provider/prolist_provider.dart';
 
 
 
@@ -30,18 +36,17 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
   final double runSpacing = 4;
   final double spacing = 4;
   final columns = 2;
-  List<ProductListModel> productListModel = [];
   var appBarTitleText ;
   String? fnl_token;
   Future<String?>? fetchDataMain;
-  Future<List<ProductListModel>?>? fetchAlbumMain;
   int? cart_count;
   int timer = 800, offset = 0;
   @override
   void initState() {
     super.initState();
     fetchDataMain=fetchData();
-    fetchAlbumMain=fetchAlbum();
+    final prolist_pd = Provider.of<ProductListProvider>(context, listen: false);
+    prolist_pd.getProductList();
 
   }
   Future<String?> fetchtotal() async {
@@ -73,35 +78,6 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
     }
   }
 
-  Future<List<ProductListModel>?> fetchAlbum() async {
-    try {
-//      prefs = await SharedPreferences.getInstance();
-//      String UserId = prefs.getString('UserId');
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? cat_id = prefs.getString('cat_id');
-      String? user_country = prefs.getString('user_selected_country');
-      // toast(cat_id);
-
-      var response = await http.get(
-          Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100&category=$cat_id"));
-
-      print('ProductListScreen products Response status2: ${response.statusCode}');
-      print('ProductListScreen products Response body2: ${response.body}');
-      productListModel.clear();
-      final jsonResponse = json.decode(response.body);
-      for (Map i in jsonResponse) {
-        if (i["product_country"] == user_country) {
-          productListModel.add(ProductListModel.fromJson(i));
-        }
-//        orderListModel = new OrderListModel2.fromJson(i);
-      }
-
-      return productListModel;
-    } catch (e) {
-//      return orderListModel;
-      print('caught error $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +109,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
       }
     }
 
-    Imagevw4(int index) {
+    Imagevw4(int index,productListModel) {
       if (productListModel[index].images!.length < 1) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
@@ -149,25 +125,36 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
       } else {
         return ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
-          child: Image.network(
+          child: CachedNetworkImage(
+            imageUrl:
             productListModel[index].images![0]!.src!,
-            fit: BoxFit.cover ,
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
             height: 150,
             width: width,
+            // memCacheWidth: width,
+            filterQuality: FilterQuality.medium,
+            placeholder: (context, url) => Center(
+              child: SizedBox(
+                  height: 30,
+                  width: 30,
+                  child: CircularProgressIndicator()),
+            ),
+            errorWidget: (context, url, error) => new Icon(Icons.error),
+          )
 
-          ),
         );
       }
     }
 
-    NewImagevw(int index) {
+    NewImagevw(int index,productListModel) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Stack(
             children: [
 
-              Imagevw4(index),
+              Imagevw4(index,productListModel),
               // Row(
               //   mainAxisAlignment: MainAxisAlignment.end,
               //   children: <Widget>[
@@ -205,41 +192,11 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
       );
     }
 
-    Descrptntext(int index){
-      // if(showShortDesc=='1') {
-      return text(productListModel[index].slug,
-          fontFamily: fontMedium,
-          textColor: sh_app_txt_color,
-          fontSize: textSizeSmall);
-      // }else{
-      //   return Container();
-      // }
-    }
 
-    DiscountPrice(int index){
-      var myprice2,myprice;
-      if(productListModel[index].price==''){
-        myprice="0.00";
-      }else {
-        myprice2 = double.parse(productListModel[index].price!);
-        myprice = myprice2.toStringAsFixed(2);
-      }
 
-      // if(showDiscountPrice=='1') {
-      return Text(
-        "\$" + myprice,
-        style: TextStyle(
-            color: sh_red,
-            fontFamily: fontBold,
-            fontSize: textSizeSMedium,
-            decoration: TextDecoration.lineThrough),
-      );
-      // }else{
-      //   return Container();
-      // }
-    }
 
-    MyPrice(int index){
+
+    MyPrice(int index,productListModel){
       var myprice2,myprice;
       if(productListModel[index].price==''){
         myprice="0.00";
@@ -268,6 +225,7 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
     Widget setUserForm() {
       AppBar appBar = AppBar(
         elevation: 0,
+
         backgroundColor: sh_colorPrimary2,
         title: Text(
           "Products",
@@ -330,97 +288,101 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
                       },
                     ),
                   ),
-                  FutureBuilder<List<ProductListModel>?>(
-                    future: fetchAlbumMain,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        if(productListModel.length > 0) {
-                          return Wrap(
-                            runSpacing: runSpacing,
-                            spacing: spacing,
-                            alignment: WrapAlignment.center,
-                            children: List.generate(productListModel.length, (index) {
-                              return InkWell(
-                                onTap: () async {
-                                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                                  prefs.setString(
-                                      'pro_id', productListModel[index].id.toString());
-                                  List<String> myimages = [];
-                                  for (var i = 0;
-                                  productListModel[index].images!.length > i;
-                                  i++) {
-                                    myimages.add(
-                                        productListModel[index].images![i]!.src!);
-                                  }
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => ProductDetailScreen(proName: productListModel[index].name,proPrice: productListModel[index].price,proImage: myimages,)));
-                                },
-                                child: Container(
-                                  width: w * .9,
-                                  decoration: boxDecoration4(showShadow: false),
-                                  margin: EdgeInsets.only(left: 12, bottom: 12),
-                                  // padding: EdgeInsets.fromLTRB(spacing_standard,spacing_standard,spacing_standard,spacing_control_half),
-                                  padding:
-                                  EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: <Widget>[
-                                      NewImagevw(index),
-                                      SizedBox(
-                                        height: 6,
+                  Consumer<ProductListProvider>(builder: ((context, value, child) {
+                    return value.loader_prolist ? Center(child: CircularProgressIndicator()) :
+                        value.productListModel.length > 0 ?Wrap(
+                          runSpacing: runSpacing,
+                          spacing: spacing,
+                          alignment: WrapAlignment.center,
+                          children: List.generate(value.productListModel.length, (index) {
+                            return InkWell(
+                              onTap: () async {
+                                SharedPreferences prefs = await SharedPreferences.getInstance();
+                                prefs.setString(
+                                    'pro_id', value.productListModel[index].id.toString());
+                                List<String> myimages = [];
+                                for (var i = 0;
+                                value.productListModel[index].images!.length > i;
+                                i++) {
+                                  myimages.add(
+                                      value.productListModel[index].images![i]!.src!);
+                                }
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ProductDetailScreen(proName: value.productListModel[index].name,proPrice: value.productListModel[index].price,proImage: myimages,)));
+                              },
+                              child: Container(
+                                width: w * .9,
+                                decoration: boxDecoration4(showShadow: false),
+                                margin: EdgeInsets.only(left: 12, bottom: 12),
+                                // padding: EdgeInsets.fromLTRB(spacing_standard,spacing_standard,spacing_standard,spacing_control_half),
+                                padding:
+                                EdgeInsets.fromLTRB(0, 0, 0, spacing_control_half),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: <Widget>[
+                                    NewImagevw(index,value.productListModel),
+                                    SizedBox(
+                                      height: 6,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 0, right: spacing_standard),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Html(
+                                            data: value.productListModel[index].name!,
+                                            style: {
+                                              "body": Style(
+                                                maxLines: 1,
+                                                margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                                fontSize: FontSize(16.0),
+                                                color: sh_black,
+                                                fontFamily: fontBold,
+                                              ),
+                                            },
+                                          ),
+                                          // Text(
+                                          //   value.productListModel[index].name!,
+                                          //   maxLines: 1,
+                                          //   style: TextStyle(
+                                          //       color: sh_black,
+                                          //       fontFamily: fontBold,
+                                          //       fontSize: textSizeMedium),
+                                          // ),
+                                          SizedBox(
+                                            height: 2,
+                                          ),
+                                          MyPrice(index,value.productListModel),
+                                          SizedBox(
+                                            height: 4,
+                                          ),
+                                        ],
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 0, right: spacing_standard),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              productListModel[index].name!,
-                                              maxLines: 1,
-                                              style: TextStyle(
-                                                  color: sh_black,
-                                                  fontFamily: fontBold,
-                                                  fontSize: textSizeMedium),
-                                            ),
-                                            SizedBox(
-                                              height: 2,
-                                            ),
-                                            MyPrice(index),
-                                            SizedBox(
-                                              height: 4,
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
+                                    )
+                                  ],
                                 ),
-                              );
-                            }),
-                          );
-                        }else{
-                          return Container(
-                            height: height-350,
-                            alignment: Alignment.center,
-                            child: Center(
-                              child: Text(
-                                'No Product Found',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: sh_colorPrimary2,
-                                    fontWeight: FontWeight.bold),
                               ),
+                            );
+                          }),
+                        ) :
+                        Container(
+                          height: height-350,
+                          alignment: Alignment.center,
+                          child: Center(
+                            child: Text(
+                              'No Product Found',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: sh_colorPrimary2,
+                                  fontWeight: FontWeight.bold),
                             ),
-                          );
-                        }
+                          ),
+                        );
+                  })),
 
-                      }
-                      return Center(child: CircularProgressIndicator());
-                    },
-                  ),
                 ],
               ),
             ),
@@ -458,15 +420,37 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
                     GestureDetector(
                       onTap: () async {
                         SharedPreferences prefs = await SharedPreferences.getInstance();
-                        prefs.setInt("shiping_index", -2);
-                        prefs.setInt("payment_index", -2);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                        String? UserId = prefs.getString('UserId');
+                        String? token = prefs.getString('token');
+                        if (UserId != null && UserId != '') {
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    CartScreen()),).then((value) {   setState(() {
+                            // refresh state
+                          });});
+                        }else{
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          // launchScreen(context, CartScreen.tag);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CartScreen()),
+                          ).then((value) {
+                            setState(() {
+                              // refresh state
+                            });
+                          });
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => LoginScreen(),
+                          //   ),
+                          // );
+                        }
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),

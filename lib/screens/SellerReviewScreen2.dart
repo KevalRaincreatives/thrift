@@ -1,7 +1,7 @@
 // import 'dart:convert';
 //
 // import 'package:flutter/material.dart';
-// import 'package:nb_utils/nb_utils.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:thrift/model/ReviewModel.dart';
 // import 'package:thrift/screens/CartScreen.dart';
 // import 'package:thrift/utils/ShColors.dart';
@@ -34,7 +34,7 @@
 //
 //       var response;
 //         response = await http.get(Uri.parse(
-//             "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews?product=2879&per_page=100"));
+//             "${Url.BASE_URL}wp-json/wc/v3/products/reviews?product=2879&per_page=100"));
 //       print('Response status2: ${response.statusCode}');
 //       print('Response body2: ${response.body}');
 //       reviewModel.clear();

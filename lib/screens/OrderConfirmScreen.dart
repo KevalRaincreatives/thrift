@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/CartModel.dart';
 import 'package:thrift/model/OrderProductModel.dart';
 import 'package:thrift/model/OrderSuccessModel.dart';
@@ -71,7 +71,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen> {
 
 
       var response = await http.get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/order_status_push_notification?payment_method=cod&order_id=$order_id'),headers: headers
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/order_status_push_notification?payment_method=cod&order_id=$order_id'),headers: headers
       );
 
       print('Response status2: ${response.statusCode}');
@@ -166,7 +166,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen> {
       //     'https://encros.rcstaging.co.in/wp-json/wooapp/v3/woocart',
       //     headers: headers);
 
-      var response = await http.get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart'),headers: headers);
+      var response = await http.get(Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/woocart'),headers: headers);
 
       print('Response status2: ${response.statusCode}');
       print('Response body2: ${response.body}');
@@ -316,7 +316,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen> {
       //     headers: headers,
       //     body: body);
 
-      var response = await http.post(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/create_order'), body: body,headers: headers);
+      var response = await http.post(Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/create_order'), body: body,headers: headers);
 
       EasyLoading.dismiss();
 
@@ -325,7 +325,7 @@ class _OrderConfirmScreenState extends State<OrderConfirmScreen> {
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');
       orderSuccessModel = new OrderSuccessModel.fromJson(jsonResponse);
-      toast(orderSuccessModel!.msg);
+      toast(orderSuccessModel!.msg!);
       prefs.setString('ord_id', orderSuccessModel!.order_id!.toString());
       AddPushData(orderSuccessModel!.order_id!);
 

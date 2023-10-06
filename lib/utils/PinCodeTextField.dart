@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:thrift/utils/PinTheme.dart';
@@ -746,9 +745,7 @@ class _PinCodeTextFieldState extends State<PinCodeTextField>
       style: TextStyle(
         color: Colors.transparent,
         height: .01,
-        fontSize: kIsWeb
-            ? 1
-            : 0.01, // it is a hidden textfield which should remain transparent and extremely small
+        fontSize:  0.01, // it is a hidden textfield which should remain transparent and extremely small
       ),
       scrollPadding: widget.scrollPadding,
       readOnly: widget.readOnly,

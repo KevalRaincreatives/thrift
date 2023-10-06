@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:flutter_html/flutter_html.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/OrderDetailModel.dart';
+import 'package:thrift/provider/order_provider.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
@@ -19,38 +22,46 @@ import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
 
 class VendorOrderDetailScreen extends StatefulWidget {
-  static String tag='/VendorOrderDetailScreen';
+  static String tag = '/VendorOrderDetailScreen';
+
   const VendorOrderDetailScreen({Key? key}) : super(key: key);
 
   @override
-  _VendorOrderDetailScreenState createState() => _VendorOrderDetailScreenState();
+  _VendorOrderDetailScreenState createState() =>
+      _VendorOrderDetailScreenState();
 }
 
 class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
-  OrderDetailModel? orderDetailModel;
+  // OrderDetailModel? orderDetailModel;
   String? productPerRow,
       showDiscountPrice,
-      showShortDesc,currency_symbol,price_decimal_sep,price_num_decimals;
+      showShortDesc,
+      currency_symbol,
+      price_decimal_sep,
+      price_num_decimals;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController controller5 = TextEditingController();
-  String pro_rating="";
-  String? vendor_country;
+  String pro_rating = "";
+
+  // String? vendor_country;
   int? cart_count;
-  Future<OrderDetailModel?>? fetchOrderMain;
+
+  // Future<OrderDetailModel?>? fetchOrderMain;
 
   @override
   void initState() {
     super.initState();
-    fetchOrderMain=fetchOrder();
-
+    // fetchOrderMain=fetchOrder();
+    final emp_pd = Provider.of<OrderProvider>(context, listen: false);
+    emp_pd.getVendorOrderDetails();
   }
 
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
 
@@ -60,54 +71,53 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
     }
   }
 
-  Future<String?> fetchCountry() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      vendor_country = prefs.getString('vendor_country');
+  // Future<String?> fetchCountry() async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     vendor_country = prefs.getString('vendor_country');
+  //
+  //     return '';
+  //   } catch (e) {
+  //     print('caught error $e');
+  //   }
+  // }
 
-      return '';
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
-
-
-  Future<OrderDetailModel?> fetchOrder() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-      String? order_id = prefs.getString('order_id');
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      final msg = jsonEncode({"order_id": order_id});
-      print(msg);
-
-      Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_order_detail'),
-          headers: headers,
-          body: msg);
-
-      final jsonResponse = json.decode(response.body);
-      print('VendorOrderDetailScreen get_order_detail Response status2: ${response.statusCode}');
-      print('VendorOrderDetailScreen get_order_detail Response body2: ${response.body}');
-      orderDetailModel = new OrderDetailModel.fromJson(jsonResponse);
-
-      return orderDetailModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
+  // Future<OrderDetailModel?> fetchOrder() async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     // String UserId = prefs.getString('UserId');
+  //     String? token = prefs.getString('token');
+  //     String? order_id = prefs.getString('order_id');
+  //
+  //     Map<String, String> headers = {
+  //       'Content-Type': 'application/json',
+  //       'Accept': 'application/json',
+  //       'Authorization': 'Bearer $token',
+  //     };
+  //
+  //     final msg = jsonEncode({"order_id": order_id});
+  //     print(msg);
+  //
+  //     Response response = await post(
+  //         Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/get_order_detail'),
+  //         headers: headers,
+  //         body: msg);
+  //
+  //     final jsonResponse = json.decode(response.body);
+  //     print('VendorOrderDetailScreen get_order_detail Response status2: ${response.statusCode}');
+  //     print('VendorOrderDetailScreen get_order_detail Response body2: ${response.body}');
+  //     orderDetailModel = new OrderDetailModel.fromJson(jsonResponse);
+  //
+  //     return orderDetailModel;
+  //   }  on Exception catch (e) {
+  //
+  //     print('caught error $e');
+  //   }
+  // }
 
   Future<String?> ReviewSubmit(String pro_id) async {
     EasyLoading.show(status: 'Please wait...');
     try {
-
       // String email = emailCont.text;
       // String firstname = firstNameCont.text;
       // String lastname = lastNameCont.text;
@@ -128,17 +138,16 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
 
       final msg = jsonEncode({
         "product_id": pro_id,
-        "review":controller5.text.toString(),
-        "reviewer":profile_name,
+        "review": controller5.text.toString(),
+        "reviewer": profile_name,
         "reviewer_email": OrderUserEmail,
         "rating": pro_rating
       });
 
-
       // String body = json.encode(data2);
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/reviews'),
+          Uri.parse('${Url.BASE_URL}wp-json/wc/v3/products/reviews'),
           headers: headers,
           body: msg);
 
@@ -146,37 +155,30 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
       final jsonResponse = json.decode(response.body);
       EasyLoading.dismiss();
 
-      print('VendorOrderDetailScreen reviews Response status2: ${response.statusCode}');
+      print(
+          'VendorOrderDetailScreen reviews Response status2: ${response.statusCode}');
       print('VendorOrderDetailScreen reviews Response body2: ${response.body}');
       toast("Review Submitted successfully");
       // becameSellerModel = new BecameSellerModel.fromJson(jsonResponse);
 
-
-
       // prefs.setString('login_name', firstname);
 
       return "becameSellerModel";
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
 
       print('caught error $e');
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery
-        .of(context)
-        .size
-        .width;
-    var height = MediaQuery
-        .of(context)
-        .size
-        .height;
+    var width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
 
-    CartPrice(int position){
-      var myprice2 =double.parse(orderDetailModel!.data!.products![position]!.total!);
+    CartPrice(int position,vendorOrderDetailModel) {
+      var myprice2 =
+          double.parse(vendorOrderDetailModel!.data!.products![position]!.total!);
       var myprice = myprice2.toStringAsFixed(2);
       // var myprice3;
       // if(price_decimal_sep==',') {
@@ -184,16 +186,13 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
       // }else{
       //   myprice3=myprice;
       // }
-      return text(
-          "\$"+myprice+" "+orderDetailModel!.data!.currency!,
-          textColor: sh_colorPrimary2,
-          fontSize: 14.0,
-          fontFamily: 'Bold'
-      );
+      return text("\$" + myprice + " " + vendorOrderDetailModel!.data!.currency!,
+          textColor: sh_colorPrimary2, fontSize: 14.0, fontFamily: 'Bold');
     }
 
     void _openCustomDialogSold(String prod_id) {
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+      showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
             return Transform.scale(
               scale: a1.value,
@@ -202,11 +201,18 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Rate this product',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  title: Center(
+                      child: Text(
+                    'Rate this product',
+                    style: TextStyle(
+                        color: sh_colorPrimary2,
+                        fontSize: 18,
+                        fontFamily: 'Bold'),
+                    textAlign: TextAlign.center,
+                  )),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-
                       Divider(
                         thickness: 0.5,
                       ),
@@ -226,7 +232,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                           ),
                           onRatingUpdate: (rating) {
                             print(rating);
-                            pro_rating=rating.toString();
+                            pro_rating = rating.toString();
                             // toast(rating.toString());
                           },
                         ),
@@ -254,41 +260,43 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                               border: InputBorder.none,
                               enabledBorder: OutlineInputBorder(
                                 borderSide:
-                                BorderSide(color: Colors.grey, width: 1),
+                                    BorderSide(color: Colors.grey, width: 1),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide:
-                                BorderSide(color: Colors.grey, width: 1),
+                                    BorderSide(color: Colors.grey, width: 1),
                               ),
                               filled: false,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(height: 20,),
+                      SizedBox(
+                        height: 20,
+                      ),
                       InkWell(
                         onTap: () async {
                           if (_formKey.currentState!.validate()) {
                             //   // TODO submit
 
-                            if(pro_rating==''){
-                              toast("Please add a rating") ;
-                            }else {
+                            if (pro_rating == '') {
+                              toast("Please add a rating");
+                            } else {
                               FocusScope.of(context).requestFocus(FocusNode());
                               Navigator.of(context, rootNavigator: true).pop();
 
                               ReviewSubmit(prod_id);
                             }
-
                           }
                           // _openCustomDialog2();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                              bgColor: sh_colorPrimary2,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Submit",
                               fontSize: 16.0,
                               textColor: sh_white,
@@ -296,17 +304,20 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                               fontFamily: 'Bold'),
                         ),
                       ),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       InkWell(
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                              bgColor: sh_btn_color,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Cancel",
                               fontSize: 16.0,
                               textColor: sh_colorPrimary2,
@@ -316,8 +327,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                       )
                     ],
                   ),
-                )
-                ,
+                ),
               ),
             );
           },
@@ -330,17 +340,16 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
           });
     }
 
-    ProductList() {
+    ProductList(vendorOrderDetailModel) {
       return ListView.builder(
           scrollDirection: Axis.vertical,
-          itemCount: orderDetailModel!.data!.products!.length,
+          itemCount: vendorOrderDetailModel!.data!.products!.length,
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
             return Container(
               // margin: EdgeInsets.only(bottom: spacing_standard_new),
-              margin: EdgeInsets.fromLTRB(26, 0,
-                  26, spacing_standard_new),
+              margin: EdgeInsets.fromLTRB(26, 0, 26, spacing_standard_new),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -348,9 +357,9 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                     flex: 1,
                     child: ClipRRect(
                       borderRadius:
-                      BorderRadius.all(Radius.circular(spacing_middle)),
+                          BorderRadius.all(Radius.circular(spacing_middle)),
                       child: Image.network(
-                        orderDetailModel!.data!.products![index]!.image!,
+                        vendorOrderDetailModel!.data!.products![index]!.image!,
                         fit: BoxFit.fill,
                         height: width * 0.20,
                       ),
@@ -365,14 +374,27 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Text(
-                          orderDetailModel!.data!.products![index]!.name!,
-                          style: TextStyle(color: sh_colorPrimary2, fontSize: 16),
+                        Html(
+                          data: vendorOrderDetailModel!.data!.products![index]!.name!,
+                          style: {
+                            "body": Style(
+                              maxLines: 2,
+                              margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                              fontSize: FontSize(16.0),
+                              color: sh_colorPrimary2,
+                              fontFamily: fontRegular,
+                            ),
+                          },
                         ),
+                        // Text(
+                        //   vendorOrderDetailModel!.data!.products![index]!.name!,
+                        //   style:
+                        //       TextStyle(color: sh_colorPrimary2, fontSize: 16),
+                        // ),
                         SizedBox(
                           height: 1,
                         ),
-                        CartPrice(index),
+                        CartPrice(index,vendorOrderDetailModel),
                         // text(
                         //   "\$" + orderDetailModel!.data!.products![index]!.total!,
                         // ),
@@ -383,15 +405,16 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                           padding: EdgeInsets.fromLTRB(
                               spacing_standard, 1, spacing_standard, 1),
                           decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(6),
                               border:
-                              Border.all(color: sh_view_color, width: 1)),
+                                  Border.all(color: sh_view_color, width: 1)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               text(
                                   "Qty: " +
-                                      orderDetailModel!.data!.products![index]!.quantity
+                                      vendorOrderDetailModel!
+                                          .data!.products![index]!.quantity
                                           .toString(),
                                   textColor: sh_textColorPrimary,
                                   fontSize: textSizeSmall)
@@ -401,7 +424,6 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                         SizedBox(
                           height: 8,
                         ),
-
                       ],
                     ),
                   ),
@@ -412,50 +434,50 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
           });
     }
 
-    CouponDet() {
-      if (orderDetailModel!.data!.coupons!.length > 0) {
-        var myprice2 =double.parse(orderDetailModel!.data!.coupons![0].amount.toString());
-        var myprice = myprice2.toStringAsFixed(2);
-        var myprice3;
-        if(price_decimal_sep==',') {
-          myprice3 = myprice.replaceAll('.', ',').toString();
-        }else{
-          myprice3=myprice;
-        }
+    // CouponDet() {
+    //   if (orderDetailModel!.data!.coupons!.length > 0) {
+    //     var myprice2 =
+    //         double.parse(orderDetailModel!.data!.coupons![0].amount.toString());
+    //     var myprice = myprice2.toStringAsFixed(2);
+    //     var myprice3;
+    //     if (price_decimal_sep == ',') {
+    //       myprice3 = myprice.replaceAll('.', ',').toString();
+    //     } else {
+    //       myprice3 = myprice;
+    //     }
+    //
+    //     return Row(
+    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //       children: <Widget>[
+    //         text(sh_lbl_coupon_discount),
+    //         text(
+    //             "(" +
+    //                 orderDetailModel!.data!.coupons![0].code! +
+    //                 ")" +
+    //                 myprice3,
+    //             textColor: sh_textColorPrimary,
+    //             fontFamily: fontMedium),
+    //       ],
+    //     );
+    //   } else {
+    //     return Row(
+    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //       children: <Widget>[
+    //         text(sh_lbl_coupon_discount),
+    //         text('N/A', textColor: sh_textColorPrimary, fontFamily: fontMedium),
+    //       ],
+    //     );
+    //   }
+    // }
 
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            text(sh_lbl_coupon_discount),
-            text("("+orderDetailModel!.data!.coupons![0].code!+")"+myprice3,
-                textColor: sh_textColorPrimary,
-                fontFamily: fontMedium),
-          ],
-        );
-
-      } else {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            text(sh_lbl_coupon_discount),
-            text('N/A',
-                textColor: sh_textColorPrimary,
-                fontFamily: fontMedium),
-          ],
-        );
-
-      }
-    }
-
-    SubPrice(){
-      var myprice2 =double.parse(orderDetailModel!.data!.subTotal.toString());
+    SubPrice(vendorOrderDetailModel) {
+      var myprice2 = double.parse(vendorOrderDetailModel!.data!.subTotal.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
-      if(price_decimal_sep==',') {
+      if (price_decimal_sep == ',') {
         myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
+      } else {
+        myprice3 = myprice;
       }
 
       return Row(
@@ -473,178 +495,37 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
               textColor: sh_textColorPrimary,
               fontSize: textSizeMedium,
               fontFamily: fontSemibold),
-          text("\$"+myprice+" "+orderDetailModel!.data!.currency!,
-              textColor: sh_colorPrimary2, fontFamily: fontMedium,fontSize: textSizeMedium),
-        ],
-      );
-    }
-
-    ShippingPrice(){
-      var myprice2 =double.parse(orderDetailModel!.data!.shippingTotal.toString());
-      var myprice = myprice2.toStringAsFixed(2);
-      var myprice3;
-      if(price_decimal_sep==',') {
-        myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
-      }
-
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          text(sh_lbl_shipping_charge,
-              textColor: sh_textColorPrimary,
-              fontSize: textSizeMedium,
-              fontFamily: fontSemibold),
-          text(
-              "\$"+myprice+" "+orderDetailModel!.data!.currency!,
-              textColor: sh_colorPrimary2, fontFamily: fontMedium,fontSize: textSizeMedium),
-        ],
-      );
-    }
-
-    TotalPrice(){
-      var myprice2 =double.parse(orderDetailModel!.data!.total.toString());
-      var myprice = myprice2.toStringAsFixed(2);
-      var myprice3;
-      if(price_decimal_sep==',') {
-        myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
-      }
-
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-
-          text(sh_lbl_total_amount,
-              textColor: sh_textColorPrimary,
-              fontSize: textSizeMedium,
-              fontFamily: fontSemibold),
-          text("\$"+myprice+" "+orderDetailModel!.data!.currency!,
+          text("\$" + myprice + " " + vendorOrderDetailModel!.data!.currency!,
               textColor: sh_colorPrimary2,
-              fontFamily: fontBold,
+              fontFamily: fontMedium,
               fontSize: textSizeMedium),
         ],
       );
     }
 
 
-    paymentDetail() {
-      return Container(
-        margin: EdgeInsets.only(
-            left: 26,
-            right: 26,
-            top: spacing_standard_new),
-        decoration:
-        BoxDecoration(
-        borderRadius: BorderRadius.circular(6),border: Border.all(color: sh_view_color, width: 1.0)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(spacing_standard_new,
-                  spacing_middle, spacing_standard_new, spacing_middle),
-              child: text(sh_lbl_payment_details,
-                  textColor: sh_textColorPrimary,
-                  fontSize: textSizeMedium,
-                  fontFamily: fontSemibold),
-            ),
-            Divider(
-              height: 1,
-              color: sh_view_color,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(spacing_standard_new,
-                  spacing_middle, spacing_standard_new, spacing_middle),
-              child: Column(
-                children: <Widget>[
-                  // CouponDet(),
-                  //
-                  // SizedBox(
-                  //   height: spacing_standard,
-                  // ),
-                  SubPrice(),
-                  // Row(
-                  //   children: <Widget>[
-                  //     text(sh_lbl_sub_total),
-                  //     text("\$" + orderDetailModel!.data!.subTotal.toString(),
-                  //         textColor: Colors.green, fontFamily: fontMedium),
-                  //   ],
-                  // ),
-                  SizedBox(
-                    height: spacing_standard,
-                  ),
-                  ShippingPrice(),
-                  // Row(
-                  //   children: <Widget>[
-                  //     text(sh_lbl_shipping_charge),
-                  //     text(
-                  //         "\$" + orderDetailModel!.data!.shippingTotal.toString(),
-                  //         textColor: Colors.green, fontFamily: fontMedium),
-                  //   ],
-                  // ),
 
-                  SizedBox(
-                    height: spacing_standard,
-                  ),
-                  TotalPrice(),
-
-
-                ],
-
-              ),
-            ),
-            SizedBox(
-              height: 6,
-            ),
-          ],
-        ),
-      );
-    }
-
-    OrdDate() {
+    OrdDate(vendorOrderDetailModel) {
       var inputFormat = DateFormat("yyyy-MM-dd");
 
-
-      String date1 = inputFormat.parse(
-          orderDetailModel!.data!.dateCreated!.date!.substring(0, 10)).toString();
+      String date1 = inputFormat
+          .parse(vendorOrderDetailModel!.data!.dateCreated!.date!.substring(0, 10))
+          .toString();
       DateTime dateTime = DateTime.parse(date1);
       var outputFormat = DateFormat.yMMMMd('en_US').format(dateTime);
 
       String date2 = outputFormat.toString();
       return text(date2,
-          textColor: sh_textColorPrimary, fontFamily: fontMedium,fontSize: textSizeMedium);
+          textColor: sh_textColorPrimary,
+          fontFamily: fontMedium,
+          fontSize: textSizeMedium);
     }
 
-    TotalAmount(){
-      var myprice2 =double.parse(orderDetailModel!.data!.total!.toString());
-      var myprice = myprice2.toStringAsFixed(2);
-      var myprice3;
-      if(price_decimal_sep==',') {
-        myprice3 = myprice.replaceAll('.', ',').toString();
-      }else{
-        myprice3=myprice;
-      }
 
-      return Row(
-        children: <Widget>[
-          text(sh_lbl_total_amount,
-              textColor: sh_textColorPrimary,
-              fontSize: textSizeMedium,
-              fontFamily: fontSemibold),
-          text("\$"+myprice3+" "+orderDetailModel!.data!.currency!,
-              textColor: sh_colorPrimary2,
-              fontFamily: fontBold,
-              fontSize: textSizeMedium),
-        ],
-      );
-    }
-
-    FetchCountryDetails(){
-      if(vendor_country=='Barbados'){
+    FetchCountryDetails(vendorOrderDetailModel) {
+      if (vendorOrderDetailModel == 'Barbados') {
         return Container();
-      }else{
+      } else {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -655,9 +536,9 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                     fontSize: textSizeMedium,
                     fontFamily: fontSemibold),
                 text(
-                    orderDetailModel!.data!.shippingAddress!.firstName! +
+                    vendorOrderDetailModel!.data!.shippingAddress!.firstName! +
                         " " +
-                        orderDetailModel!.data!.shippingAddress!.lastName!,
+                        vendorOrderDetailModel!.data!.shippingAddress!.lastName!,
                     textColor: sh_textColorPrimary,
                     fontFamily: fontMedium,
                     fontSize: textSizeMedium),
@@ -671,19 +552,16 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
       }
     }
 
-    shippingDetail() {
-      if(vendor_country=='Barbados'){
+    shippingDetail(vendorOrderDetailModel) {
+      if (vendorOrderDetailModel == 'Barbados') {
         return Container();
-      }else {
+      } else {
         return Container(
-          margin: EdgeInsets.only(
-              left: 26,
-              right: 26,
-              top: spacing_standard_new),
-          decoration:
-          BoxDecoration(
-              borderRadius: BorderRadius.circular(6)
-              , border: Border.all(color: sh_view_color, width: 1.0)),
+          margin:
+              EdgeInsets.only(left: 26, right: 26, top: spacing_standard_new),
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: sh_view_color, width: 1.0)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -706,25 +584,25 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     text(
-                        orderDetailModel!.data!.shippingAddress!.firstName! +
+                        vendorOrderDetailModel!.data!.shippingAddress!.firstName! +
                             " " +
-                            orderDetailModel!.data!.shippingAddress!.lastName!,
+                            vendorOrderDetailModel!.data!.shippingAddress!.lastName!,
                         textColor: sh_textColorPrimary,
                         fontFamily: fontMedium,
                         fontSize: textSizeMedium),
-                    text(orderDetailModel!.data!.shippingAddress!.address,
+                    text(vendorOrderDetailModel!.data!.shippingAddress!.address,
                         textColor: sh_textColorPrimary,
                         fontSize: textSizeMedium),
                     text(
-                        orderDetailModel!.data!.shippingAddress!.city! +
+                        vendorOrderDetailModel!.data!.shippingAddress!.city! +
                             "," +
-                            orderDetailModel!.data!.shippingAddress!.postcode!,
+                            vendorOrderDetailModel!.data!.shippingAddress!.postcode!,
                         textColor: sh_textColorPrimary,
                         fontSize: textSizeSMedium),
                     text(
-                        orderDetailModel!.data!.shippingAddress!.state! +
+                        vendorOrderDetailModel!.data!.shippingAddress!.state! +
                             "," +
-                            orderDetailModel!.data!.shippingAddress!.country!,
+                            vendorOrderDetailModel!.data!.shippingAddress!.country!,
                         textColor: sh_textColorPrimary,
                         fontSize: textSizeMedium),
                   ],
@@ -736,14 +614,12 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
       }
     }
 
-    orderDetail() {
+    orderDetail(vendorOrderDetailModel) {
       return Container(
-        margin: EdgeInsets.only(
-            left: 26,
-            right: 26),
-        decoration:
-        BoxDecoration(
-        borderRadius: BorderRadius.circular(6),border: Border.all(color: sh_view_color, width: 1.0)),
+        margin: EdgeInsets.only(left: 26, right: 26),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: sh_view_color, width: 1.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -770,10 +646,10 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                           textColor: sh_textColorPrimary,
                           fontSize: textSizeMedium,
                           fontFamily: fontSemibold),
-                      text("#" + orderDetailModel!.data!.orderId.toString(),
+                      text("#" + vendorOrderDetailModel!.data!.orderId.toString(),
                           textColor: sh_textColorPrimary,
                           fontFamily: fontMedium,
-                      fontSize: textSizeMedium),
+                          fontSize: textSizeMedium),
                     ],
                   ),
                   SizedBox(
@@ -785,48 +661,13 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                           textColor: sh_textColorPrimary,
                           fontSize: textSizeMedium,
                           fontFamily: fontSemibold),
-                      OrdDate()
+                      OrdDate(vendorOrderDetailModel)
                     ],
                   ),
                   SizedBox(
                     height: spacing_control,
                   ),
-                  FutureBuilder<String?>(
-                    future: fetchCountry(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return FetchCountryDetails();
-                      } else if (snapshot.hasError) {
-                        return Text("${snapshot.error}");
-                      }
-                      // By default, show a loading spinner.
-                      return CircularProgressIndicator();
-                    },
-                  ),
-
-
-
-
-                  // Row(
-                  //   children: <Widget>[
-                  //     text("Order By -",
-                  //         textColor: sh_textColorPrimary,
-                  //         fontSize: textSizeMedium,
-                  //         fontFamily: fontSemibold),
-                  //     text(
-                  //         orderDetailModel!.data!.shippingAddress!.firstName! +
-                  //             " " +
-                  //             orderDetailModel!.data!.shippingAddress!.lastName!,
-                  //         textColor: sh_textColorPrimary,
-                  //         fontFamily: fontMedium,
-                  //         fontSize: textSizeMedium),
-                  //   ],
-                  // ),
-                  // SizedBox(
-                  //   height: spacing_control,
-                  // ),
-                  //
-                  // TotalAmount(),
+                  // FetchCountryDetails(vendorOrderDetailModel),
 
                 ],
               ),
@@ -836,10 +677,8 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
       );
     }
 
-
-
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
           height: 44,
@@ -847,10 +686,13 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
+          badgeContent: Text(
+            cart_count.toString(),
+            style: TextStyle(color: sh_white, fontSize: 8),
+          ),
           child: Container(
             child: Image.asset(
               sh_new_cart,
@@ -870,7 +712,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
         title: Text(
           "Sales Details",
           style:
-          TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
+              TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
@@ -897,8 +739,8 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
             height: 120,
             width: width,
             child: Image.asset(sh_upper2, fit: BoxFit.fill)
-          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-        ),
+            // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+            ),
         //Above card
 
         Container(
@@ -910,126 +752,244 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
             child: Container(
               width: width,
               height: height,
-              child: FutureBuilder<OrderDetailModel?>(
-                  future: fetchOrderMain,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return SingleChildScrollView(
+              child: Consumer<OrderProvider>(builder: ((context, data, child) {
+                return data.loader_det_vendor
+                    ? Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        enabled: true,
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                    width: 60.0,
+                                    height: 60.0,
+                                    color: Colors.white,
+                                  ),
+                                  const Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 8.0),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Container(
+                                          width: double.infinity,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 8.0),
+                                        ),
+                                        Container(
+                                          width: double.infinity,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 8.0),
+                                        ),
+                                        Container(
+                                          width: 40.0,
+                                          height: 8.0,
+                                          color: Colors.white,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              Container(
+                                width: width * .3,
+                                height: 8.0,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              Container(
+                                width: double.infinity,
+                                height: 40.0,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                height: 18,
+                              ),
+                              Container(
+                                width: width * .3,
+                                height: 8.0,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              Container(
+                                width: double.infinity,
+                                height: 80.0,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              Container(
+                                width: double.infinity,
+                                height: 100.0,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : SingleChildScrollView(
                         child: Column(
                           children: <Widget>[
-
-                            ProductList(),
-                            orderDetail(),
-                            FutureBuilder<String?>(
-                              future: fetchCountry(),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  return shippingDetail();
-                                } else if (snapshot.hasError) {
-                                  return Text("${snapshot.error}");
-                                }
-                                // By default, show a loading spinner.
-                                return CircularProgressIndicator();
-                              },
-                            ),
-
-                            // paymentDetail(),
+                            // SizedBox(
+                            //   height: 16,
+                            // ),
+                            ProductList(data.vendorOrderDetailModel),
+                            orderDetail(data.vendorOrderDetailModel),
+                            // shippingDetail(data.vendorOrderDetailModel),
+                            // paymentDetail(data.orderDetailModel),
                             SizedBox(
                               height: 200,
                             )
                           ],
                         ),
                       );
-                    } else if (snapshot.hasError) {
-                      return Text("${snapshot.error}");
-                    }
-                    // By default, show a loading spinner.
-                    // return CircularProgressIndicator();
-                    return Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      enabled: true,
-                      child: Container(
-                        padding: EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Container(
-                                  width: 60.0,
-                                  height: 60.0,
-                                  color: Colors.white,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Container(
-                                        width: double.infinity,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                                      ),
-                                      Container(
-                                        width: double.infinity,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                                      ),
-                                      Container(
-                                        width: 40.0,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                            SizedBox(height: 20,),
-                            Container(
-                              width: width*.3,
-                              height: 8.0,
-                              color: Colors.white,
-                            ),
-                            SizedBox(height: 10,),
-                            Container(
-                              width: double.infinity,
-                              height: 40.0,
-                              color: Colors.white,
-                            ),
-                            SizedBox(height: 18,),
-                            Container(
-                              width: width*.3,
-                              height: 8.0,
-                              color: Colors.white,
-                            ),
-                            SizedBox(height: 10,),
-                            Container(
-                              width: double.infinity,
-                              height: 80.0,
-                              color: Colors.white,
-                            ),
+              })),
 
-                            SizedBox(height: 20,),
-                            Container(
-                              width: double.infinity,
-                              height: 100.0,
-                              color: Colors.white,
-                            ),
-                          ],),
-                      ),
-                    );
-                  }),
+              // FutureBuilder<OrderDetailModel?>(
+              //     future: fetchOrderMain,
+              //     builder: (context, snapshot) {
+              //       if (snapshot.hasData) {
+              //         return SingleChildScrollView(
+              //           child: Column(
+              //             children: <Widget>[
+              //
+              //               ProductList(),
+              //               orderDetail(),
+              //               FutureBuilder<String?>(
+              //                 future: fetchCountry(),
+              //                 builder: (context, snapshot) {
+              //                   if (snapshot.hasData) {
+              //                     return shippingDetail();
+              //                   } else if (snapshot.hasError) {
+              //                     return Text("${snapshot.error}");
+              //                   }
+              //                   // By default, show a loading spinner.
+              //                   return CircularProgressIndicator();
+              //                 },
+              //               ),
+              //
+              //               // paymentDetail(),
+              //               SizedBox(
+              //                 height: 200,
+              //               )
+              //             ],
+              //           ),
+              //         );
+              //       } else if (snapshot.hasError) {
+              //         return Text("${snapshot.error}");
+              //       }
+              //       // By default, show a loading spinner.
+              //       // return CircularProgressIndicator();
+              //       return Shimmer.fromColors(
+              //         baseColor: Colors.grey[300]!,
+              //         highlightColor: Colors.grey[100]!,
+              //         enabled: true,
+              //         child: Container(
+              //           padding: EdgeInsets.all(20),
+              //           child: Column(
+              //             crossAxisAlignment: CrossAxisAlignment.start,
+              //             children: [
+              //               Row(
+              //                 crossAxisAlignment: CrossAxisAlignment.start,
+              //                 children: <Widget>[
+              //                   Container(
+              //                     width: 60.0,
+              //                     height: 60.0,
+              //                     color: Colors.white,
+              //                   ),
+              //                   const Padding(
+              //                     padding: EdgeInsets.symmetric(horizontal: 8.0),
+              //                   ),
+              //                   Expanded(
+              //                     child: Column(
+              //                       crossAxisAlignment: CrossAxisAlignment.start,
+              //                       children: <Widget>[
+              //                         Container(
+              //                           width: double.infinity,
+              //                           height: 8.0,
+              //                           color: Colors.white,
+              //                         ),
+              //                         const Padding(
+              //                           padding: EdgeInsets.symmetric(vertical: 8.0),
+              //                         ),
+              //                         Container(
+              //                           width: double.infinity,
+              //                           height: 8.0,
+              //                           color: Colors.white,
+              //                         ),
+              //                         const Padding(
+              //                           padding: EdgeInsets.symmetric(vertical: 8.0),
+              //                         ),
+              //                         Container(
+              //                           width: 40.0,
+              //                           height: 8.0,
+              //                           color: Colors.white,
+              //                         ),
+              //                       ],
+              //                     ),
+              //                   )
+              //                 ],
+              //               ),
+              //               SizedBox(height: 20,),
+              //               Container(
+              //                 width: width*.3,
+              //                 height: 8.0,
+              //                 color: Colors.white,
+              //               ),
+              //               SizedBox(height: 10,),
+              //               Container(
+              //                 width: double.infinity,
+              //                 height: 40.0,
+              //                 color: Colors.white,
+              //               ),
+              //               SizedBox(height: 18,),
+              //               Container(
+              //                 width: width*.3,
+              //                 height: 8.0,
+              //                 color: Colors.white,
+              //               ),
+              //               SizedBox(height: 10,),
+              //               Container(
+              //                 width: double.infinity,
+              //                 height: 80.0,
+              //                 color: Colors.white,
+              //               ),
+              //
+              //               SizedBox(height: 20,),
+              //               Container(
+              //                 width: double.infinity,
+              //                 height: 100.0,
+              //                 color: Colors.white,
+              //               ),
+              //             ],),
+              //         ),
+              //       );
+              //     }),
             ),
           ),
         ),
@@ -1039,7 +999,7 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(10,18,10,0),
+            padding: const EdgeInsets.fromLTRB(10, 18, 10, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1048,15 +1008,26 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                      padding: const EdgeInsets.fromLTRB(1.0, 2, 6, 2),
+                      child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          )),
                     ),
-
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
-                      child: Text("Sales Details",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
+                      padding: const EdgeInsets.fromLTRB(0, 6, 6, 6.0),
+                      child: Text(
+                        "Sales Details",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontFamily: 'TitleCursive'),
+                      ),
                     )
                   ],
                 ),
@@ -1064,16 +1035,18 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        ).then((value) {
+                          setState(() {
+                            // refresh state
+                          });
+                        });
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),
@@ -1087,7 +1060,6 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
                           return CircularProgressIndicator();
                         },
                       ),
-
                     ),
                     // SizedBox(width: 16,)
                   ],
@@ -1100,11 +1072,10 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
     }
 
     return Scaffold(
-
       body: StreamProvider<NetworkStatus>(
         initialData: NetworkStatus.Online,
         create: (context) =>
-        NetworkStatusService().networkStatusController.stream,
+            NetworkStatusService().networkStatusController.stream,
         child: NetworkAwareWidget(
           onlineChild: SafeArea(child: setUserForm()),
           offlineChild: Container(
@@ -1121,6 +1092,5 @@ class _VendorOrderDetailScreenState extends State<VendorOrderDetailScreen> {
         ),
       ),
     );
-
   }
 }

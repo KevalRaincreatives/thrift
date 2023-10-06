@@ -8,7 +8,7 @@ class NewCategoryModel {
       {this.catid,
         this.name,this.selected});
 
-  factory NewCategoryModel.fromJson(Map<String, dynamic> json) {
+  factory NewCategoryModel.fromJson(Map<dynamic, dynamic> json) {
     return NewCategoryModel(
         catid: json['catid'],
         name: json['name'],

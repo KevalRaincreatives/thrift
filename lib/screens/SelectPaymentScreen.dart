@@ -1,8 +1,8 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/screens/OrderConfirmScreen.dart';
 import 'package:thrift/screens/PaymentModel.dart';
 import 'package:thrift/utils/ShColors.dart';
@@ -39,7 +39,7 @@ class _SelectPaymentScreenState extends State<SelectPaymentScreen> {
       };
 
       Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_payment_method'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/list_payment_method'),
           headers: headers);
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');

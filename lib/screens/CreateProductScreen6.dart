@@ -3,7 +3,7 @@ import 'dart:io' as i;
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +11,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 import 'package:thrift/model/AddProCategoryModel.dart';
 import 'package:thrift/model/AddProMetaModel.dart';
@@ -30,7 +30,6 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
-import 'package:thrift/utils/T6Colors.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
@@ -116,7 +115,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woo_product_categories"));
+              "${Url.BASE_URL}wp-json/wooapp/v3/woo_product_categories"));
         } finally {
           client.close();
         }
@@ -159,7 +158,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/attributes"));
+              "${Url.BASE_URL}wp-json/wooapp/v3/attributes"));
         } finally {
           client.close();
         }
@@ -266,7 +265,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       // }
 
       var response = await http.post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products'),
+          Uri.parse('${Url.BASE_URL}wp-json/wc/v3/products'),
           body: body,
           headers: headers);
 
@@ -312,7 +311,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       print(body);
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_product_images'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/add_product_images'),
           body: body,
           headers: headers);
 
@@ -359,7 +358,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       print(body);
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_estimated_retail_price'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/add_estimated_retail_price'),
           body: body,
           headers: headers);
 

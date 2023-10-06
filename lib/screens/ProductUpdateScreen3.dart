@@ -10,7 +10,7 @@
 // import 'package:html_unescape/html_unescape.dart';
 // import 'package:http/retry.dart';
 // import 'package:image_picker/image_picker.dart';
-// import 'package:nb_utils/nb_utils.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:sizer/sizer.dart';
 // import 'package:thrift/model/AddProCategoryModel.dart';
 // import 'package:thrift/model/AddProMetaModel.dart';
@@ -109,7 +109,7 @@
 //         var response;
 //         try {
 //           response = await client.get(Uri.parse(
-//               "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories"));
+//               "${Url.BASE_URL}wp-json/wc/v3/products/categories"));
 //         } finally {
 //           client.close();
 //         }
@@ -174,7 +174,7 @@
 //         var response;
 //         try {
 //           response = await client.get(Uri.parse(
-//               "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/attributes"));
+//               "${Url.BASE_URL}wp-json/wooapp/v3/attributes"));
 //         } finally {
 //           client.close();
 //         }
@@ -265,12 +265,12 @@
 //
 //       print(body);
 //       // var response = await http.put(
-//       //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id'),
+//       //     Uri.parse('${Url.BASE_URL}wp-json/wc/v3/products/$pro_id'),
 //       //     body: body,
 //       //     headers: headers);
 //
 //       var response = await http.post(
-//           Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id?_method=PUT'),
+//           Uri.parse('${Url.BASE_URL}wp-json/wc/v3/products/$pro_id?_method=PUT'),
 //           body: body,
 //           headers: headers);
 //
@@ -315,7 +315,7 @@
 //       print(body);
 //       var response = await http.post(
 //           Uri.parse(
-//               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_product_images'),
+//               '${Url.BASE_URL}wp-json/wooapp/v3/add_product_images'),
 //           body: body,
 //           headers: headers);
 //
@@ -361,7 +361,7 @@
 //       print(body);
 //       var response = await http.post(
 //           Uri.parse(
-//               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/delete_product_image'),
+//               '${Url.BASE_URL}wp-json/wooapp/v3/delete_product_image'),
 //           body: body,
 //           headers: headers);
 //
@@ -411,9 +411,9 @@
 //       String? pro_id = prefs.getString('seller_pro_id');
 //       // toast(pro_id);
 //       print(
-//           "https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id");
+//           "${Url.BASE_URL}/wp-json/wc/v3/products/$pro_id");
 //       var response = await http.get(Uri.parse(
-//           'https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id'));
+//           '${Url.BASE_URL}/wp-json/wc/v3/products/$pro_id'));
 //       final jsonResponse = json.decode(response.body);
 //       print('not json prpr$jsonResponse');
 //       pro_det_model = new ProductDetailModel.fromJson(jsonResponse);

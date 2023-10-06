@@ -1,15 +1,15 @@
 import 'dart:convert';
-
+import 'package:flutter/services.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/SignUpErrorNewModel.dart';
 import 'package:thrift/model/SignUpNewModel.dart';
 import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
-import 'package:thrift/utils/T6Colors.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/retry.dart';
 
@@ -80,7 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       try {
         response=await client.post(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/registration'),
+                '${Url.BASE_URL}wp-json/wooapp/v3/registration'),
             headers: headers,
             body: msg);
       } finally {
@@ -116,7 +116,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }else{
         EasyLoading.dismiss();
         signup_error_model= new SignUpErrorNewModel.fromJson(jsonResponse);
-        toast(signup_error_model!.msg);
+        toast(signup_error_model!.msg!);
       }
 
       return null;
@@ -376,6 +376,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                               SizedBox(height: 15.88),
                               TextFormField(
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.deny(RegExp('[&]')),
+                                ],
                                 obscureText: !this._showPassword,
                                 keyboardType: TextInputType.text,
                                 autofocus: false,

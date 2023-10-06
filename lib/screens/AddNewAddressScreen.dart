@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/AddressListModel.dart';
 import 'package:thrift/model/AddressSuccessModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
@@ -22,7 +23,7 @@ import 'package:http/http.dart' as http;
 import 'package:badges/badges.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
-
+import 'package:thrift/api_service/Url.dart';
 
 class AddNewAddressScreen extends StatefulWidget {
   static String tag='/AddNewAddressScreen';
@@ -72,7 +73,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
     super.initState();
     init();
     // fetchtotalMain=fetchtotal();
-
   }
 
   init() async {
@@ -117,7 +117,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       //   headers: headers
       // );
 
-      var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
+      var response =await http.get(Uri.parse("${Url.BASE_URL}wp-json/wooapp/v3/profile"),
           headers: headers);
 
 
@@ -136,7 +136,8 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
 
 
       return profileModel;
-    } catch (e) {
+    } on Exception catch (e) {
+
       print('caught error $e');
     }
   }
@@ -187,7 +188,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       // );
 
       var response = await http.post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_shipping_address'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/add_shipping_address'),
           body: body,
           headers: headers);
 
@@ -216,13 +217,14 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         }
       } else {
         couponErrorModel = new CouponErrorModel.fromJson(jsonResponse);
-        toast(couponErrorModel!.error);
+        toast(couponErrorModel!.error!);
       }
 //      saveAddressModel = new SaveAddressModel.fromJson(jsonResponse);
 
 //      toast(saveAddressModel.msg);
 
-    } catch (e) {
+    }  on Exception catch (e) {
+
       print('caught error $e');
     }
   }
@@ -277,7 +279,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       // );
 
       var response = await http.post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/update_shipping_addres'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/update_shipping_addres'),
           body: body,
           headers: headers);
 
@@ -294,13 +296,14 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         Navigator.pushReplacement(context, route);
       } else {
         couponErrorModel = new CouponErrorModel.fromJson(jsonResponse);
-        toast(couponErrorModel!.error);
+        toast(couponErrorModel!.error!);
       }
 //      saveAddressModel = new SaveAddressModel.fromJson(jsonResponse);
 
 //      toast(saveAddressModel.msg);
 
-    } catch (e) {
+    }  on Exception catch (e) {
+
       print('caught error $e');
     }
   }
@@ -313,7 +316,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       // await get('http://54.245.123.190//gotspotz//wp-json/v3/woocountries');
 
       var response = await http
-          .get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/countries'));
+          .get(Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/countries'));
 
       final jsonResponse = json.decode(response.body);
 
@@ -351,6 +354,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         for (var i = 0; i < countryNewModel!.data!.countries!.length; i++) {
           if (countryNewModel!.data!.countries![i]!.country == user_country) {
             selectedValue = countryNewModel!.data!.countries![i];
+            countryname=user_country!;
 
             if (countryNewModel!.data!.countries![i]!.parishes!.length > 0) {
               _visible_drop = true;
@@ -368,8 +372,9 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
 
       return countryNewModel;
 //      return jsonResponse.map((job) => new CountryModel.fromJson(job)).toList();
-    } catch (e) {
-      print('Caught error $e');
+    } on Exception catch (e) {
+
+      print('caught error $e');
     }
   }
 
@@ -498,23 +503,23 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         }).toList(),
         hint: Text('Select Country'),
         value: selectedValue,
-        onChanged: null,
-        // onChanged: (CountryParishModelDataCountries? newVal) {
-        //   setState(() {
-        //     selectedValue = newVal;
-        //     countryname = newVal!.country!;
-        //
-        //     parish_size = newVal.parishes!.length;
-        //     if (newVal.parishes!.length > 0) {
-        //       selectedStateValue = newVal.parishes![0];
-        //       _visible_drop = true;
-        //       _visible_text = false;
-        //     } else {
-        //       _visible_drop = false;
-        //       _visible_text = true;
-        //     }
-        //   });
-        // },
+        // onChanged: null,
+        onChanged: (CountryParishModelDataCountries? newVal) {
+          setState(() {
+            selectedValue = newVal;
+            countryname = newVal!.country!;
+
+            parish_size = newVal.parishes!.length;
+            if (newVal.parishes!.length > 0) {
+              selectedStateValue = newVal.parishes![0];
+              _visible_drop = true;
+              _visible_text = false;
+            } else {
+              _visible_drop = false;
+              _visible_text = true;
+            }
+          });
+        },
       );
     }
 

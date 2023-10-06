@@ -9,7 +9,7 @@
 // import 'package:flutter_easyloading/flutter_easyloading.dart';
 // import 'package:http/retry.dart';
 // import 'package:image_picker/image_picker.dart';
-// import 'package:nb_utils/nb_utils.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:thrift/model/AddProCategoryModel.dart';
 // import 'package:thrift/model/AddProMetaModel.dart';
 // import 'package:thrift/model/AddProMetaModel2.dart';
@@ -95,7 +95,7 @@
 //         var response;
 //         try {
 //           response = await client.get(Uri.parse(
-//               "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/categories"));
+//               "${Url.BASE_URL}wp-json/wc/v3/products/categories"));
 //         } finally {
 //           client.close();
 //         }
@@ -136,7 +136,7 @@
 //         var response;
 //         try {
 //           response = await client.get(Uri.parse(
-//               "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/attributes"));
+//               "${Url.BASE_URL}wp-json/wooapp/v3/attributes"));
 //         } finally {
 //           client.close();
 //         }
@@ -239,7 +239,7 @@
 //
 //           var response = await http.post(
 //               Uri.parse(
-//                   'https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products'),
+//                   '${Url.BASE_URL}wp-json/wc/v3/products'),
 //               body: body,
 //               headers: headers);
 //
@@ -290,7 +290,7 @@
 //       print(body);
 //       var response = await http.post(
 //           Uri.parse(
-//               'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_product_images'),
+//               '${Url.BASE_URL}wp-json/wooapp/v3/add_product_images'),
 //           body: body,
 //           headers: headers);
 //

@@ -1,13 +1,15 @@
 import 'dart:convert';
-
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:http/retry.dart';
 import 'package:http/http.dart' as http;
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/TermsModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
+import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
@@ -52,14 +54,14 @@ class _FAQScreenState extends State<FAQScreen> {
 
 
       // Response response = await get(
-      //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/terms'));
+      //     Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/terms'));
 
       final client = RetryClient(http.Client());
       var response;
       try {
         response=await client.get(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/faq'));
+                '${Url.BASE_URL}wp-json/wooapp/v3/faq'));
       } finally {
         client.close();
       }
@@ -73,7 +75,27 @@ class _FAQScreenState extends State<FAQScreen> {
 
 
       return termsModel;
-    } catch (e) {
+    }on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+
+      });} );
       print('caught error $e');
     }
   }
@@ -282,15 +304,38 @@ class _FAQScreenState extends State<FAQScreen> {
                     GestureDetector(
                       onTap: () async {
                         SharedPreferences prefs = await SharedPreferences.getInstance();
-                        prefs.setInt("shiping_index", -2);
-                        prefs.setInt("payment_index", -2);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                        String? UserId = prefs.getString('UserId');
+                        String? token = prefs.getString('token');
+                        if (UserId != null && UserId != '') {
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    CartScreen()),).then((value) {   setState(() {
+                            // refresh state
+                          });});
+                        }else{
+                          prefs.setInt("shiping_index", -2);
+                          prefs.setInt("payment_index", -2);
+                          // launchScreen(context, CartScreen.tag);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CartScreen()),
+                          ).then((value) {
+                            setState(() {
+                              // refresh state
+                            });
+                          });
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => LoginScreen(),
+                          //   ),
+                          // );
+                        }
+
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),

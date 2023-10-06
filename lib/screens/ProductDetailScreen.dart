@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:nb_utils/nb_utils.dart' hide lightGrey;
 import 'package:photo_view/photo_view.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/database/CartPro.dart';
@@ -19,10 +21,12 @@ import 'package:thrift/model/GetVariantModel.dart';
 import 'package:thrift/model/MyVariant.dart';
 import 'package:thrift/model/ProductDetailModel.dart';
 import 'package:thrift/model/ProductListModel.dart';
-import 'package:thrift/model/ProductListModel.dart';
+import 'package:thrift/model/ReportProductModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:thrift/model/ProductSellerModel.dart';
+import 'package:thrift/provider/pro_det_provider.dart';
 import 'package:thrift/screens/CartScreen.dart';
+import 'package:thrift/screens/LoginScreen.dart';
 import 'package:thrift/screens/SellerProfileScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
@@ -32,15 +36,16 @@ import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
 
+import '../provider/home_product_provider.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   static String tag = '/ProductDetailScreen';
   List<String>? proImage;
-  final String? proName,proPrice;
+  final String? proName, proPrice;
 
   // ProductListModel? product;
 
-  ProductDetailScreen({this.proName,this.proPrice,this.proImage});
+  ProductDetailScreen({this.proName, this.proPrice, this.proImage});
 
   @override
   _ProductDetailScreenState createState() => _ProductDetailScreenState();
@@ -65,7 +70,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   PageController? _controller;
 
   Future<ProductDetailModel?>? futuredetail;
-  ProductDetailModel? pro_det_model;
+  // ProductDetailModel? pro_det_model;
   GetVariantModel? getVariantModel;
   final GlobalKey<State> _keyLoader = new GlobalKey<State>();
   List<ProductListModel> productListModel = [];
@@ -87,21 +92,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   static const _kCurve = Curves.ease;
 
   final _kArrowColor = Colors.black.withOpacity(0.8);
-  bool _isVisible = true;
-  bool _isVisible_success = false;
-  ProductSellerModel? productSellerModel;
+  // bool _isVisible = true;
+  // bool _isVisible_success = false;
+  // ProductSellerModel? productSellerModel;
   CartModel? cat_model;
-  Future<ProductDetailModel?>? fetchDetailMain;
-  Future<ProductSellerModel?>? fetchSellerMain;
-  Future<EstPriceModel?>? fetchEstPrice2;
-  EstPriceModel? estPriceModel;
-  bool? ct_changel = true;
+  // Future<ProductDetailModel?>? fetchDetailMain;
+  ReportProductModel? reportProductModel;
+  // bool? ct_changel = true;
+  bool singleTap = true;
+  // String myFinalToken = '';
+
   @override
   void initState() {
     _controller = PageController();
-    fetchDetailMain = fetchDetail();
-    fetchEstPrice2 = fetchEstPrice();
-    fetchSellerMain = fetchSeller();
+    // fetchDetailMain = fetchDetail();
+    final emp_pd = Provider.of<ProductDetailProvider>(context, listen: false);
+    // toast(emp_pd.isLoggedIn.toString());
+    if(emp_pd.isLoggedIn){
+      emp_pd.getEstmatePrice();
+    }
+    emp_pd.getProductDetail();
+    emp_pd.getSellerDetail();
+
+
     super.initState();
 //    mListings2 = getPopular();
   }
@@ -111,7 +124,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return false;
   }
 
-  Future<EstPriceModel?> fetchEstPrice() async {
+
+  Future<ReportProductModel?> reportProduct(
+      String pro_name, String reason) async {
+    EasyLoading.show(status: 'Please wait...');
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String UserId = prefs.getString('UserId');
@@ -124,149 +140,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         'Authorization': 'Bearer $token',
       };
 
-      var response = await http.get(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_estimated_retail_price?product_id=$pro_id'),
-          headers: headers);
+      final msg = jsonEncode(
+          {"product_name": pro_name, "product_id": pro_id, "reason": reason});
+      print(msg);
+
+      var response = await http
+          .post(
+              Uri.parse(
+                  '${Url.BASE_URL}wp-json/wooapp/v3/report_product'),
+              body: msg,
+              headers: headers)
+          ;
+
       final jsonResponse = json.decode(response.body);
-      print('ProductDetailScreen view_estimated_retail_price Response status2: ${response.statusCode}');
-      print('ProductDetailScreen view_estimated_retail_price Response body2: ${response.body}');
-      estPriceModel = new EstPriceModel.fromJson(jsonResponse);
-
-      return estPriceModel;
-    } catch (e) {
-      // EasyLoading.dismiss();
-//      return orderListModel;
-      print('caught error $e');
-    }
-  }
-
-  Future<ProductSellerModel?> fetchSeller() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? pro_id = prefs.getString('pro_id');
-      // toast(pro_id);
       print(
-          "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id");
-      var response = await http.get(Uri.parse(
-          'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id'));
-      final jsonResponse = json.decode(response.body);
-      print('ProductDetailScreen get_product_seller Response status2: ${response.statusCode}');
-      print('ProductDetailScreen get_product_seller Response body2: ${response.body}');
-      productSellerModel = new ProductSellerModel.fromJson(jsonResponse);
-      prefs.setString(
-          "seller_pic", productSellerModel!.seller!.profile_picture!);
-      return productSellerModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
-
-  Future<ProductDetailModel?> fetchDetail() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? pro_id = prefs.getString('pro_id');
-      // toast(pro_id);
+          'ProductDetailScreen report_product Response status2: ${response.statusCode}');
       print(
-          "https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id");
-      var response = await http.get(Uri.parse(
-          'https://thriftapp.rcstaging.co.in//wp-json/wc/v3/products/$pro_id'));
-      final jsonResponse = json.decode(response.body);
-      print('ProductDetailScreen products Response status2: ${response.statusCode}');
-      print('ProductDetailScreen products Response body2: ${response.body}');
-      pro_det_model = new ProductDetailModel.fromJson(jsonResponse);
-      if (pro_det_model!.attributes!.length > 0) {
-        if (pro_det_model!.attributes![0]!.variation == true) {
-          if (pro_det_model!.attributes![0]!.name == 'Size') {
-            _isSizeVisible = true;
-          } else if (pro_det_model!.attributes![0]!.name == 'Color') {
-            _isColorVisible = true;
-          }
-        }
+          'ProductDetailScreen report_product Response body2: ${response.body}');
+      reportProductModel = new ReportProductModel.fromJson(jsonResponse);
+      EasyLoading.dismiss();
+      singleTap = true;
+      if (reportProductModel!.response!.success!) {
+        Navigator.of(context, rootNavigator: true).pop();
+        _openCustomDialog4();
+      } else {
+        toast(reportProductModel!.response!.msg!);
       }
-      ct_changel = false;
 
-      // if(pro_det_model.type=='variable'){
-      //   fetchVariant();
-      // }
-      return pro_det_model;
-    } catch (e) {
+      return reportProductModel;
+    } on Exception catch (e) {
+      EasyLoading.dismiss();
+toast(e.toString());
+      singleTap = true;
       print('caught error $e');
     }
   }
 
-  void _insert() async {
-    // row to insert
-    if (myvariation_name.length > 2) {
-      myvariation_name = myvariation_name.substring(1);
-      myvariation_value = myvariation_value.substring(1);
-    }
-    print(myvariation_name);
-    print(myvariation_value);
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? variation_id = prefs.getString('variant_id');
-
-    final allRows = await dbHelper.queryAllRows();
-    cartPro.clear();
-    allRows.forEach((row) => cartPro.add(CartPro.fromJson(row)));
-    if ((cartPro.singleWhereOrNull(
-          (it) => it.product_id == pro_det_model!.id.toString(),
-    )) !=
-        null) {
-        print('Already exists!');
-        int chk = 0;
-        for (var i = 0; i < cartPro.length; i++) {
-          if (cartPro[i].product_id == pro_det_model!.id.toString()) {
-            chk == i;
-          }
-        }
-        int dd = int.parse(cartPro[chk].quantity!) + 1;
-
-        double fnlamnt = double.parse(cartPro[chk].line_subtotal!) *
-            double.parse(dd.toString());
-
-        CartPro car = CartPro(
-            cartPro[chk].id,
-            cartPro[chk].product_id,
-            cartPro[chk].product_name,
-            cartPro[chk].product_img,
-            cartPro[chk].variation_id,
-            cartPro[chk].variation_name,
-            cartPro[chk].variation_value,
-            dd.toString(),
-            cartPro[chk].line_subtotal,
-            fnlamnt.toString());
-        final rowsAffected = await dbHelper.update(car);
 
 
-      // print('Already exists!');
-    } else {
-      print('Added!');
-      Map<String, dynamic> row = {
-        DatabaseHelper.columnProductId: pro_det_model!.id.toString(),
-        DatabaseHelper.columnProductName: pro_det_model!.name.toString(),
-        DatabaseHelper.columnProductImage:
-        pro_det_model!.images![0]!.src.toString(),
-        DatabaseHelper.columnVariationId: variation_id,
-        DatabaseHelper.columnVariationName: myvariation_name,
-        DatabaseHelper.columnVariationValue: myvariation_value,
-        DatabaseHelper.columnQuantity: "1",
-        DatabaseHelper.columnLine_subtotal: pro_det_model!.price.toString(),
-        DatabaseHelper.columnLine_total: pro_det_model!.price.toString(),
-      };
-      CartPro car = CartPro.fromJson(row);
-      final id = await dbHelper.insert(car);
-    }
-
-    // toast('inserted row id: $id');
-  }
 
   Future<ProductDetailModel?> AddCart() async {
 //    Dialogs.showLoadingDialog(context, _keyLoader);
 //     EasyLoading.show(status: 'Please wait...');
     try {
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pro_id = prefs.getString('pro_id');
       String? token = prefs.getString('token');
@@ -289,16 +205,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       //     'https://encros.rcstaging.co.in/wp-json/wooapp/v3/wooapp_add_to_cart',
       //     headers: headers,
       //     body: msg);
-      var response = await http.post(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/wooapp_add_to_cart'),
-          body: msg,
-          headers: headers);
+      var response = await http
+          .post(
+              Uri.parse(
+                  '${Url.BASE_URL}wp-json/wooapp/v3/wooapp_add_to_cart'),
+              body: msg,
+              headers: headers)
+          ;
 
-      print('ProductDetailScreen wooapp_add_to_cart Response status2: ${response.statusCode}');
-      print('ProductDetailScreen wooapp_add_to_cart Response body2: ${response.body}');
+      print(
+          'ProductDetailScreen wooapp_add_to_cart Response status2: ${response.statusCode}');
+      print(
+          'ProductDetailScreen wooapp_add_to_cart Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
-
 
       if (response.statusCode == 200) {
         addCartModel = new AddCartModel.fromJson(jsonResponse);
@@ -316,10 +235,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             cart_count == addCartModel!.cart!.length;
           }
 
-
           // ct_changel = true;
           // _incrementCounter();
-
 
 //           showDialog<void>(
 //             context: context,
@@ -391,61 +308,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             });
       }
       return null;
-    } catch (e) {
-      // EasyLoading.dismiss();
+    } on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+
+      });} );
       print('caught error $e');
     }
   }
 
-  Future<CartModel?> fetchCart() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String pro_id = prefs.getString('pro_id');
-      String? token = prefs.getString('token');
-      String? user_country = prefs.getString('user_selected_country');
-
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      // Response response = await get(
-      //     Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart'),
-      //     headers: headers);
-      var response = await http.get(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woocart?country=$user_country'),
-          headers: headers);
-
-      EasyLoading.dismiss();
-      print('ProductDetailScreen woocart Response status2: ${response.statusCode}');
-      print('ProductDetailScreen woocart Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-
-      cat_model = new CartModel.fromJson(jsonResponse);
-
-      if (cat_model!.cart == null) {
-        prefs.setInt("cart_count", 0);
-        cart_count == 0;
-      } else if (cat_model!.cart!.length == 0) {
-        prefs.setInt("cart_count", 0);
-        cart_count == 0;
-      } else {
-        prefs.setInt("cart_count", cat_model!.cart!.length);
-        cart_count == cat_model!.cart!.length;
-      }
-      ct_changel = true;
-      _incrementCounter();
-
-      return cat_model;
-    } catch (e) {
-      EasyLoading.dismiss();
-      print('caught error $e');
-      // return cat_model;
-    }
-  }
 
   int? cart_count;
 
@@ -464,25 +351,147 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  _incrementCounter() {
-    if (ct_changel!) {
-      setState(() {
-        ct_changel = false;
-          _isVisible = false;
-          _isVisible_success = true;
-        // cart_count = cart_count! + 1;
-      });
-    }
+
+  void _openCustomDialog4() {
+    showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          return Transform.scale(
+            scale: a1.value,
+            child: Opacity(
+              opacity: a1.value,
+              child: AlertDialog(
+                shape: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0)),
+                title: Center(
+                    child: Text(
+                  'Your report has been successfully submitted',
+                  style: TextStyle(
+                      color: sh_colorPrimary2,
+                      fontSize: 18,
+                      fontFamily: 'Bold'),
+                  textAlign: TextAlign.center,
+                )),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 8,
+                    ),
+                    InkWell(
+                      onTap: () async {
+                        Navigator.of(context, rootNavigator: true).pop();
+                      },
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * .7,
+                        padding: EdgeInsets.only(top: 6, bottom: 10),
+                        decoration: boxDecoration(
+                            bgColor: sh_btn_color,
+                            radius: 10,
+                            showShadow: true),
+                        child: text("Close",
+                            fontSize: 16.0,
+                            textColor: sh_colorPrimary2,
+                            isCentered: true,
+                            fontFamily: 'Bold'),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        barrierLabel: '',
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          return Container();
+        });
   }
+
 
   @override
   Widget build(BuildContext context) {
+    final product_pro = Provider.of<ProductDetailProvider>(context);
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
+    void _insert() async {
+      // row to insert
+      if (myvariation_name.length > 2) {
+        myvariation_name = myvariation_name.substring(1);
+        myvariation_value = myvariation_value.substring(1);
+      }
+      print(myvariation_name);
+      print(myvariation_value);
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? variation_id = prefs.getString('variant_id');
+
+      final allRows = await dbHelper.queryAllRows();
+      cartPro.clear();
+      allRows.forEach((row) => cartPro.add(CartPro.fromJson(row)));
+      if ((cartPro.singleWhereOrNull(
+            (it) => it.product_id == product_pro.pro_det_model!.id.toString(),
+      )) !=
+          null) {
+        print('Already exists!');
+        int chk = 0;
+        for (var i = 0; i < cartPro.length; i++) {
+          if (cartPro[i].product_id == product_pro.pro_det_model!.id.toString()) {
+            chk == i;
+          }
+        }
+        int dd = int.parse(cartPro[chk].quantity!) + 1;
+
+        double fnlamnt = double.parse(cartPro[chk].line_subtotal!) *
+            double.parse(dd.toString());
+
+        CartPro car = CartPro(
+            cartPro[chk].id,
+            cartPro[chk].product_id,
+            cartPro[chk].product_name,
+            cartPro[chk].product_img,
+            cartPro[chk].variation_id,
+            cartPro[chk].variation_name,
+            cartPro[chk].variation_value,
+            dd.toString(),
+            cartPro[chk].line_subtotal,
+            fnlamnt.toString());
+        final rowsAffected = await dbHelper.update(car);
+        Provider.of<HomeProductListProvider>(context, listen: false).getLocalCart();
+        // print('Already exists!');
+      } else {
+        print('Added!');
+        Map<String, dynamic> row = {
+          DatabaseHelper.columnProductId: product_pro.pro_det_model!.id.toString(),
+          DatabaseHelper.columnProductName: product_pro.pro_det_model!.name.toString(),
+          DatabaseHelper.columnProductImage:
+          product_pro.pro_det_model!.images![0]!.src.toString(),
+          DatabaseHelper.columnVariationId: variation_id,
+          DatabaseHelper.columnVariationName: myvariation_name,
+          DatabaseHelper.columnVariationValue: myvariation_value,
+          DatabaseHelper.columnQuantity: "1",
+          DatabaseHelper.columnLine_subtotal: product_pro.pro_det_model!.price.toString(),
+          DatabaseHelper.columnLine_total: product_pro.pro_det_model!.price.toString(),
+        };
+        CartPro car = CartPro.fromJson(row);
+        final id = await dbHelper.insert(car);
+      }
+      Provider.of<HomeProductListProvider>(context, listen: false).getLocalCart();
+      // toast('inserted row id: $id');
+    }
+
+
     void _openCustomDialog2() {
-      String? cc=pro_det_model!.name!;
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+      final _formKey = GlobalKey<FormState>();
+      String? cc = product_pro.pro_det_model!.name!;
+      var reasonCont = TextEditingController();
+
+      showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
             return Transform.scale(
               scale: a1.value,
@@ -491,63 +500,96 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Do you want to report $cc(Product)?',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  title: Center(
+                      child: Text(
+                    'Do you want to report $cc(Product)?',
+                    style: TextStyle(
+                        color: sh_colorPrimary2,
+                        fontSize: 18,
+                        fontFamily: 'Bold'),
+                    textAlign: TextAlign.center,
+                  )),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: 8,),
-
-                      Center(child: Text('Why are you Reporting?',style: TextStyle(color: sh_colorPrimary2,fontSize: 15,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
-                      SizedBox(height: 16,),
-                      Container(
-                        color: Colors.transparent,
-                        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                        child: TextFormField(
-                          maxLines: 5,
-                          style: TextStyle(
-                              color: sh_colorPrimary2,
-                              fontSize: textSizeMedium,
-                              fontFamily: "Bold"),
-                          decoration: InputDecoration(
-                            filled: true,
-                            hintMaxLines: 5,
-                            fillColor: sh_text_back,
-                            contentPadding:
-                            EdgeInsets.fromLTRB(16, 16, 16, 16),
-                            hintText: "Type Report",
-                            hintStyle:
-                            TextStyle(color: sh_colorPrimary2),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                  color: sh_transparent, width: 0.7),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                  color: sh_transparent, width: 0.7),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Center(
+                          child: Text(
+                        'Why are you Reporting?',
+                        style: TextStyle(
+                            color: sh_colorPrimary2,
+                            fontSize: 15,
+                            fontFamily: 'Bold'),
+                        textAlign: TextAlign.center,
+                      )),
+                      SizedBox(
+                        height: 16,
+                      ),
+                      Form(
+                        key: _formKey,
+                        child: Container(
+                          color: Colors.transparent,
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: TextFormField(
+                            maxLines: 5,
+                            style: TextStyle(
+                                color: sh_colorPrimary2,
+                                fontSize: textSizeMedium,
+                                fontFamily: "Bold"),
+                            controller: reasonCont,
+                            validator: (text) {
+                              if (text == null || text.isEmpty) {
+                                return 'Please Enter Reason';
+                              }
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              hintMaxLines: 5,
+                              fillColor: sh_text_back,
+                              contentPadding:
+                                  EdgeInsets.fromLTRB(16, 16, 16, 16),
+                              hintText: "Type Report",
+                              hintStyle: TextStyle(color: sh_colorPrimary2),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                    color: sh_transparent, width: 0.7),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                    color: sh_transparent, width: 0.7),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(height: 16,),
+                      SizedBox(
+                        height: 16,
+                      ),
                       InkWell(
                         onTap: () async {
-                          // BecameSeller();
-                          toast("Your report has successfully submited");
-
-                          Navigator.of(context, rootNavigator: true).pop();
-                          // setState(() {
-                          //   _isVisible = false;
-                          //   _isVisible_success = true;
-                          // });
+                          if (_formKey.currentState!.validate()) {
+                            // TODO submit
+                            FocusScope.of(context).requestFocus(FocusNode());
+                            if (singleTap) {
+                              reportProduct(cc, reasonCont.text);
+                              setState(() {
+                                singleTap = false; // update bool
+                              });
+                            }
+                          }
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                              bgColor: sh_colorPrimary2,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Report",
                               fontSize: 16.0,
                               textColor: sh_white,
@@ -555,17 +597,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               fontFamily: 'Bold'),
                         ),
                       ),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       InkWell(
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                              bgColor: sh_btn_color,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Cancel",
                               fontSize: 16.0,
                               textColor: sh_colorPrimary2,
@@ -615,8 +660,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                               child: PhotoView(
-                                  imageProvider: NetworkImage(
-                                    widget.proImage![index],
+                                  imageProvider:
+                                  NetworkImage(
+
+                                widget.proImage![index],
                               ))
                               // Image.network(
                               //     pro_det_model!.images![index]!.src!,
@@ -635,7 +682,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: new Center(
                         child: new DotsIndicator(
                           controller: _controller2,
-                          itemCount: pro_det_model!.images!.length,
+                          itemCount: product_pro.pro_det_model!.images!.length,
                           onPageSelected: (int page) {
                             _controller2.animateToPage(
                               page,
@@ -689,7 +736,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   },
                   child: Container(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(0,8,0,8),
+                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
                       child: Card(
                         semanticContainer: true,
                         clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -698,10 +745,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18.0),
                         ),
-                        child: FadeInImage.assetNetwork(
-                            placeholder: 'images/tenor.gif',
-                            image: widget.proImage![index],
-                            fit: BoxFit.fitWidth),
+                        child:  CachedNetworkImage(
+                          imageUrl: widget.proImage![index],
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                          filterQuality: FilterQuality.low,
+                          placeholder: (context, url) =>
+                              Center(
+                                child: SizedBox(
+                                    height: 30,
+                                    width: 30,
+                                    child:
+                                    CircularProgressIndicator()),
+                              ),
+                          errorWidget:
+                              (context, url, error) =>
+                          new Icon(Icons.error),
+                        )
+                        // FadeInImage.assetNetwork(
+                        //     placeholder: 'images/tenor.gif',
+                        //     image: widget.proImage![index],
+                        //     fit: BoxFit.fitWidth),
                       ),
                     ),
                   ),
@@ -713,7 +777,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               left: 0.0,
               right: 0.0,
               child: new Container(
-                padding: const EdgeInsets.fromLTRB(20.0,20,20,26),
+                padding: const EdgeInsets.fromLTRB(20.0, 20, 20, 26),
                 child: new Center(
                   child: new DotsIndicator(
                     controller: _controller,
@@ -729,41 +793,39 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
             ),
-
-            Positioned(
-              bottom:0.0,
-              right: 0.0,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16.0,16,10,18),
-                child:                       InkWell(
-                  onTap: () async {
-                    _openCustomDialog2();
-                  },
-                  child: Container(
-                    padding: EdgeInsets.fromLTRB(
-                        6,6,2,6),
-                    decoration: boxDecoration(
-                        bgColor: sh_colorPrimary2, radius: 8, showShadow: true),
-                    child:
-                    Row(
-                      children: [
-                        text("Report",
-                            fontSize: 10.0,
-                            textColor: sh_white,
-                            isCentered: true,
-                            fontFamily: 'Bold'),
-                        Image.asset(sh_report_pro,height: 12,width: 12,fit: BoxFit.fill,)
-                      ],
-                    ),
-                  ),
-                ),
-                // new IconButton(
-                //     icon: new Image.asset(sh_report_pro,height: 20,width: 20,fit: BoxFit.fill,),
-                //     onPressed: () {
-                //       _openCustomDialog2();
-                //     }),
-              ),
-            )
+            // Positioned(
+            //   bottom: 0.0,
+            //   right: 0.0,
+            //   child: Padding(
+            //     padding: const EdgeInsets.fromLTRB(16.0, 16, 10, 18),
+            //     child: InkWell(
+            //       onTap: () async {
+            //         SharedPreferences prefs = await SharedPreferences.getInstance();
+            //         String? UserId = prefs.getString('UserId');
+            //         String? token = prefs.getString('token');
+            //         if (UserId != null && UserId != '') {
+            //           _openCustomDialog2();
+            //         }else{
+            //           Navigator.push(
+            //             context,
+            //             MaterialPageRoute(
+            //               builder: (context) => LoginScreen(),
+            //             ),
+            //           );
+            //         }
+            //       },
+            //       child: Padding(
+            //         padding: const EdgeInsets.all(6.0),
+            //         child: Image.asset(imgWarning2,height: 20,),
+            //       ),
+            //     ),
+            //     // new IconButton(
+            //     //     icon: new Image.asset(sh_report_pro,height: 20,width: 20,fit: BoxFit.fill,),
+            //     //     onPressed: () {
+            //     //       _openCustomDialog2();
+            //     //     }),
+            //   ),
+            // )
           ],
         );
       }
@@ -773,10 +835,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       // var myprice2 = double.parse(pro_det_model!.price!);
       // var myprice = myprice2.toStringAsFixed(2);
       var myprice2, myprice;
-      if (pro_det_model!.price == '') {
+      if (product_pro.pro_det_model!.price == '') {
         myprice = "0.00";
       } else {
-        myprice2 = double.parse(pro_det_model!.price!);
+        myprice2 = double.parse(product_pro.pro_det_model!.price!);
         myprice = myprice2.toStringAsFixed(2);
       }
 
@@ -806,8 +868,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     Imagevwsuccess() {
-      if (_isVisible_success) {
-        if (pro_det_model!.images!.length < 1) {
+      if (product_pro.isVisible_success) {
+        if (product_pro.pro_det_model!.images!.length < 1) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
@@ -820,15 +882,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               SizedBox(
                 height: 10,
               ),
-              Text(
-                pro_det_model!.name!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+              Html(
+                data: product_pro.pro_det_model!.name!,
+                style: {
+                  "body": Style(
+                    maxLines: 2,
+                    margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                    fontSize: FontSize(16.0),
+                    fontWeight: FontWeight.bold,
                     color: sh_colorPrimary2,
                     fontFamily: fontBold,
-                    fontSize: textSizeMedium),
+                  ),
+                },
               ),
+              // Text(
+              //   product_pro.pro_det_model!.name!,
+              //   maxLines: 2,
+              //   overflow: TextOverflow.ellipsis,
+              //   style: TextStyle(
+              //       color: sh_colorPrimary2,
+              //       fontFamily: fontBold,
+              //       fontSize: textSizeMedium),
+              // ),
               SizedBox(
                 height: 4,
               ),
@@ -853,7 +928,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12.0),
                 child: Image.network(
-                  pro_det_model!.images![0]!.src!,
+                  product_pro.pro_det_model!.images![0]!.src!,
                   fit: BoxFit.cover,
                   width: width * .4,
                   height: width * .4,
@@ -866,15 +941,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   Column(
                     children: [
-                      Text(
-                        pro_det_model!.name!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                      Html(
+                        data: product_pro.pro_det_model!.name!,
+                        style: {
+                          "body": Style(
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                            fontSize: FontSize(16.0),
+                            fontWeight: FontWeight.bold,
                             color: sh_colorPrimary2,
                             fontFamily: fontBold,
-                            fontSize: textSizeMedium),
+                          ),
+                        },
                       ),
+
+                      // Text(
+                      //   product_pro.pro_det_model!.name!,
+                      //   maxLines: 2,
+                      //   overflow: TextOverflow.ellipsis,
+                      //   style: TextStyle(
+                      //       color: sh_colorPrimary2,
+                      //       fontFamily: fontBold,
+                      //       fontSize: textSizeMedium),
+                      // ),
                       SizedBox(
                         height: 4,
                       ),
@@ -942,7 +1033,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
 
-    EstPrice() {
+    EstPrice(EstPriceModel? estPriceModel) {
       var myprice2, myprice;
       if (estPriceModel!.estimatedRetailPrice == '') {
         myprice = "0.00";
@@ -956,82 +1047,75 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           Text(
             "\$" + myprice + " " + "USD",
             style: TextStyle(
-                color: sh_black,
-                fontFamily: fontMedium,
-                fontSize: 14),
+                color: sh_black, fontFamily: fontMedium, fontSize: 14),
           ),
         ],
       );
     }
 
     CheckVariant() {
-
-        int? my_index = -1;
-        for (var i = 0; i < pro_det_model!.metaData!.length; i++) {
-          if (pro_det_model!.metaData![i]!.key == "attrs_val") {
-            my_index = i;
-          }
+      int? my_index = -1;
+      for (var i = 0; i < product_pro.pro_det_model!.metaData!.length; i++) {
+        if (product_pro.pro_det_model!.metaData![i]!.key == "attrs_val") {
+          my_index = i;
         }
+      }
 
-        if (my_index == -1) {
-          return ListView.builder(
-              itemCount: pro_det_model!.metaData!.length,
-              physics: NeverScrollableScrollPhysics(),
-              // itemExtent: 50.0,
-              shrinkWrap: true,
-              itemBuilder: (BuildContext context, int index) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      pro_det_model!.metaData![index]!.key!,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: fontSemibold,
-                          color: sh_colorPrimary2),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      pro_det_model!.metaData![index]!.value!,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: fontMedium,
-                          color: sh_black),
-                    ),
-                    SizedBox(height: 20),
-                  ],
-                );
-              });
-        } else {
-          return ListView.builder(
-              itemCount: pro_det_model!.metaData![my_index!]!.value!.length,
-              physics: NeverScrollableScrollPhysics(),
-              // itemExtent: 50.0,
-              shrinkWrap: true,
-              itemBuilder: (BuildContext context, int index) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      pro_det_model!.metaData![my_index!]!.value![index]!.key!,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: fontSemibold,
-                          color: sh_colorPrimary2),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      pro_det_model!.metaData![my_index]!.value![index]!.value!,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: fontMedium,
-                          color: sh_black),
-                    ),
-                    SizedBox(height: 20),
-                  ],
-                );
-              });
-        }
+      if (my_index == -1) {
+        return ListView.builder(
+            itemCount: product_pro.pro_det_model!.metaData!.length,
+            physics: NeverScrollableScrollPhysics(),
+            // itemExtent: 50.0,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    product_pro.pro_det_model!.metaData![index]!.key!,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: fontSemibold,
+                        color: sh_colorPrimary2),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    product_pro.pro_det_model!.metaData![index]!.value!,
+                    style: TextStyle(
+                        fontSize: 14, fontFamily: fontMedium, color: sh_black),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              );
+            });
+      } else {
+        return ListView.builder(
+            itemCount: product_pro.pro_det_model!.metaData![my_index!]!.value!.length,
+            physics: NeverScrollableScrollPhysics(),
+            // itemExtent: 50.0,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    product_pro.pro_det_model!.metaData![my_index!]!.value![index]!.key!,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: fontSemibold,
+                        color: sh_colorPrimary2),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    product_pro.pro_det_model!.metaData![my_index]!.value![index]!.value!,
+                    style: TextStyle(
+                        fontSize: 14, fontFamily: fontMedium, color: sh_black),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              );
+            });
+      }
     }
 
     BadgeCount() {
@@ -1048,7 +1132,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           position: BadgePosition.topEnd(top: 4, end: 6),
           badgeContent: Text(
             cart_count.toString(),
-            style: TextStyle(color: sh_white,fontSize: 8),
+            style: TextStyle(color: sh_white, fontSize: 8),
           ),
           child: Image.asset(
             sh_new_cart,
@@ -1076,15 +1160,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
 
-
-
     SuccesVisiblity() {
-      if (_isVisible_success) {
-        var myprice2 =
-        double.parse(pro_det_model!.price!.toString());
+      if (product_pro.isVisible_success) {
+        var myprice2 = double.parse(product_pro.pro_det_model!.price!.toString());
         var myprice = myprice2.toStringAsFixed(2);
         return Visibility(
-            visible: _isVisible_success,
+            visible: product_pro.isVisible_success,
             child: Container(
               height: height,
               width: width,
@@ -1140,8 +1221,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 fontFamily: fontSemibold),
                           ),
                           Text(
-
-                                "1 Item ",
+                            "1 Item ",
                             style: TextStyle(
                                 color: sh_black,
                                 fontSize: 15,
@@ -1169,10 +1249,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 fontFamily: fontSemibold),
                           ),
                           Text(
-                            "\$" +
-                                myprice +
-                                " " +
-                                "USD",
+                            "\$" + myprice + " " + "USD",
                             style: TextStyle(
                                 color: sh_black,
                                 fontSize: 15,
@@ -1205,7 +1282,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               fontFamily: 'Bold'),
                         ),
                       ),
-            // CheckShimmer(),
+                      // CheckShimmer(),
                       groceryButton(),
 
                       // InkWell(
@@ -1306,7 +1383,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
         //Above card
         Visibility(
-          visible: _isVisible,
+          visible: product_pro.isVisible,
           child: Container(
             height: height,
             margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
@@ -1331,14 +1408,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           SizedBox(
                             height: 8,
                           ),
-                          Text(
-                            widget.proName!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                          // Text(
+                          //   widget.proName!,
+                          //   maxLines: 2,
+                          //   overflow: TextOverflow.ellipsis,
+                          //   style: TextStyle(
+                          //       color: sh_colorPrimary2,
+                          //       fontFamily: fontBold,
+                          //       fontSize: textSizeLargeMedium),
+                          // ),
+                          Html(
+                            data: widget.proName!,
+                            style: {
+                              "body": Style(
+                                maxLines: 2,
+                                textOverflow: TextOverflow.ellipsis,
+                                margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                fontSize: FontSize(16.0),
+                                fontWeight: FontWeight.bold,
                                 color: sh_colorPrimary2,
                                 fontFamily: fontBold,
-                                fontSize: textSizeLargeMedium),
+                              ),
+                            },
                           ),
                           SizedBox(
                             height: 2,
@@ -1347,380 +1438,390 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           SizedBox(
                             height: 14,
                           ),
-                          FutureBuilder<ProductDetailModel?>(
-                            future: fetchDetailMain,
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                return Container(
-
-                                  child: Stack(
+                          product_pro.loader ?
+                          Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            direction: ShimmerDirection.ltr,
+                            child: Container(
+                              width: width,
+                              padding: const EdgeInsets.fromLTRB(1, 12, 12, 12),
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          1.0, 0, 12, 12),
+                                      child: Container(
+                                        width: width * .40,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 4,
+                                  ),
+                                  InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          1.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .30,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 4,
+                                  ),
+                                  InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          1.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .35,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          1.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width * .20,
+                                        height: 12.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 4,
+                                  ),
+                                  InkWell(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          1.0, 12, 12, 12),
+                                      child: Container(
+                                        width: width,
+                                        height: 62.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ) :
+                          Stack(
+                            children: <Widget>[
+                              Column(
+                                mainAxisAlignment:
+                                MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                     children: <Widget>[
-                                      Column(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-
-
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-
-                                              FutureBuilder<EstPriceModel?>(
-                                                future: fetchEstPrice2,
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    if (estPriceModel!
-                                                        .estimatedRetailPrice!
-                                                        .length >
-                                                        0) {
-                                                      return Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Text(
-                                                            'Estimated Retail Price',
-                                                            style: TextStyle(
-                                                                fontSize: 14,
-                                                                fontFamily:
-                                                                fontSemibold,
-                                                                color:
-                                                                sh_colorPrimary2),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          EstPrice(),
-                                                          SizedBox(
-                                                            height: 6,
-                                                          ),
-                                                        ],
-                                                      );
-                                                    }else{
-                                                      return Container();
-                                                    }
-                                                  } else if (snapshot.hasError) {
-                                                    return Text(
-                                                        "${snapshot.error}");
-                                                  }
-                                                  // By default, show a loading spinner.
-                                                  return Container();
-                                                },
-                                              ),
-                                              // CheckVariant()
-                                            ],
-                                          ),
-
-                                          SizedBox(
-                                            height: 12,
-                                          ),
-                                          CheckVariant(),
-
-                                          // _availableSize(),
-                                          // SizedBox(
-                                          //   height: 20,
-                                          // ),
-                                          // _availableColor(),
-                                          SizedBox(
-                                            height: 8,
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-                                              Text(
-                                                "Description",
-                                                maxLines: 2,
-                                                style: TextStyle(
-                                                    color: sh_colorPrimary2,
-                                                    fontFamily: fontSemibold,
-                                                    fontSize: textSizeMedium),
-                                              ),
-                                              SizedBox(
-                                                height: 4,
-                                              ),
-                                              Html(
-                                                data: pro_det_model!.description,
-                                                style: {
-                                                  "body": Style(color: sh_black,fontFamily: "Regular"),
-                                                },
-                                              ),
-                                            ],
-                                          ),
-
-                                          SizedBox(
-                                            height: 8,
-                                          ),
-                                          Container(
-                                            height: 0.5,
-                                            color: sh_app_txt_color,
-                                          ),
-                                          SizedBox(
-                                            height: 26,
-                                          ),
-                                          FutureBuilder<ProductSellerModel?>(
-                                            future: fetchSellerMain,
-                                            builder: (context, snapshot) {
-                                              if (snapshot.hasData) {
-                                                return Container(
-                                                  child: InkWell(
-                                                    onTap: () async {
-                                                      SharedPreferences prefs =
-                                                          await SharedPreferences
-                                                              .getInstance();
-                                                      prefs.setString(
-                                                          "seller_id",
-                                                          productSellerModel!
-                                                              .seller!.sellerId
-                                                              .toString());
-                                                      prefs.setString(
-                                                          "seller_name",
-                                                          productSellerModel!
-                                                                  .seller!
-                                                                  .firstName![0]
-                                                                  .toString() +
-                                                              " " +
-                                                              productSellerModel!
-                                                                  .seller!
-                                                                  .lastName![0]
-                                                                  .toString());
-                                                      launchScreen(context,
-                                                          SellerProfileScreen.tag);
-                                                    },
-                                                    child: Column(
-                                                      children: [
-                                                        Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
-                                                          children: [
-                                                            Text(
-                                                              "Seller",
-                                                              maxLines: 2,
-                                                              style: TextStyle(
-                                                                  color:
-                                                                      sh_colorPrimary2,
-                                                                  fontFamily:
-                                                                  fontSemibold,
-                                                                  fontSize: 16),
-                                                            ),
-                                                            Row(
-                                                              children: <Widget>[
-                                                                Text(
-                                                                  "View Profile",
-                                                                  maxLines: 2,
-                                                                  style: TextStyle(
-                                                                      color:
-                                                                          sh_black,
-                                                                      fontFamily:
-                                                                      fontSemibold,
-                                                                      fontSize: 14),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        SizedBox(
-                                                          height: 6,
-                                                        ),
-                                                        Row(
-                                                          children: [
-                                                            Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .all(2.0),
-                                                                child: productSellerModel!
-                                                                            .seller!
-                                                                            .profile_picture ==
-                                                                        null
-                                                                    ? CircleAvatar(
-                                                                        // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                                        backgroundImage:
-                                                                            NetworkImage(
-                                                                                "https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"),
-                                                                        radius: 22,
-                                                                      )
-                                                                    : CircleAvatar(
-                                                                        // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                                                        backgroundImage:
-                                                                            NetworkImage(productSellerModel!
-                                                                                .seller!
-                                                                                .profile_picture!),
-                                                                        radius: 22,
-                                                                      )),
-                                                            // Icon(
-                                                            //   Icons.circle,
-                                                            //   color: sh_grey,
-                                                            //   size: 40,
-                                                            // ),
-                                                            SizedBox(
-                                                              width: 10,
-                                                            ),
-                                                            Text(
-                                                              productSellerModel!
-                                                                      .seller!
-                                                                      .firstName![
-                                                                          0]!
-                                                                      .toString() +
-                                                                  " " +
-                                                                  productSellerModel!
-                                                                      .seller!
-                                                                      .lastName![0]!
-                                                                      .toString(),
-                                                              maxLines: 2,
-                                                              style: TextStyle(
-                                                                  color:
-                                                                      sh_colorPrimary2,
-                                                                  fontFamily:
-                                                                  fontSemibold,
-                                                                  fontSize: 14),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              } else if (snapshot.hasError) {
-                                                return Text("${snapshot.error}");
-                                              }
-                                              // By default, show a loading spinner.
-                                              return CircularProgressIndicator();
-                                            },
-                                          ),
-
-                                          SizedBox(
-                                            height: 36,
-                                          ),
-                                          InkWell(
-                                            onTap: () async {
-                                              SharedPreferences prefs =
-                                                  await SharedPreferences
-                                                      .getInstance();
-
-                                              prefs.setString("variant_id", "");
-                                              _insert();
-                                              AddCart();
-                                              ct_changel = true;
-                                              cart_count==1;
-                                              _incrementCounter();
-                                            },
-                                            child: Container(
-                                              width:
-                                                  MediaQuery.of(context).size.width,
-                                              padding: EdgeInsets.only(
-                                                  top: spacing_middle,
-                                                  bottom: spacing_middle),
-                                              decoration: boxDecoration(
-                                                  bgColor: sh_app_background,
-                                                  radius: 10,
-                                                  showShadow: true),
-                                              child: text("Add to Cart",
-                                                  textColor: sh_app_txt_color,
-                                                  isCentered: true,
-                                                  fontFamily: 'Bold'),
+                                      Consumer<ProductDetailProvider>(builder: ((context, value, child) {
+                                        return value.isLoggedIn ? value.loader_est_price ? Center(
+                                            child:
+                                            CircularProgressIndicator()) : value.estPriceModel!=null?
+                                        value.estPriceModel!.estimatedRetailPrice!.isNotEmpty ?
+                                        Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment
+                                              .start,
+                                          children: [
+                                            Text(
+                                              'Estimated Retail Price',
+                                              style: TextStyle(
+                                                  fontSize:
+                                                  14,
+                                                  fontFamily:
+                                                  fontSemibold,
+                                                  color:
+                                                  sh_colorPrimary2),
                                             ),
-                                          ),
-                                          SizedBox(
-                                            height: 18,
-                                          ),
-                                        ],
-                                      ),
-//                        _detailWidget()
-                                    ],
-                                  ),
-                                );
-                              } else if (snapshot.hasError) {
-                                return Text("${snapshot.error}");
-                              }
-                              // By default, show a loading spinner.
-                              return Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                direction: ShimmerDirection.ltr,
-                                child: Container(
-                                  width: width,
-                                  padding: EdgeInsets.fromLTRB(1, 12, 12, 12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
+                                            SizedBox(
+                                              height: 4,
+                                            ),
+                                            EstPrice(value.estPriceModel),
+                                            SizedBox(
+                                              height: 6,
+                                            ),
+                                          ],
+                                        ) :Container():Container() : Container();
+                                      }))
 
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 0, 12, 12),
-                                          child: Container(
-                                            width: width * .40,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .30,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .35,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width * .20,
-                                            height: 12.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
-                                      SizedBox(
-                                        height: 4,
-                                      ),
-                                      Container(
-                                          child: InkWell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              1.0, 12, 12, 12),
-                                          child: Container(
-                                            width: width,
-                                            height: 62.0,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      )),
+                                      // CheckVariant()
                                     ],
                                   ),
-                                ),
-                              );
-                            },
+
+                                  SizedBox(
+                                    height: 12,
+                                  ),
+                                  CheckVariant(),
+
+                                  // _availableSize(),
+                                  // SizedBox(
+                                  //   height: 20,
+                                  // ),
+                                  // _availableColor(),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        "Description",
+                                        maxLines: 2,
+                                        style: TextStyle(
+                                            color: sh_colorPrimary2,
+                                            fontFamily: fontSemibold,
+                                            fontSize: textSizeMedium),
+                                      ),
+                                      SizedBox(
+                                        height: 4,
+                                      ),
+                                      Html(
+                                        data:
+                                        product_pro.pro_det_model!.description,
+                                        style: {
+                                          "body": Style(
+                                              margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                              color: sh_black,
+                                              fontSize: FontSize(16.0),
+                                              fontFamily: "Regular"),
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      InkWell(
+                                        onTap: () async {
+                                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                                          String? UserId = prefs.getString('UserId');
+                                          String? token = prefs.getString('token');
+                                          if (UserId != null && UserId != '') {
+                                            _openCustomDialog2();
+                                          }else{
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => LoginScreen(),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: Image.asset(imgWarning2,height: 20,),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Container(
+                                    height: 0.5,
+                                    color: sh_app_txt_color,
+                                  ),
+                                  SizedBox(
+                                    height: 26,
+                                  ),
+                                  Consumer<ProductDetailProvider>(builder: ((context, value, child) {
+                                    return value.loader_seller_det ? CircularProgressIndicator() :
+                                    Container(
+                                      child: InkWell(
+                                        onTap: () async {
+                                          SharedPreferences prefs =
+                                          await SharedPreferences
+                                              .getInstance();
+                                          prefs.setString(
+                                              "seller_id",
+                                              value.productSellerModel!
+                                                  .seller!.sellerId
+                                                  .toString());
+                                          prefs.setString(
+                                              "seller_name",
+                                              value.productSellerModel!
+                                                  .seller!
+                                                  .nickname![0]
+                                                  .toString());
+                                          launchScreen(
+                                              context,
+                                              SellerProfileScreen
+                                                  .tag);
+                                        },
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment
+                                                  .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  "Seller",
+                                                  maxLines: 2,
+                                                  style: TextStyle(
+                                                      color:
+                                                      sh_colorPrimary2,
+                                                      fontFamily:
+                                                      fontSemibold,
+                                                      fontSize: 16),
+                                                ),
+                                                Row(
+                                                  children: <
+                                                      Widget>[
+                                                    Text(
+                                                      "View Profile",
+                                                      maxLines: 2,
+                                                      style: TextStyle(
+                                                          color:
+                                                          sh_black,
+                                                          fontFamily:
+                                                          fontSemibold,
+                                                          fontSize:
+                                                          14),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                              height: 6,
+                                            ),
+                                            Row(
+                                              children: [
+                                                Padding(
+                                                    padding:
+                                                    const EdgeInsets
+                                                        .all(
+                                                        2.0),
+                                                    child: value.productSellerModel!
+                                                        .seller!
+                                                        .profile_picture ==
+                                                        null
+                                                        ? CircleAvatar(
+                                                      // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                                      backgroundImage:
+                                                      NetworkImage("https://firebasestorage.googleapis.com/v0/b/sureloyalty-24e2a.appspot.com/o/nophoto.jpg?alt=media&token=cd6972d8-f794-4951-9c7a-b02cd2bc6366"),
+                                                      radius:
+                                                      22,
+                                                    )
+                                                        : CircleAvatar(
+                                                      backgroundImage: NetworkImage(value.productSellerModel!
+                                                          .seller!
+                                                          .profile_picture!),
+                                                      radius:
+                                                      22,
+                                                    )),
+                                                // Icon(
+                                                //   Icons.circle,
+                                                //   color: sh_grey,
+                                                //   size: 40,
+                                                // ),
+                                                SizedBox(
+                                                  width: 10,
+                                                ),
+                                                Text(
+                                                  value.productSellerModel!
+                                                      .seller!
+                                                      .nickname![
+                                                  0]!
+                                                      .toString(),
+                                                  maxLines: 2,
+                                                  style: TextStyle(
+                                                      color:
+                                                      sh_colorPrimary2,
+                                                      fontFamily:
+                                                      fontSemibold,
+                                                      fontSize: 14),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  })),
+
+
+                                  SizedBox(
+                                    height: 36,
+                                  ),
+                                  InkWell(
+                                    onTap: () async {
+                                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                                      String? UserId = prefs.getString('UserId');
+                                      String? token = prefs.getString('token');
+                                      if (UserId != null && UserId != '') {
+                                        prefs.setString("variant_id", "");
+                                        _insert();
+                                        Provider.of<ProductDetailProvider>(context, listen: false).incrementCounter(product_pro.ct_changel);
+
+                                        AddCart();
+                                        // product_pro.ct_changel = true;
+                                        cart_count == 1;
+
+                                        // product_pro.in();
+                                      }else{
+                                        prefs.setString("variant_id", "");
+                                        _insert();
+                                        Provider.of<ProductDetailProvider>(context, listen: false).incrementCounter(product_pro.ct_changel);
+
+                                        // AddCart();
+                                        // product_pro.ct_changel = true;
+                                        cart_count == 1;
+
+                                        // Navigator.push(
+                                        //   context,
+                                        //   MaterialPageRoute(
+                                        //     builder: (context) => LoginScreen(),
+                                        //   ),
+                                        // );
+                                      }
+
+                                    },
+                                    child: Container(
+                                      width: MediaQuery.of(context)
+                                          .size
+                                          .width,
+                                      padding: EdgeInsets.only(
+                                          top: spacing_middle,
+                                          bottom: spacing_middle),
+                                      decoration: boxDecoration(
+                                          bgColor: sh_app_background,
+                                          radius: 10,
+                                          showShadow: true),
+                                      child: text("Add to Cart",
+                                          textColor: sh_app_txt_color,
+                                          isCentered: true,
+                                          fontFamily: 'Bold'),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 18,
+                                  ),
+                                ],
+                              ),
+//                        _detailWidget()
+                            ],
                           ),
                         ],
                       ),
@@ -1765,7 +1866,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           )),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0,6.0,6,6),
+                      padding: const EdgeInsets.fromLTRB(0, 6.0, 6, 6),
                       child: Text(
                         "Product Details",
                         style: TextStyle(
@@ -1776,42 +1877,122 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     )
                   ],
                 ),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
+                Consumer<HomeProductListProvider>(builder: ((context, value, child) {
+                  return GestureDetector(
+                    onTap: () async {
+                      SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                      String? UserId = prefs.getString('UserId');
+                      String? token = prefs.getString('token');
+                      if (UserId != null && UserId != '') {
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         // launchScreen(context, CartScreen.tag);
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => CartScreen()),
-                        ).then((value) {
-                          setState(() {
-                            // refresh state
-                          });
-                        });
-                      },
-                      child: FutureBuilder<String?>(
-                        future: fetchtotal(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return BadgeCount();
-                          } else if (snapshot.hasError) {
-                            return Text("${snapshot.error}");
-                          }
-                          // By default, show a loading spinner.
-                          return CircularProgressIndicator();
-                        },
+                        );
+                      }else{
+                        prefs.setInt("shiping_index", -2);
+                        prefs.setInt("payment_index", -2);
+                        // launchScreen(context, CartScreen.tag);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => LoginScreen(),
+                        //   ),
+                        // );
+                      }
+
+
+                    },
+                    child: value.localCart ==0 ? Image.asset(
+                      sh_new_cart,
+                      height: 44,
+                      width: 44,
+                      fit: BoxFit.fill,
+                      color: sh_white,
+                    ):
+                    Badge(
+                      position: BadgePosition.topEnd(top: 4, end: 6),
+                      badgeContent: Text(
+                        value.localCart.toString(),
+                        style: TextStyle(color: sh_white, fontSize: 8),
+                      ),
+                      child: Image.asset(
+                        sh_new_cart,
+                        height: 44,
+                        width: 44,
+                        fit: BoxFit.fill,
+                        color: sh_white,
                       ),
                     ),
-                    // SizedBox(
-                    //   width: 16,
-                    // )
-                  ],
-                ),
+                  );
+                })),
+                // Row(
+                //   children: [
+                //     GestureDetector(
+                //       onTap: () async {
+                //         SharedPreferences prefs = await SharedPreferences.getInstance();
+                //         String? UserId = prefs.getString('UserId');
+                //         String? token = prefs.getString('token');
+                //         if (UserId != null && UserId != '') {
+                //           prefs.setInt("shiping_index", -2);
+                //           prefs.setInt("payment_index", -2);
+                //           // launchScreen(context, CartScreen.tag);
+                //           Navigator.push(
+                //             context,
+                //             MaterialPageRoute(builder: (context) => CartScreen()),
+                //           ).then((value) {
+                //             setState(() {
+                //               // refresh state
+                //             });
+                //           });
+                //         }else{
+                //
+                //           prefs.setInt("shiping_index", -2);
+                //           prefs.setInt("payment_index", -2);
+                //           // launchScreen(context, CartScreen.tag);
+                //           Navigator.push(
+                //             context,
+                //             MaterialPageRoute(builder: (context) => CartScreen()),
+                //           ).then((value) {
+                //             setState(() {
+                //               // refresh state
+                //             });
+                //           });
+                //           // Navigator.push(
+                //           //   context,
+                //           //   MaterialPageRoute(
+                //           //     builder: (context) => LoginScreen(),
+                //           //   ),
+                //           // );
+                //         }
+                //
+                //
+                //       },
+                //       child: FutureBuilder<String?>(
+                //         future: fetchtotal(),
+                //         builder: (context, snapshot) {
+                //           if (snapshot.hasData) {
+                //             return BadgeCount();
+                //           } else if (snapshot.hasError) {
+                //             return Text("${snapshot.error}");
+                //           }
+                //           // By default, show a loading spinner.
+                //           return CircularProgressIndicator();
+                //         },
+                //       ),
+                //     ),
+                //     // SizedBox(
+                //     //   width: 16,
+                //     // )
+                //   ],
+                // ),
               ],
             ),
           ),
@@ -1821,25 +2002,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     return Scaffold(
       body: WillPopScope(
-          onWillPop: _onWillPop, child: StreamProvider<NetworkStatus>(
-        initialData: NetworkStatus.Online,
-        create: (context) =>
-        NetworkStatusService().networkStatusController.stream,
-        child: NetworkAwareWidget(
-          onlineChild: SafeArea(child: setUserForm()),
-          offlineChild: Container(
-            child: Center(
-              child: Text(
-                "No internet connection!",
-                style: TextStyle(
-                    color: Colors.grey[400],
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20.0),
+          onWillPop: _onWillPop,
+          child: StreamProvider<NetworkStatus>(
+            initialData: NetworkStatus.Online,
+            create: (context) =>
+                NetworkStatusService().networkStatusController.stream,
+            child: NetworkAwareWidget(
+              onlineChild: SafeArea(child: setUserForm()),
+              offlineChild: Container(
+                child: Center(
+                  child: Text(
+                    "No internet connection!",
+                    style: TextStyle(
+                        color: Colors.grey[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20.0),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      )),
+          )),
     );
   }
 }
@@ -1932,10 +2114,7 @@ class DotsIndicator extends AnimatedWidget {
   }
 }
 
-
 class groceryButton extends StatefulWidget {
-
-
   groceryButton();
 
   @override
@@ -1943,44 +2122,36 @@ class groceryButton extends StatefulWidget {
 }
 
 class groceryButtonState extends State<groceryButton> {
-  bool ch=false;
+  bool ch = false;
 
   @override
   void initState() {
-    Timer(
-        Duration(milliseconds: 1500),
-            () {
-              setState(() {
-                ch=true;
-              });
-            }
-    );
+    Timer(Duration(milliseconds: 1500), () {
+      setState(() {
+        ch = true;
+      });
+    });
     super.initState();
 //    mListings2 = getPopular();
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
-    if(ch) {
+    if (ch) {
       return InkWell(
         onTap: () async {
           Navigator.of(context).pop(ConfirmAction.CANCEL);
-          SharedPreferences prefs =
-          await SharedPreferences.getInstance();
+          SharedPreferences prefs = await SharedPreferences.getInstance();
           prefs.setInt("shiping_index", -2);
           prefs.setInt("payment_index", -2);
           // launchScreen(context, CartScreen.tag);
           Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => CartScreen()),
+            MaterialPageRoute(builder: (context) => CartScreen()),
           ).then((value) {
-            setState(() {
-              // refresh state
-            });
+            // setState(() {
+            //   // refresh state
+            // });
           });
           //   Navigator.pushReplacement(
           // context,
@@ -1992,9 +2163,7 @@ class groceryButtonState extends State<groceryButton> {
         child: Container(
           padding: EdgeInsets.all(spacing_standard),
           decoration: boxDecoration(
-              bgColor: sh_colorPrimary2,
-              radius: 6,
-              showShadow: true),
+              bgColor: sh_colorPrimary2, radius: 6, showShadow: true),
           child: text("Cart/Checkout",
               textColor: sh_white,
               isCentered: true,
@@ -2002,7 +2171,7 @@ class groceryButtonState extends State<groceryButton> {
               fontFamily: 'Bold'),
         ),
       );
-    }else{
+    } else {
       return Shimmer.fromColors(
         baseColor: Colors.grey[300]!,
         highlightColor: Colors.grey[100]!,
@@ -2010,9 +2179,7 @@ class groceryButtonState extends State<groceryButton> {
         child: Container(
           padding: EdgeInsets.all(spacing_standard),
           decoration: boxDecoration(
-              bgColor: sh_colorPrimary2,
-              radius: 6,
-              showShadow: true),
+              bgColor: sh_colorPrimary2, radius: 6, showShadow: true),
           child: text("Cart/Checkout",
               textColor: sh_white,
               isCentered: true,

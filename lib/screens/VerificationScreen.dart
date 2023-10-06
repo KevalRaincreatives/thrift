@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/retry.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/ShLoginErrorNewModel.dart';
 import 'package:thrift/model/ShLoginModel.dart';
 import 'package:thrift/model/SignUpErrorNewModel.dart';
@@ -24,12 +24,17 @@ import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
 
+import '../provider/pro_det_provider.dart';
+
 class VerificationScreen extends StatefulWidget {
-  static String tag='/VerificationScreen';
-  final String? verificationId,phoneNumber,country_code,fnlNumber;
+  static String tag = '/VerificationScreen';
+  final String? verificationId, phoneNumber, country_code, fnlNumber;
 
-
-  VerificationScreen({this.verificationId,this.phoneNumber,this.country_code,this.fnlNumber});
+  VerificationScreen(
+      {this.verificationId,
+      this.phoneNumber,
+      this.country_code,
+      this.fnlNumber});
 
   @override
   _VerificationScreenState createState() => _VerificationScreenState();
@@ -37,6 +42,7 @@ class VerificationScreen extends StatefulWidget {
 
 class _VerificationScreenState extends State<VerificationScreen> {
   TextEditingController textEditingController = TextEditingController();
+
   // ..text = "123456";
 
   // ignore: close_sinks
@@ -47,10 +53,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
   final formKey = GlobalKey<FormState>();
   AuthCredential? _phoneAuthCredential;
   String? _status;
-  String _verificationId='';
+  String _verificationId = '';
   int? _code;
-  bool? Isresend=false;
-
+  bool? Isresend = false;
 
   @override
   void initState() {
@@ -83,13 +88,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
     EasyLoading.show(status: 'Verifying...');
 
     try {
-      String vari_id='';
-      if(Isresend!){
-        vari_id=_verificationId;
-      }else{
-        vari_id=widget.verificationId!;
+      String vari_id = '';
+      if (Isresend!) {
+        vari_id = _verificationId;
+      } else {
+        vari_id = widget.verificationId!;
       }
-      PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(verificationId: vari_id, smsCode: currentText);
+      PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(
+          verificationId: vari_id, smsCode: currentText);
       FirebaseAuth auth = FirebaseAuth.instance;
       // Sign the user in (or link) with the credential
       await auth.signInWithCredential(phoneAuthCredential);
@@ -101,12 +107,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
         MaterialPageRoute(
             builder: (context) => TermsConditionScreen(
                 country_code: widget.country_code!,
-                fnlNumber: widget.fnlNumber!
-            )),
+                fnlNumber: widget.fnlNumber!)),
       );
 
       setState(
-            () {
+        () {
           hasError = false;
           snackBar("OTP Verified!!");
         },
@@ -128,9 +133,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
       });
       print(e.toString());
       // toast(e.toString());
-      if(e.toString().contains("invalid-verification-code")){
+      if (e.toString().contains("invalid-verification-code")) {
         toast("The sms verification code is invalid");
-      }else{
+      } else {
         toast(e.toString());
       }
     }
@@ -141,7 +146,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
     /// NOTE: Either append your phone number country code or add in the code itself
     /// Since I'm in India we use "+91 " as prefix `phoneNumber`
     EasyLoading.show(status: 'Sending Code...');
-    String phoneNumber = "+"+widget.country_code!+ " "+ widget.fnlNumber!.trim();
+    String phoneNumber =
+        "+" + widget.country_code! + " " + widget.fnlNumber!.trim();
     print(phoneNumber);
 
     /// The below functions are the callbacks, separated so as to make code more redable
@@ -165,7 +171,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       print(error);
     }
 
-    void codeSent(String verificationId, [int? code]) async{
+    void codeSent(String verificationId, [int? code]) async {
       print('codeSent');
       this._verificationId = verificationId;
       print(verificationId);
@@ -230,16 +236,15 @@ class _VerificationScreenState extends State<VerificationScreen> {
       final msg = jsonEncode({"device_id": device_id});
 
       // Response response = await post(
-      //   Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_device'),
+      //   Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/add_device'),
       //   headers: headers,
       //   body: msg,
       // );
       final client = RetryClient(http.Client());
       var response;
       try {
-        response=await client.post(
-            Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_device'),
+        response = await client.post(
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/add_device'),
             headers: headers,
             body: msg);
       } finally {
@@ -247,11 +252,18 @@ class _VerificationScreenState extends State<VerificationScreen> {
       }
 
       final jsonResponse = json.decode(response.body);
-      print('VerificationScreen add_device Response status2: ${response.statusCode}');
+      print(
+          'VerificationScreen add_device Response status2: ${response.statusCode}');
       print('VerificationScreen add_device Response body2: ${response.body}');
 
       EasyLoading.dismiss();
-      launchScreen(context, DashboardScreen.tag);
+      // launchScreen(context, DashboardScreen.tag);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => DashboardScreen(selectedTab: 0,)),
+        ModalRoute.withName('/DashboardScreen'),
+      );
       // launchScreen(context, DashboardScreen.tag);
 
       return cat_model;
@@ -290,48 +302,42 @@ class _VerificationScreenState extends State<VerificationScreen> {
       final client = RetryClient(http.Client());
       var response;
       try {
-        response=await client.post(
-            Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/login'),
+        response = await client.post(
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/login'),
             headers: headers,
             body: msg);
       } finally {
         client.close();
       }
 
-
-
       final jsonResponse = json.decode(response.body);
-      print('VerificationScreen login Response status2: ${response.statusCode}');
+      print(
+          'VerificationScreen login Response status2: ${response.statusCode}');
       print('VerificationScreen login Response body2: ${response.body}');
       if (response.statusCode == 200) {
-
-
         cat_model = new ShLoginModel.fromJson(jsonResponse);
-
 
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString('token', cat_model!.data!.token.toString());
         prefs.setString('UserId', cat_model!.ID.toString());
-        prefs.setString('is_store_owner', cat_model!.data!.is_store_owner.toString());
+        prefs.setString(
+            'is_store_owner', cat_model!.data!.is_store_owner.toString());
         prefs.setString('user_country', cat_model!.data!.country!);
         prefs.setString('user_selected_country', cat_model!.data!.country!);
 
-
-        prefs.setString('profile_name',cat_model!.data!.userNicename!);
+        prefs.setString('profile_name', cat_model!.data!.userNicename!);
         prefs.setString('OrderUserName', cat_model!.data!.displayName!);
         prefs.setString('OrderUserEmail', cat_model!.data!.userEmail!);
         prefs.commit();
+        Provider.of<ProductDetailProvider>(context, listen: false)
+            .setLoggedInStatus(true);
 
-
-SaveToken();
-
-
+        SaveToken();
       } else {
         EasyLoading.dismiss();
         err_model = new ShLoginErrorNewModel.fromJson(jsonResponse);
 
-        toast(err_model!.message);
+        toast(err_model!.message!);
         // toast('Something Went Wrong');
 //        print("cat dta$cat_model");
 
@@ -343,8 +349,6 @@ SaveToken();
     }
   }
 
-
-
   Future<SignUpNewModel?> getSetting() async {
     // Dialogs.showLoadingDialog(context, _keyLoader);
     EasyLoading.show(status: 'Loading...');
@@ -355,9 +359,9 @@ SaveToken();
       String? email = prefs.getString('sg_email');
       String? username = prefs.getString('sg_username');
       String? password = prefs.getString('sg_password');
-      String? bl_country=prefs.getString('bl_country');
-      String phone=widget.fnlNumber!;
-      String country_code=widget.country_code!;
+      String? bl_country = prefs.getString('bl_country');
+      String phone = widget.fnlNumber!;
+      String country_code = widget.country_code!;
 
       Map<String, String> headers = {'Content-Type': 'application/json'};
 
@@ -377,16 +381,15 @@ SaveToken();
       //       "password": password
       //       // "country_code":country_code
       //     });
-      final msg = jsonEncode(
-          {
-         "first_name": first,
+      final msg = jsonEncode({
+        "first_name": first,
         "last_name": last,
         "username": username,
         "email": email,
         "phone": phone,
-        "phone_code":country_code,
+        "phone_code": country_code,
         "password": password,
-         "billing_country": bl_country
+        "billing_country": bl_country
       });
 
       print(msg);
@@ -394,24 +397,23 @@ SaveToken();
       final client = RetryClient(http.Client());
       var response;
       try {
-        response=await client.post(
-            Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/registration'),
+        response = await client.post(
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/registration'),
             headers: headers,
             body: msg);
       } finally {
         client.close();
       }
 
-
-      print('VerificationScreen registration Response status2: ${response.statusCode}');
+      print(
+          'VerificationScreen registration Response status2: ${response.statusCode}');
       print('VerificationScreen registration Response body2: ${response.body}');
 
       final jsonResponse = json.decode(response.body);
       print('not json $jsonResponse');
       // signup_model = new SignUpModel.fromJson(jsonResponse);
       signup_model = new SignUpNewModel.fromJson(jsonResponse);
-      if(signup_model!.status=='Yes'){
+      if (signup_model!.status == 'Yes') {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         // prefs.setString('Login', "Yes");
         // prefs.setString('login_email', email);
@@ -430,10 +432,10 @@ SaveToken();
         getLogin();
 
         // launchScreen(context, T2Dialog.tag);
-      }else{
+      } else {
         EasyLoading.dismiss();
-        signup_error_model= new SignUpErrorNewModel.fromJson(jsonResponse);
-        toast(signup_error_model!.msg);
+        signup_error_model = new SignUpErrorNewModel.fromJson(jsonResponse);
+        toast(signup_error_model!.msg!);
       }
 
       return null;
@@ -444,7 +446,6 @@ SaveToken();
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -452,7 +453,7 @@ SaveToken();
       body: StreamProvider<NetworkStatus>(
         initialData: NetworkStatus.Online,
         create: (context) =>
-        NetworkStatusService().networkStatusController.stream,
+            NetworkStatusService().networkStatusController.stream,
         child: NetworkAwareWidget(
           onlineChild: GestureDetector(
             onTap: () {},
@@ -466,7 +467,10 @@ SaveToken();
                     height: MediaQuery.of(context).size.height / 3,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(30),
-                      child: Image.asset(sh_app_logo,color: sh_colorPrimary2,),
+                      child: Image.asset(
+                        sh_app_logo,
+                        color: sh_colorPrimary2,
+                      ),
                     ),
                   ),
                   SizedBox(height: 8),
@@ -474,13 +478,14 @@ SaveToken();
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
                       'Phone Number Verification',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                       textAlign: TextAlign.center,
                     ),
                   ),
                   Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 30.0, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30.0, vertical: 8),
                     child: RichText(
                       text: TextSpan(
                           text: "Enter the code sent to ",
@@ -492,7 +497,8 @@ SaveToken();
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15)),
                           ],
-                          style: TextStyle(color: Colors.black54, fontSize: 15)),
+                          style:
+                              TextStyle(color: Colors.black54, fontSize: 15)),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -588,8 +594,9 @@ SaveToken();
                       TextButton(
                           onPressed: () {
                             _submitPhoneNumber();
-                            Isresend=true;
-                            snackBar("OTP resend!!");},
+                            Isresend = true;
+                            snackBar("OTP resend!!");
+                          },
                           child: Text(
                             "RESEND",
                             style: TextStyle(
@@ -603,8 +610,8 @@ SaveToken();
                     height: 14,
                   ),
                   Container(
-                    margin:
-                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 30),
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 30),
                     child: InkWell(
                       onTap: () async {
                         formKey.currentState!.validate();
@@ -624,7 +631,6 @@ SaveToken();
                           // );
 
                           _login();
-
                         }
                       },
                       child: Container(
@@ -632,15 +638,15 @@ SaveToken();
                         padding: EdgeInsets.only(
                             top: spacing_middle, bottom: spacing_middle),
                         decoration: boxDecoration(
-                            bgColor: sh_app_background, radius: 10, showShadow: true),
+                            bgColor: sh_app_background,
+                            radius: 10,
+                            showShadow: true),
                         child: text("VERIFY",
                             textColor: sh_colorPrimary2,
                             isCentered: true,
                             fontFamily: 'Bold'),
                       ),
                     ),
-
-
                   ),
                   SizedBox(
                     height: 16,
@@ -650,11 +656,11 @@ SaveToken();
                     children: <Widget>[
                       Flexible(
                           child: TextButton(
-                            child: Text("Clear"),
-                            onPressed: () {
-                              textEditingController.clear();
-                            },
-                          )),
+                        child: Text("Clear"),
+                        onPressed: () {
+                          textEditingController.clear();
+                        },
+                      )),
                       // Flexible(
                       //     child: TextButton(
                       //       child: Text("Set Text"),
@@ -683,8 +689,6 @@ SaveToken();
           ),
         ),
       ),
-
     );
-
   }
 }

@@ -109,7 +109,13 @@ class _CheckOutState extends State<CheckOut> {
                           flex: 5,
                           child: InkWell(
                             onTap: () async{
-                              launchScreen(context, DashboardScreen.tag);
+                              // launchScreen(context, DashboardScreen.tag);
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (BuildContext context) => DashboardScreen(selectedTab: 0,)),
+                                ModalRoute.withName('/DashboardScreen'),
+                              );
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,

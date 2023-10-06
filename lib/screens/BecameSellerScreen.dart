@@ -1,14 +1,17 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sizer/sizer.dart';
 import 'package:thrift/model/BecameSellerModel.dart';
 import 'package:thrift/model/CountryParishModel.dart';
 import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
+import 'package:thrift/screens/EulaScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
@@ -18,10 +21,10 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
-
-
+import 'package:thrift/api_service/Url.dart';
 class BecameSellerScreen extends StatefulWidget {
-  static String tag='/BecameSellerScreen';
+  static String tag = '/BecameSellerScreen';
+
   const BecameSellerScreen({Key? key}) : super(key: key);
 
   @override
@@ -30,7 +33,7 @@ class BecameSellerScreen extends StatefulWidget {
 
 class _BecameSellerScreenState extends State<BecameSellerScreen> {
   final _formKey = GlobalKey<FormState>();
-  var ShopNameCont= TextEditingController();
+  var ShopNameCont = TextEditingController();
   var firstNameCont = TextEditingController();
   var lastNameCont = TextEditingController();
   var pinCodeCont = TextEditingController();
@@ -48,8 +51,6 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
 
   bool singleTap = true;
   int val = 1;
-
-
 
   Future<CountryParishModel?>? countrydetail;
   List<CountryParishModel>? countryModel;
@@ -69,7 +70,6 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
     super.initState();
     countrydetail = fetchcountry();
     fetchDetails();
-
   }
 
   Future<ProfileModel?> fetchDetails() async {
@@ -93,11 +93,14 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
       //   headers: headers
       // );
 
-      var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
+      var response = await http.get(
+          Uri.parse(
+              "${Url.BASE_URL}wp-json/wooapp/v3/profile"),
           headers: headers);
 
       final jsonResponse = json.decode(response.body);
-      print('BecameSellerScreen profile Response status2: ${response.statusCode}');
+      print(
+          'BecameSellerScreen profile Response status2: ${response.statusCode}');
       print('BecameSellerScreen profile Response body2: ${response.body}');
       EasyLoading.dismiss();
 
@@ -106,12 +109,32 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
       firstNameCont.text = profileModel!.data!.firstName!;
       lastNameCont.text = profileModel!.data!.lastName!;
       emailCont.text = profileModel!.data!.userEmail!;
-      phoneNumberCont.text= profileModel!.data!.phone!;
-
-
+      phoneNumberCont.text = profileModel!.data!.phone!;
 
       return profileModel;
-    } catch (e) {
+    } on Exception catch (e) {
+      EasyLoading.dismiss();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        countrydetail = fetchcountry();
+        fetchDetails();
+      });} );
       print('caught error $e');
     }
   }
@@ -119,7 +142,6 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
   Future<BecameSellerModel?> BecameSeller() async {
     EasyLoading.show(status: 'Please wait...');
     try {
-
       // String email = emailCont.text;
       // String firstname = firstNameCont.text;
       // String lastname = lastNameCont.text;
@@ -164,35 +186,35 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
 
       final msg = jsonEncode({
         // "shop_name": ShopNameCont.text.toString(),
-        "billing_first_name":firstNameCont.text.toString(),
-        "billing_last_name":lastNameCont.text.toString(),
+        "billing_first_name": firstNameCont.text.toString(),
+        "billing_last_name": lastNameCont.text.toString(),
         "billing_email": emailCont.text.toString(),
         "billing_phone": phoneNumberCont.text.toString(),
         "billing_address_1": addressCont.text.toString(),
-        "billing_city":cityCont.text.toString(),
-        "billing_state":statename,
-        "billing_postcode":pinCodeCont.text.toString(),
-        "billing_country":countryname,
-        "shipping_first_name":firstNameCont.text.toString(),
-        "shipping_last_name":lastNameCont.text.toString(),
+        "billing_city": cityCont.text.toString(),
+        "billing_state": statename,
+        "billing_postcode": pinCodeCont.text.toString(),
+        "billing_country": countryname,
+        "shipping_first_name": firstNameCont.text.toString(),
+        "shipping_last_name": lastNameCont.text.toString(),
         "shipping_email": emailCont.text.toString(),
         "shipping_phone": phoneNumberCont.text.toString(),
         "shipping_address_1": addressCont.text.toString(),
-        "shipping_city":cityCont.text.toString(),
-        "shipping_state":statename,
-        "shipping_postcode":pinCodeCont.text.toString(),
-        "shipping_country":countryname,
-        "name_of_account":accountNameCont.text.toString(),
-        "account_number":accountNumberCont.text.toString(),
-        "name_of_bank":bankNameCont.text.toString(),
-        "other_details":otherCont.text.toString()
+        "shipping_city": cityCont.text.toString(),
+        "shipping_state": statename,
+        "shipping_postcode": pinCodeCont.text.toString(),
+        "shipping_country": countryname,
+        "name_of_account": accountNameCont.text.toString(),
+        "account_number": accountNumberCont.text.toString(),
+        "name_of_bank": bankNameCont.text.toString(),
+        "other_details": otherCont.text.toString()
       });
-
 
       // String body = json.encode(data2);
 
       http.Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/become_a_seller'),
+          Uri.parse(
+              '${Url.BASE_URL}wp-json/wooapp/v3/become_a_seller'),
           headers: headers,
           body: msg);
 
@@ -200,44 +222,66 @@ class _BecameSellerScreenState extends State<BecameSellerScreen> {
       final jsonResponse = json.decode(response.body);
       EasyLoading.dismiss();
 
-      print('BecameSellerScreen become_a_seller Response status2: ${response.statusCode}');
-      print('BecameSellerScreen become_a_seller Response body2: ${response.body}');
+      print(
+          'BecameSellerScreen become_a_seller Response status2: ${response.statusCode}');
+      print(
+          'BecameSellerScreen become_a_seller Response body2: ${response.body}');
 
       becameSellerModel = new BecameSellerModel.fromJson(jsonResponse);
 
-
-if(becameSellerModel!.success!) {
-  toast(becameSellerModel!.msg);
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) =>
-          DashboardScreen(selectedTab: 0),
-    ),
-  );
-}else{
-  toast(becameSellerModel!.msg);
-}
+      if (becameSellerModel!.success!) {
+        toast(becameSellerModel!.msg!);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(selectedTab: 0),
+          ),
+        );
+      } else {
+        toast(becameSellerModel!.msg!);
+      }
 
       // prefs.setString('login_name', firstname);
 
       return becameSellerModel;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
-
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        countrydetail = fetchcountry();
+        fetchDetails();
+      });} );
       print('caught error $e');
     }
   }
 
   Future<CountryParishModel?> fetchcountry() async {
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      countryname = prefs.getString('user_selected_country')!;
       Map<String, String> headers = {'Content-Type': 'application/json'};
 
       // Response response =
       // await get('http://54.245.123.190//gotspotz//wp-json/v3/woocountries');
 
-      var response = await http
-          .get(Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/countries'));
+      var response = await http.get(Uri.parse(
+          '${Url.BASE_URL}wp-json/wooapp/v3/countries'));
 
       final jsonResponse = json.decode(response.body);
 
@@ -255,24 +299,44 @@ if(becameSellerModel!.success!) {
           }
 
           for (var j = 0;
-          j < countryNewModel!.data!.countries![i]!.parishes!.length;
-          j++) {
-            if (countryNewModel!.data!.countries![i]!.parishes![j]!.name == statename) {
-              selectedStateValue = countryNewModel!.data!.countries![i]!.parishes![j];
+              j < countryNewModel!.data!.countries![i]!.parishes!.length;
+              j++) {
+            if (countryNewModel!.data!.countries![i]!.parishes![j]!.name ==
+                statename) {
+              selectedStateValue =
+                  countryNewModel!.data!.countries![i]!.parishes![j];
             }
           }
         }
       }
 
-
       return countryNewModel;
 //      return jsonResponse.map((job) => new CountryModel.fromJson(job)).toList();
-    } catch (e) {
-      print('Caught error $e');
+    } on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        countrydetail = fetchcountry();
+        fetchDetails();
+      });} );
+      print('caught error $e');
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +346,7 @@ if(becameSellerModel!.success!) {
 
     countryList() {
       return Padding(
-          padding: const EdgeInsets.fromLTRB(0.0,12,0,0),
+          padding: const EdgeInsets.fromLTRB(0.0, 12, 0, 0),
           child: Container(
             decoration: boxDecoration(
                 bgColor: sh_btn_color, radius: 22, showShadow: true),
@@ -296,7 +360,7 @@ if(becameSellerModel!.success!) {
                     items: countryNewModel!.data!.countries!.map((item) {
                       return new DropdownMenuItem(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12.0,0,0,0),
+                          padding: const EdgeInsets.fromLTRB(12.0, 0, 0, 0),
                           child: Text(
                             item!.country!,
                             style: TextStyle(
@@ -310,35 +374,34 @@ if(becameSellerModel!.success!) {
                     }).toList(),
                     hint: Text('Select Country'),
                     value: selectedValue,
-                    onChanged: (CountryParishModelDataCountries? newVal) {
-                      setState(() {
-                        selectedValue = newVal;
-                        countryname = newVal!.country!;
-
-                        parish_size = newVal.parishes!.length;
-                        if (newVal.parishes!.length > 0) {
-                          selectedStateValue = newVal.parishes![0];
-                          _visible_drop = true;
-                          _visible_text = false;
-                        } else {
-                          _visible_drop = false;
-                          _visible_text = true;
-                        }
-                      });
-                    },
+                    onChanged: null,
+                    // onChanged: (CountryParishModelDataCountries? newVal) {
+                    //   setState(() {
+                    //     selectedValue = newVal;
+                    //     countryname = newVal!.country!;
+                    //
+                    //     parish_size = newVal.parishes!.length;
+                    //     if (newVal.parishes!.length > 0) {
+                    //       selectedStateValue = newVal.parishes![0];
+                    //       _visible_drop = true;
+                    //       _visible_text = false;
+                    //     } else {
+                    //       _visible_drop = false;
+                    //       _visible_text = true;
+                    //     }
+                    //   });
+                    // },
                   ),
                 ),
               ],
             ),
-          )
-      )
-        ;
+          ));
     }
 
     stateList() {
       if (_visible_drop) {
         return Padding(
-            padding: const EdgeInsets.fromLTRB(0.0,12,0,0),
+            padding: const EdgeInsets.fromLTRB(0.0, 12, 0, 0),
             child: Container(
               decoration: boxDecoration(
                   bgColor: sh_btn_color, radius: 22, showShadow: true),
@@ -346,13 +409,14 @@ if(becameSellerModel!.success!) {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Flexible(
-                    child: DropdownButton<CountryParishModelDataCountriesParishes>(
+                    child:
+                        DropdownButton<CountryParishModelDataCountriesParishes>(
                       underline: SizedBox(),
                       isExpanded: true,
                       items: selectedValue!.parishes!.map((item) {
                         return new DropdownMenuItem(
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(12.0,0,0,0),
+                            padding: const EdgeInsets.fromLTRB(12.0, 0, 0, 0),
                             child: Text(
                               item!.name!,
                               style: TextStyle(
@@ -366,7 +430,8 @@ if(becameSellerModel!.success!) {
                       }).toList(),
                       hint: Text('Select Parish'),
                       value: selectedStateValue,
-                      onChanged: (CountryParishModelDataCountriesParishes? newVal) {
+                      onChanged:
+                          (CountryParishModelDataCountriesParishes? newVal) {
                         setState(() {
                           selectedStateValue = newVal;
                           statename = newVal!.name!;
@@ -376,9 +441,7 @@ if(becameSellerModel!.success!) {
                   ),
                 ],
               ),
-            )
-        )
-          ;
+            ));
       } else {
         return TextFormField(
           maxLines: 1,
@@ -387,7 +450,6 @@ if(becameSellerModel!.success!) {
           onEditingComplete: () => node.nextFocus(),
           style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
           cursorColor: sh_app_txt_color,
-
           decoration: InputDecoration(
             contentPadding: EdgeInsets.fromLTRB(24, 16, 24, 16),
             hintText: sh_hint_parish,
@@ -401,11 +463,9 @@ if(becameSellerModel!.success!) {
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide(color: sh_view_color, width: 1.0)),
           ),
-        )
-          ;
+        );
       }
     }
-
 
     Widget setUserForm() {
       AppBar appBar = AppBar(
@@ -413,7 +473,8 @@ if(becameSellerModel!.success!) {
         backgroundColor: sh_colorPrimary2,
         title: Text(
           "Add Details",
-          style: TextStyle(color: sh_white,fontFamily: 'Cursive',fontSize: 40),
+          style:
+              TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
@@ -427,7 +488,6 @@ if(becameSellerModel!.success!) {
               width: 50,
               color: sh_white,
             ),
-
           ),
           SizedBox(
             width: 22,
@@ -440,9 +500,9 @@ if(becameSellerModel!.success!) {
         Container(
             height: 120,
             width: width,
-            child: Image.asset(sh_upper2,fit: BoxFit.fill)
-          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-        ),
+            child: Image.asset(sh_upper2, fit: BoxFit.fill)
+            // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+            ),
         //Above card
 
         Container(
@@ -454,11 +514,11 @@ if(becameSellerModel!.success!) {
             child: Form(
               key: _formKey,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(26,spacing_standard_new,26,spacing_standard_new),
+                padding: const EdgeInsets.fromLTRB(
+                    26, spacing_standard_new, 26, spacing_standard_new),
                 child: Container(
                   color: sh_white,
                   child: Column(
-
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // text(" Shop Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
@@ -476,29 +536,48 @@ if(becameSellerModel!.success!) {
                               children: [
                                 Row(
                                   children: [
-                                    text(" First Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                                    text("*", textColor: sh_red, fontFamily: "Bold"),
+                                    text(" First Name",
+                                        textColor: sh_app_txt_color,
+                                        fontFamily: "Bold"),
+                                    text("*",
+                                        textColor: sh_red, fontFamily: "Bold"),
                                   ],
                                 ),
-
-                                editTextStyle("First Name", firstNameCont, node,
-                                    "Please Enter First Name", sh_white, sh_view_color, 1),
+                                editTextStyle(
+                                    "First Name",
+                                    firstNameCont,
+                                    node,
+                                    "Please Enter First Name",
+                                    sh_white,
+                                    sh_view_color,
+                                    1),
                               ],
                             ),
                           ),
-                          SizedBox(width: 12,),
+                          SizedBox(
+                            width: 12,
+                          ),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    text(" Last Name", textColor: sh_app_txt_color,fontFamily: "Bold"),
-                                    text("*", textColor: sh_red, fontFamily: "Bold"),
+                                    text(" Last Name",
+                                        textColor: sh_app_txt_color,
+                                        fontFamily: "Bold"),
+                                    text("*",
+                                        textColor: sh_red, fontFamily: "Bold"),
                                   ],
                                 ),
-                                editTextStyle("Last Name", lastNameCont, node,
-                                    "Please Enter Last Name", sh_white, sh_view_color, 1),
+                                editTextStyle(
+                                    "Last Name",
+                                    lastNameCont,
+                                    node,
+                                    "Please Enter Last Name",
+                                    sh_white,
+                                    sh_view_color,
+                                    1),
                               ],
                             ),
                           ),
@@ -509,7 +588,8 @@ if(becameSellerModel!.success!) {
                       ),
                       Row(
                         children: [
-                          text(" Email", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text(" Email",
+                              textColor: sh_app_txt_color, fontFamily: "Bold"),
                           text("*", textColor: sh_red, fontFamily: "Bold"),
                         ],
                       ),
@@ -521,7 +601,8 @@ if(becameSellerModel!.success!) {
                       ),
                       Row(
                         children: [
-                          text(" Phone", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text(" Phone",
+                              textColor: sh_app_txt_color, fontFamily: "Bold"),
                           text("*", textColor: sh_red, fontFamily: "Bold"),
                         ],
                       ),
@@ -532,7 +613,8 @@ if(becameSellerModel!.success!) {
                       ),
                       Row(
                         children: [
-                          text(" Address", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text(" Address",
+                              textColor: sh_app_txt_color, fontFamily: "Bold"),
                           text("*", textColor: sh_red, fontFamily: "Bold"),
                         ],
                       ),
@@ -543,7 +625,8 @@ if(becameSellerModel!.success!) {
                       ),
                       Row(
                         children: [
-                          text(" City", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text(" City",
+                              textColor: sh_app_txt_color, fontFamily: "Bold"),
                           text("*", textColor: sh_red, fontFamily: "Bold"),
                         ],
                       ),
@@ -554,7 +637,8 @@ if(becameSellerModel!.success!) {
                       ),
                       Row(
                         children: [
-                          text(" Zipcode", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                          text(" Zipcode",
+                              textColor: sh_app_txt_color, fontFamily: "Bold"),
                           text("*", textColor: sh_red, fontFamily: "Bold"),
                         ],
                       ),
@@ -563,7 +647,8 @@ if(becameSellerModel!.success!) {
                       SizedBox(
                         height: spacing_middle,
                       ),
-                      text(" Select Country & State", textColor: sh_app_txt_color,fontFamily: "Bold"),
+                      text(" Select Country & State",
+                          textColor: sh_app_txt_color, fontFamily: "Bold"),
                       FutureBuilder<CountryParishModel?>(
                         future: countrydetail,
                         builder: (context, snapshot) {
@@ -582,12 +667,12 @@ if(becameSellerModel!.success!) {
                         },
                       ),
                       SizedBox(
-                        height: spacing_middle,
+                        height: spacing_standard_new,
                       ),
                       Container(
                         width: MediaQuery.of(context).size.width,
                         padding: EdgeInsets.only(
-                            top: 10, bottom: 10,left: 14,right: 14),
+                            top: 10, bottom: 10, left: 14, right: 14),
                         decoration: BoxDecoration(
                           border: Border.all(color: sh_colorPrimary2),
                           color: sh_white,
@@ -600,46 +685,98 @@ if(becameSellerModel!.success!) {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                              text("Banking Information",fontSize: 18.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
-                            ],),
-                            SizedBox(height: 10,),
-                            Row(
-                              children: [
-                                text(" Name of account",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
-                                text("*",fontSize: 15.0, textColor: sh_red, fontFamily: "Bold"),
+                                text("Banking Information",
+                                    fontSize: 18.0,
+                                    textColor: sh_app_txt_color,
+                                    fontFamily: "Bold"),
                               ],
                             ),
-                            editTextStyle5("Name of account", accountNameCont, node,
-                                "Please Enter Name of account", sh_white, sh_view_color, 1),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Row(
+                              children: [
+                                text(" Name of account",
+                                    fontSize: 15.0,
+                                    textColor: sh_app_txt_color,
+                                    fontFamily: "Bold"),
+                                text("*",
+                                    fontSize: 15.0,
+                                    textColor: sh_red,
+                                    fontFamily: "Bold"),
+                              ],
+                            ),
+                            editTextStyle5(
+                                "Name of account",
+                                accountNameCont,
+                                node,
+                                "Please Enter Name of account",
+                                sh_white,
+                                sh_view_color,
+                                1),
                             SizedBox(
                               height: spacing_middle,
                             ),
                             Row(
                               children: [
-                                text(" Account number",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
-                                text("*",fontSize: 15.0, textColor: sh_red, fontFamily: "Bold"),
+                                text(" Account number",
+                                    fontSize: 15.0,
+                                    textColor: sh_app_txt_color,
+                                    fontFamily: "Bold"),
+                                text("*",
+                                    fontSize: 15.0,
+                                    textColor: sh_red,
+                                    fontFamily: "Bold"),
                               ],
                             ),
-                            editTextStyle5("Account number", accountNumberCont, node,
-                                "Please Enter Account number", sh_white, sh_view_color, 1),
+                            editTextStyle5(
+                                "Account number",
+                                accountNumberCont,
+                                node,
+                                "Please Enter Account number",
+                                sh_white,
+                                sh_view_color,
+                                1),
                             SizedBox(
                               height: spacing_middle,
                             ),
                             Row(
                               children: [
-                                text(" Name of Bank",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
-                                text("*",fontSize: 15.0, textColor: sh_red, fontFamily: "Bold"),
+                                text(" Name of Bank",
+                                    fontSize: 15.0,
+                                    textColor: sh_app_txt_color,
+                                    fontFamily: "Bold"),
+                                text("*",
+                                    fontSize: 15.0,
+                                    textColor: sh_red,
+                                    fontFamily: "Bold"),
                               ],
                             ),
-                            editTextStyle5("Name of Bank", bankNameCont, node,
-                                "Please Enter Name of Bank", sh_white, sh_view_color, 1),
+                            editTextStyle5(
+                                "Name of Bank",
+                                bankNameCont,
+                                node,
+                                "Please Enter Name of Bank",
+                                sh_white,
+                                sh_view_color,
+                                1),
                             SizedBox(
                               height: spacing_middle,
                             ),
-                            text(" Other Details",fontSize: 15.0, textColor: sh_app_txt_color,fontFamily: "Bold"),
-                            editTextStyle3("Other Details", otherCont, node,
-                                "Please Enter Other Details", sh_white, sh_view_color, 4),
-                          ],),
+                            text(" Other Details",
+                                fontSize: 15.0,
+                                textColor: sh_app_txt_color,
+                                fontFamily: "Bold"),
+                            editTextStyle3(
+                                "Other Details",
+                                otherCont,
+                                node,
+                                "Please Enter Other Details",
+                                sh_white,
+                                sh_view_color,
+                                4),
+                          ],
+                        ),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -654,19 +791,40 @@ if(becameSellerModel!.success!) {
                             },
                             activeColor: sh_colorPrimary2,
                           ),
-                          Text('I agree to the ',style: TextStyle(color: sh_black,fontSize: 13),),
-                          Text('Terms & Conditions',style: TextStyle(color: sh_colorPrimary2,fontSize: 13, decoration: TextDecoration.underline,),),
+                          Text(
+                            'I agree to Seller EULA.',
+                            style: TextStyle(color: sh_black, fontSize: 12),
+                          ),
+                          Flexible(
+                            child: InkWell(
+                                onTap: () {
+                                  launchScreen(context, EulaScreen.tag);
+                                },
+                                child: Text(
+                                  'Click here to view full EULA.',
+                                  style: TextStyle(
+                                    color: sh_colorPrimary2,
+                                    fontSize: 12,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                )),
+                          ),
                         ],
                       ),
 
-SizedBox(height: 16,),
+                      SizedBox(
+                        height: 16,
+                      ),
                       InkWell(
                         onTap: () async {
-                          if (_formKey.currentState!.validate()) {
-                            //   // TODO submit
-                            FocusScope.of(context).requestFocus(FocusNode());
-                            BecameSeller();
-
+                          if (val == 2) {
+                            if (_formKey.currentState!.validate()) {
+                              //   // TODO submit
+                              FocusScope.of(context).requestFocus(FocusNode());
+                              BecameSeller();
+                            }
+                          } else {
+                            toast("Please agree to the seller EULA");
                           }
                         },
                         child: Container(
@@ -674,7 +832,9 @@ SizedBox(height: 16,),
                           padding: EdgeInsets.only(
                               top: spacing_middle, bottom: spacing_middle),
                           decoration: boxDecoration(
-                              bgColor: sh_app_background, radius: 10, showShadow: true),
+                              bgColor: sh_app_background,
+                              radius: 10,
+                              showShadow: true),
                           child: text("SUBMIT",
                               textColor: sh_colorPrimary2,
                               isCentered: true,
@@ -694,7 +854,7 @@ SizedBox(height: 16,),
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(10,18,10,0),
+            padding: const EdgeInsets.fromLTRB(10, 18, 10, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -703,21 +863,33 @@ SizedBox(height: 16,),
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                      padding: const EdgeInsets.fromLTRB(1.0, 2, 6, 2),
+                      child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          )),
                     ),
-
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
-                      child: Text("Become a Seller",style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'),),
+                      padding: const EdgeInsets.fromLTRB(0, 6, 6, 6.0),
+                      child: Text(
+                        "Become a Seller",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontFamily: 'TitleCursive'),
+                      ),
                     )
                   ],
                 ),
                 GestureDetector(
-                  onTap: () async{
-                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                  onTap: () async {
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
                     prefs.setInt("shiping_index", -2);
                     prefs.setInt("payment_index", -2);
                     launchScreen(context, CartScreen.tag);
@@ -731,24 +903,21 @@ SizedBox(height: 16,),
                       color: sh_white,
                     ),
                   ),
-
                 ),
               ],
             ),
           ),
         ),
-
       ]);
     }
 
     return Sizer(
       builder: (context, orientation, deviceType) {
         return Scaffold(
-
           body: StreamProvider<NetworkStatus>(
             initialData: NetworkStatus.Online,
             create: (context) =>
-            NetworkStatusService().networkStatusController.stream,
+                NetworkStatusService().networkStatusController.stream,
             child: NetworkAwareWidget(
               onlineChild: SafeArea(child: setUserForm()),
               offlineChild: Container(
@@ -767,9 +936,9 @@ SizedBox(height: 16,),
         );
       },
     );
-
   }
 }
+
 Padding editTextStyle(var hintText, var cn, final node, String alert,
     Color sh_white, Color sh_view_color, int min_lne) {
   return Padding(
@@ -837,7 +1006,7 @@ Padding editTextStyle2(var hintText, var cn, final node, String alert,
     child: TextFormField(
       maxLines: min_lne,
       controller: cn,
-        keyboardType: TextInputType.number,
+      keyboardType: TextInputType.number,
       onEditingComplete: () => node.nextFocus(),
       style: TextStyle(fontSize: textSizeMedium, fontFamily: fontRegular),
       cursorColor: sh_app_txt_color,
@@ -883,7 +1052,7 @@ Padding editTextStyle5(var hintText, var cn, final node, String alert,
       decoration: InputDecoration(
         contentPadding: EdgeInsets.fromLTRB(18, 10, 18, 10),
         hintText: hintText,
-        hintStyle: TextStyle(color: sh_app_txt_color,fontSize: textSizeMedium),
+        hintStyle: TextStyle(color: sh_app_txt_color, fontSize: textSizeMedium),
         filled: true,
         fillColor: sh_white,
         enabledBorder: OutlineInputBorder(

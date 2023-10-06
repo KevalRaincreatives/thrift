@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as i;
 import 'dart:io';
@@ -5,13 +6,16 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:badges/badges.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sizer/sizer.dart';
 import 'package:thrift/model/AddProCategoryModel.dart';
 import 'package:thrift/model/AddProMetaModel.dart';
@@ -30,11 +34,13 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:http/http.dart' as http;
-import 'package:thrift/utils/T6Colors.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
-
+import '../provider/home_product_provider.dart';
+import '../utils/data_manager.dart';
+import 'EulaScreen.dart';
+import 'package:thrift/api_service/Url.dart';
 
 class CreateProductScreen extends StatefulWidget {
   static String tag = '/CreateProductScreen';
@@ -81,6 +87,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   var textLength = 0;
   bool singleTap = true;
   int val = 1;
+  Trace traceAddProduct = FirebasePerformance.instance.newTrace('AddProduct');
+  Trace traceAddProductImage = FirebasePerformance.instance.newTrace('add_product_images');
+  Trace traceAddEstPrice = FirebasePerformance.instance.newTrace('add_estimated_retail_price');
 
   @override
   void initState() {
@@ -109,6 +118,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   Future<List<NewCategoryModel>?> fetchAlbum() async {
     EasyLoading.show(status: 'Please wait...');
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // String? token = prefs.getString('token');
+      String? user_default_country=prefs.getString('user_default_country');
+      print("mycss"+user_default_country!);
 //      prefs = await SharedPreferences.getInstance();
 //      String UserId = prefs.getString('UserId');
 //       var response = await http.get(
@@ -118,7 +131,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/woo_product_categories"));
+              "${Url.BASE_URL}wp-json/wooapp/v3/woo_product_categories"));
         } finally {
           client.close();
         }
@@ -139,9 +152,28 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       }
       fetchAttribute();
       return categoryListModel2;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
-//      return orderListModel;
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAlbum();
+      });} );
       print('caught error $e');
     }
   }
@@ -157,7 +189,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
         var response;
         try {
           response = await client.get(Uri.parse(
-              "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/attributes"));
+              "${Url.BASE_URL}wp-json/wooapp/v3/attributes"));
         } finally {
           client.close();
         }
@@ -173,9 +205,28 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       setState(() {});
 
       return attributeModel;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
-//      return orderListModel;
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAlbum();
+      });} );
       print('caught error $e');
     }
   }
@@ -202,8 +253,51 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     }
   }
 
+  void _openCustomDialog2() {
+
+    showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          return Transform.scale(
+            scale: a1.value,
+            child: Opacity(
+              opacity: a1.value,
+              child: AlertDialog(
+                shape: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0)),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      semanticsLabel: 'Circular progress indicator',
+                      color: sh_colorPrimary2,
+                    ),
+                SizedBox(height: 16,),
+                Text(
+                  'Please wait',
+                  style: TextStyle(
+                      color: sh_colorPrimary2,
+                      fontSize: 18,
+                      fontFamily: 'Bold'))
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: true,
+        barrierLabel: '',
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          return Container();
+        });
+  }
+
   Future<CreateProModel?> AddProduct() async {
-    EasyLoading.show(status: 'Please wait...');
+    await traceAddProduct.start();
+    // EasyLoading.show(status: 'Please wait...');
+    Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog2(context,'Storing your product data on the server',false);
     try {
       addProMetaModel
           .add(new AddProMetaModel(key: "Brand", value: BrandCont.text));
@@ -257,7 +351,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       // }
 
       var response = await http.post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products'),
+          Uri.parse('${Url.BASE_URL}wp-json/wc/v3/products'),
           body: body,
           headers: headers);
 
@@ -267,20 +361,27 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
       createProModel = new CreateProModel.fromJson(jsonResponse);
 
-      toast("Product Created Successfully");
+      // toast("Product Created Successfully");
+      Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog2(context,'Storing your product data on the server',true);
+
       ItemAdd(createProModel!.id.toString());
 
       // }
       // );
-
+      await traceAddProduct.stop();
       return createProModel;
-    } catch (e) {
-      EasyLoading.dismiss();
+    } on Exception catch (e) {
+      await traceAddProduct.stop();
+      Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog4(context,'Unable to save your product.\nPlease attempt again');
+      // EasyLoading.dismiss();
+// toast(e.toString());
       print('caught error $e');
     }
   }
 
   Future<String?> AddPhoto(String prodId) async {
+    await traceAddProductImage.start();
+    Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog2(context,'Uploading your product images to the server',false);
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
@@ -301,10 +402,11 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       });
 
       // final msg = jsonEncode({"username": username, "password": password});
+      print("uploadLength"+uploadModel.length.toString());
       print(body);
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_product_images'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/add_product_images'),
           body: body,
           headers: headers);
 
@@ -314,21 +416,31 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
       if (EstPriceCont.text.length > 0) {
         AddEstPrice(prodId);
-      } else {
-        EasyLoading.dismiss();
-        Navigator.pop(context);
-      }
-      // EasyLoading.dismiss();
-      toast("Image Uploaded Successfully");
 
+      } else {
+        Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog2(context,'Uploading your product images to the server',true);
+        Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog3(context,'Your product has been successfully saved');
+        // Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog2(context,'product created successfully',true);
+        // EasyLoading.dismiss();
+        // Navigator.pop(context);
+      }
+      final postMdl = Provider.of<HomeProductListProvider>(context, listen: false);
+      postMdl.getHomeProduct('Newest to Oldest',true);
+      // EasyLoading.dismiss();
+      // toast("Image Uploaded Successfully");
+      await traceAddProductImage.stop();
       return "cat_model";
-    } catch (e) {
-      EasyLoading.dismiss();
+    } on Exception catch (e) {
+      // EasyLoading.dismiss();
+      await traceAddProductImage.stop();
+      Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog4(context,'Unable to save your product.\nPlease attempt again');
+// toast(e.toString());
       print('caught error $e');
     }
   }
 
   Future<String?> AddEstPrice(String prodId) async {
+    await traceAddEstPrice.start();
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
@@ -353,7 +465,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       print(body);
       var response = await http.post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_estimated_retail_price'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/add_estimated_retail_price'),
           body: body,
           headers: headers);
 
@@ -361,17 +473,21 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       print('CreateProductScreen add_estimated_retail_price Response body2: ${response.body}');
 
       final jsonResponse = json.decode(response.body);
-
-      EasyLoading.dismiss();
+      Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog2(context,'Uploading your product images to the server',true);
+      Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog3(context,'Your product has been successfully saved');
+      // EasyLoading.dismiss();
 
       // EasyLoading.dismiss();
       // toast("Image Uploaded Successfully");
 
-      Navigator.pop(context);
-
+      // Navigator.pop(context);
+      await traceAddEstPrice.stop();
       return "cat_model";
-    } catch (e) {
-      EasyLoading.dismiss();
+    }  on Exception catch (e) {
+      await traceAddEstPrice.stop();
+      Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog4(context,'Unable to save your product.\nPlease attempt again');
+      // EasyLoading.dismiss();
+// toast(e.toString());
       print('caught error $e');
     }
   }
@@ -720,8 +836,14 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                       SizedBox(
                         height: spacing_standard_new,
                       ),
-                      text(" Select Category",
-                          textColor: sh_app_txt_color, fontFamily: "Bold"),
+                      Row(
+                        children: [
+                          text(" Select Category",
+                              textColor: sh_app_txt_color, fontFamily: "Bold"),
+                          text("*", textColor: sh_red, fontFamily: "Bold"),
+                        ],
+                      ),
+
                       MultiSelectChip(
                         categoryListModel2,
                         onSelectionChanged: (selectedList) {
@@ -736,7 +858,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
                       // text(" Select Attribute", textColor: t6textColorPrimary),
                       // CheckVariant(),
-                      AttrWidget(attributeModel, itModel, itemsModel!),
+                      AttrWidget(attributeModel, itModel, itemsModel!,categoryListModel2),
                       SizedBox(
                         height: spacing_standard_new,
                       ),
@@ -763,8 +885,14 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                             },
                             activeColor: sh_colorPrimary2,
                           ),
-                          Text('I agree to the ',style: TextStyle(color: sh_black,fontSize: 13),),
-                          Text('Terms & Conditions',style: TextStyle(color: sh_colorPrimary2,fontSize: 13, decoration: TextDecoration.underline,),),
+                          Text('I agree to Seller EULA.',style: TextStyle(color: sh_black,fontSize: 12),),
+                          Flexible(
+                            child: InkWell(
+                                onTap: () {
+                                  launchScreen(context, EulaScreen.tag);
+                                },
+                                child: Text('Click here to view full EULA.',style: TextStyle(color: sh_colorPrimary2,fontSize: 12, decoration: TextDecoration.underline,),)),
+                          ),
                         ],
                       ),
                       SizedBox(
@@ -772,59 +900,85 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                       ),
                       InkWell(
                         onTap: () async {
-                          if (_formKey.currentState!.validate()) {
-                            //   // TODO submit
-                            FocusScope.of(context).requestFocus(FocusNode());
-                            for (var i = 0;
+                          // Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog2(context,'Please wait uploading',false);
+                          // Provider.of<HomeProductListProvider>(context, listen: false).openCustomDialog3(context,'Product Created Successfully');
+                          if(val==2){
+                              // Do something here
+                              if (_formKey.currentState!.validate()) {
+                                //   // TODO submit
+                                FocusScope.of(context).requestFocus(FocusNode());
+                                for (var i = 0;
                                 i < selectedReportList.length;
                                 i++) {
-                              addProCatModel.add(new AddProCategoryModel(
-                                  id: selectedReportList[i]));
-                            }
-                            //                       toast(itemsModel!.length.toString());
-                            //                     if(itemsModel![0].options!.length>0){
-                            //                       print(itemsModel![0].name! +
-                            //                           itemsModel![0].options![0].toString());
-                            //                     }
-                            // if(itemsModel![1].options!.length>0) {
-                            //   print(itemsModel![1].name! + itemsModel![1].options![0].toString());
-                            // }
-                            // if(itemsModel![2].options!.length>0) {
-                            //   print(itemsModel![2].name! + itemsModel![2].options![0].toString());
-                            // }
-                            // if(itemsModel![3].options!.length>0) {
-                            //   print(itemsModel![3].name! + itemsModel![3].options![0].toString());
-                            // }
-                            if (multimimageModel.length > 0) {
-                              // AddProduct();
-                              int jj = 0;
-                              String mj = '';
+                                  addProCatModel.add(new AddProCategoryModel(
+                                      id: selectedReportList[i]));
+                                }
+                                //                       toast(itemsModel!.length.toString());
+                                //                     if(itemsModel![0].options!.length>0){
+                                //                       print(itemsModel![0].name! +
+                                //                           itemsModel![0].options![0].toString());
+                                //                     }
+                                // if(itemsModel![1].options!.length>0) {
+                                //   print(itemsModel![1].name! + itemsModel![1].options![0].toString());
+                                // }
+                                // if(itemsModel![2].options!.length>0) {
+                                //   print(itemsModel![2].name! + itemsModel![2].options![0].toString());
+                                // }
+                                // if(itemsModel![3].options!.length>0) {
+                                //   print(itemsModel![3].name! + itemsModel![3].options![0].toString());
+                                // }
+                                if (multimimageModel.length > 0) {
+      if (addProCatModel.isNotEmpty) {
+                                  // AddProduct();
+                                  int jj = 0;
+                                  String mj = '';
 
-                              // itemsModel!.length = itemsModel.length - howMany;
-                              // itemsModel.length=attributeModel.data.attributes.length
-                              for (var j = 0;
+                                  // itemsModel!.length = itemsModel.length - howMany;
+                                  // itemsModel.length=attributeModel.data.attributes.length
+                                  for (var j = 0;
                                   j < attributeModel!.data!.attributes!.length;
                                   j++) {
-                                if (itemsModel![j].required == '1') {
-                                  if (itemsModel![j].options!.length == 0) {
-                                    jj++;
-                                    // toast(itemsModel![j].name!);
-                                    mj = itemsModel![j].name!;
-                                    break;
-                                  }
-                                }
-                              }
+                                    if (itemsModel![j].required == '1') {
+                                      if (itemsModel![j].options!.length == 0) {
+                                        if(DataManager.getInstance().getIsShoesSelected()=='True'&&itemsModel![j].name=='Size'){
 
-                              // toast(jj.toString());
-                              if (jj > 0) {
-                                toast("Please Select $mj");
-                              } else {
-                                AddProduct();
-                              }
-                            } else {
-                              toast("Please add a photo");
+                                        }else if(DataManager.getInstance().getIsShoesSelected()=='False'&&itemsModel![j].name=='Footware Size'){
+
+                                        }else if(itemsModel![j].type=='text'){
+
+                                        }
+                                        else {
+                                          jj++;
+                                          mj = itemsModel![j].name!;
+                                          break;
+                                        }
+                                      }
+                                    }
+                                  }
+
+                                  // toast(jj.toString());
+                                  if (jj > 0) {
+                                    toast("Please Select $mj");
+                                  } else {
+                                    // toast("Perfect");
+                                    AddProduct();
+                                  }
+      } else {
+        toast("Please Select Category");
+      }
+                                } else {
+                                  toast("Please add a photo");
+                                }
+                              // setState(() {
+                              //   singleTap = false; // update bool
+                              // });
                             }
+
+                          }else{
+                            toast("Please agree to the seller EULA");
                           }
+
+
                         },
                         child: Container(
                           width: 100.w,
@@ -1239,9 +1393,9 @@ class AttrWidget extends StatefulWidget {
   AttributeModel? attributeModel;
   NewAttributeModel? itModel;
   List<NewAttributeModel> itemsModel = [];
+  final List<NewCategoryModel> reportList;
 
-
-  AttrWidget(this.attributeModel, this.itModel, this.itemsModel);
+  AttrWidget(this.attributeModel, this.itModel, this.itemsModel,this.reportList);
 
   @override
   State<StatefulWidget> createState() {
@@ -1258,6 +1412,15 @@ class _AttrWidgetState extends State<AttrWidget> {
     super.initState();
   }
 
+  bool isBooksSelected() {
+    for (var category in widget.reportList) {
+      if (category.name == 'Shoes' && category.selected == true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     // var _value = widget.pro_det_model!.attributes![widget.index!]!.options!.isEmpty
@@ -1265,58 +1428,112 @@ class _AttrWidgetState extends State<AttrWidget> {
     //     : widget.pro_det_model!.attributes![widget.index!]!.options!.firstWhere((item) => item.toString() == selectedItemValue.toString());
 
     if (widget.attributeModel!.data!.attributes!.length > 0) {
-      return Container(
-        child: ListView.builder(
-            itemCount: widget.attributeModel!.data!.attributes!.length,
-            physics: NeverScrollableScrollPhysics(),
-            // itemExtent: 50.0,
-            shrinkWrap: true,
-            itemBuilder: (BuildContext context, int index) {
-              widget.itModel = NewAttributeModel(
-                  name: widget.attributeModel!.data!.attributes![index]!.title!,
-                  position: 0,
-                  variation: true,
-                  visible: true,
-                  options: [],
-                  required: widget
-                      .attributeModel!.data!.attributes![index]!.required!,
-              type: widget
-                  .attributeModel!.data!.attributes![index]!.type!);
+      return Visibility(
+        visible: DataManager.getInstance().getIsSelected()=='True'?true:false,
+        // widget.reportList.any((item) => item.selected == true),
+        child: Container(
+          child: ListView.builder(
+              itemCount: widget.attributeModel!.data!.attributes!.length,
+              physics: NeverScrollableScrollPhysics(),
+              // itemExtent: 50.0,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                widget.itModel = NewAttributeModel(
+                    name: widget.attributeModel!.data!.attributes![index]!.title!,
+                    position: 0,
+                    variation: true,
+                    visible: true,
+                    options: [],
+                    required: widget
+                        .attributeModel!.data!.attributes![index]!.required!,
+                type: widget
+                    .attributeModel!.data!.attributes![index]!.type!);
 
-              widget.itemsModel.add(widget.itModel!);
-              // if(attributeModel!.data!.attributes![index]!.title!)
-              _textFieldRateControllers!.add(new TextEditingController());
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    children: [
-                      text(widget.attributeModel!.data!.attributes![index]!.type=='text'
-                          ? " Add " +
-                          widget.attributeModel!.data!.attributes![index]!
-                              .title!:
+                widget.itemsModel.add(widget.itModel!);
+                // if(attributeModel!.data!.attributes![index]!.title!)
+                _textFieldRateControllers!.add(new TextEditingController());
+                bool isShoesShowMain=(DataManager.getInstance().getIsShoesSelected()=='True');
+                bool isShoesShow=(DataManager.getInstance().getIsShoesSelected()=='True'&&widget.attributeModel!.data!.attributes![index]!.title=='Size');
+
+                bool isMainSizeShow=(widget.attributeModel!.data!.attributes![index]!.title=='Footware Size');
+
+                print('isShoesShowMain'+DataManager.getInstance().getIsShoesSelected()=='True');
+                print('isShoesShow'+DataManager.getInstance().getIsShoesSelected()=='True'&&widget.attributeModel!.data!.attributes![index]!.title=='Size');
+                print('isMainSizeShow'+'${widget.attributeModel!.data!.attributes![index]!.title=='Footware Size'}');
+                return isShoesShowMain?
+                  Visibility(
+visible: widget.attributeModel!.data!.attributes![index]!.title=='Size'? false:true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: [
+                          text(widget.attributeModel!.data!.attributes![index]!.type=='text'
+                              ? " Add " +
+                              widget.attributeModel!.data!.attributes![index]!
+                                  .title!:
+                              " Select " +
+                                  widget.attributeModel!.data!.attributes![index]!
+                                      .title!,
+                              textColor: sh_app_txt_color,
+                              fontFamily: "Bold"),
+                          Visibility(
+                            visible: widget.attributeModel!.data!.attributes![index]!.type=='text'? false:true,
+                            child: text("*",
+                                textColor: widget.attributeModel!.data!
+                                            .attributes![index]!.required ==
+                                        "1"
+                                    ? sh_red
+                                    : sh_transparent,
+                                fontFamily: "Bold"),
+                          ),
+                        ],
+                      ),
+                      PlayerWidget(
+                          pro_det_model: widget.attributeModel!,
+                          index: index,
+                          itemsModel: widget.itemsModel,textFieldRateControllers: _textFieldRateControllers![index]),
+                      SizedBox(height: 10),
+                    ],
+                  ),
+                ) : Visibility(
+                  visible: widget.attributeModel!.data!.attributes![index]!.title=='Footware Size'? false:true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: [
+                          text(widget.attributeModel!.data!.attributes![index]!.type=='text'
+                              ? " Add " +
+                              widget.attributeModel!.data!.attributes![index]!
+                                  .title!:
                           " Select " +
                               widget.attributeModel!.data!.attributes![index]!
                                   .title!,
-                          textColor: sh_app_txt_color,
-                          fontFamily: "Bold"),
-                      text("*",
-                          textColor: widget.attributeModel!.data!
-                                      .attributes![index]!.required ==
-                                  "1"
-                              ? sh_red
-                              : sh_transparent,
-                          fontFamily: "Bold"),
+                              textColor: sh_app_txt_color,
+                              fontFamily: "Bold"),
+                          Visibility(
+                            visible: widget.attributeModel!.data!.attributes![index]!.type=='text'? false:true,
+                            child: text("*",
+                                textColor: widget.attributeModel!.data!
+                                    .attributes![index]!.required ==
+                                    "1"
+                                    ? sh_red
+                                    : sh_transparent,
+                                fontFamily: "Bold"),
+                          ),
+                        ],
+                      ),
+                      PlayerWidget(
+                          pro_det_model: widget.attributeModel!,
+                          index: index,
+                          itemsModel: widget.itemsModel,textFieldRateControllers: _textFieldRateControllers![index]),
+                      SizedBox(height: 10),
                     ],
                   ),
-                  PlayerWidget(
-                      pro_det_model: widget.attributeModel!,
-                      index: index,
-                      itemsModel: widget.itemsModel,textFieldRateControllers: _textFieldRateControllers![index]),
-                  SizedBox(height: 10),
-                ],
-              );
-            }),
+                );
+              }),
+        ),
       );
     } else {
       return Container();
@@ -1427,6 +1644,8 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
   // String selectedChoice = "";
   List<int> selectedChoices = [];
 
+
+
   _buildChoiceList() {
     var unescape = HtmlUnescape();
     List<Widget> choices = [];
@@ -1446,7 +1665,30 @@ class _MultiSelectChipState extends State<MultiSelectChip> {
               selectedChoices.contains(item.catid)
                   ? selectedChoices.remove(item.catid)
                   : selectedChoices.add(item.catid!);
+
+              if(selectedChoices.isNotEmpty){
+                DataManager.getInstance().setIsSelected('True');
+              }else{
+                DataManager.getInstance().setIsSelected('False');
+              }
+
+              if(selectedChoices.contains(188)){
+                DataManager.getInstance().setIsShoesSelected('True');
+              }else{
+                DataManager.getInstance().setIsShoesSelected('False');
+              }
+
+              if((selectedChoices.contains(191)||selectedChoices.contains(195)
+                  ||selectedChoices.contains(205)||selectedChoices.contains(193)||selectedChoices.contains(190)
+                  ||selectedChoices.contains(192)||selectedChoices.contains(194))){
+                DataManager.getInstance().setIsRequired('False');
+              }else{
+                DataManager.getInstance().setIsRequired('True');
+              }
+
+
               widget.onSelectionChanged?.call(selectedChoices);
+
             });
           },
         ),
@@ -1554,6 +1796,25 @@ class _PhotoWidgetState extends State<PhotoWidget> {
     super.initState();
   }
 
+  Future<String> testCompressAndGetFile(String filePath) async {
+    // final filePath = file.absolute.path;
+    // Create output file path
+    // eg:- "Volume/VM/abcd_out.jpeg"
+    final lastIndex = filePath.lastIndexOf(new RegExp(r'.jp'));
+    final splitted = filePath.substring(0, (lastIndex));
+    final outPath = "${splitted}_out${filePath.substring(lastIndex)}";
+    var result = await FlutterImageCompress.compressAndGetFile(
+      filePath, outPath,
+      quality: 60,
+    );
+
+    // print(file.lengthSync());
+    print(result!.lengthSync());
+    print(result.path.toString());
+
+    return result.path;
+  }
+
   @override
   Widget build(BuildContext context) {
     // var _value = widget.pro_det_model!.attributes![widget.index!]!.options!.isEmpty
@@ -1580,12 +1841,13 @@ class _PhotoWidgetState extends State<PhotoWidget> {
                 if(pickedFileList!.length+widget.multimimageModel!.length>5){
                  toast("Maximum limit is 5");
                 }else {
+                  widget.imageFileList = pickedFileList;
+                  for (var i = 0; i < pickedFileList.length; i++) {
+                    widget.multimimageModel!.add(new MultiImageModel(
+                        pickedFileList[i].name, await testCompressAndGetFile(pickedFileList[i].path)));
+                  }
                   setState(() {
-                    widget.imageFileList = pickedFileList;
-                    for (var i = 0; i < pickedFileList!.length; i++) {
-                      widget.multimimageModel!.add(new MultiImageModel(
-                          pickedFileList[i].name, pickedFileList[i].path));
-                    }
+
                   });
                 }
                 // if (bool) {
@@ -1638,12 +1900,17 @@ class _PhotoWidgetState extends State<PhotoWidget> {
               if(pickedFileList!.length+widget.multimimageModel!.length>5){
                 toast("Maximum limit is 5");
               }else {
+                widget.imageFileList = pickedFileList;
+                for (var i = 0; i < pickedFileList.length; i++) {
+                  widget.multimimageModel!.add(new MultiImageModel(
+                      pickedFileList[i].name, await testCompressAndGetFile(pickedFileList[i].path)));
+                }
                 setState(() {
-                  widget.imageFileList = pickedFileList;
-                  for (var i = 0; i < pickedFileList!.length; i++) {
-                    widget.multimimageModel!.add(new MultiImageModel(
-                        pickedFileList[i].name, pickedFileList[i].path));
-                  }
+                  // widget.imageFileList = pickedFileList;
+                  // for (var i = 0; i < pickedFileList.length; i++) {
+                  //   widget.multimimageModel!.add(new MultiImageModel(
+                  //       pickedFileList[i].name, pickedFileList[i].path));
+                  // }
                 });
               }
               // if (bool) {

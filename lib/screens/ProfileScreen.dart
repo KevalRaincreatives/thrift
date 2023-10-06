@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nb_utils/nb_utils.dart' hide lightGrey;
 import 'package:thrift/model/ProfileModel.dart';
 import 'package:thrift/model/ProfileUpdateModel.dart';
 import 'package:thrift/model/ViewProModel.dart';
@@ -26,6 +26,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
+
+import '../provider/pro_det_provider.dart';
 class ProfileScreen extends StatefulWidget {
   static String tag='/ProfileScreen';
   const ProfileScreen({Key? key}) : super(key: key);
@@ -62,7 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   getLogout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('token', "");
-
+    Provider.of<ProductDetailProvider>(context, listen: false).setLoggedInStatus(false);
     Route route = MaterialPageRoute(
         builder: (context) => LoginScreen());
     Navigator.pushReplacement(context, route);
@@ -90,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       //   headers: headers
       // );
 
-      var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
+      var response =await http.get(Uri.parse("${Url.BASE_URL}wp-json/wooapp/v3/profile"),
           headers: headers);
 
 
@@ -162,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // String body = json.encode(data2);
 
       http.Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/edit_profile'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/edit_profile'),
           headers: headers,
           body: msg);
       EasyLoading.dismiss();
@@ -172,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print('ProfileScreen edit_profile Response status2: ${response.statusCode}');
       print('ProfileScreen edit_profile Response body2: ${response.body}');
       profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
-      toast(profileUpdateModel!.msg);
+      toast(profileUpdateModel!.msg!);
 
       // prefs.setString('login_name', firstname);
 
@@ -227,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // String body = json.encode(data2);
 
       http.Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/become_a_seller'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/become_a_seller'),
           headers: headers,
           body: msg);
       EasyLoading.dismiss();
@@ -363,7 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/v3/update_profile_picture'),
+          Uri.parse('${Url.BASE_URL}wp-json/v3/update_profile_picture'),
           headers: headers,
           body: msg);
       print('ProfileScreen update_profile_picture Response status2: ${response.statusCode}');
@@ -399,7 +401,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print(msg);
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/v3/view_profile_picture'),
+          Uri.parse('${Url.BASE_URL}wp-json/v3/view_profile_picture'),
           headers: headers,
           body: msg);
       print('ProfileScreen view_profile_picture Response status2: ${response.statusCode}');
@@ -691,6 +693,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             onEditingComplete: () =>
                                 node.nextFocus(),
                             controller: emailCont,
+                            enabled: false,
                             validator: (text) {
                               if (text == null || text.isEmpty) {
                                 return 'Please Enter Email';

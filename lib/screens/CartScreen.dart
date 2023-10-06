@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dotted_border/dotted_border.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'package:sizer/sizer.dart';
@@ -35,7 +38,9 @@ import 'package:thrift/utils/ShStrings.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
+import 'package:thrift/api_service/Url.dart';
 
+import '../provider/home_product_provider.dart';
 
 class CartScreen extends StatefulWidget {
   static String tag = '/CartScreen';
@@ -64,6 +69,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   String user_total = '';
   double posx = 100.0;
   double posy = 100.0;
+  bool isLogedIn = false;
   bool isSwitched = true;
   bool isSwitchedVisible = true;
   int val = 1;
@@ -85,6 +91,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
   Future<NewShipmentModel?>? fetchShipmentmy;
   List<CartPro> cartPro = [];
+  Trace traceShippingAddress = FirebasePerformance.instance.newTrace('list_shipping_addres');
+  Trace traceShippingMethod = FirebasePerformance.instance.newTrace('get_shipping_methods');
+  Trace traceShippingCharge = FirebasePerformance.instance.newTrace('add_shipping_charge');
 
 
   @override
@@ -98,59 +107,96 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
 
   Future<AddressListModel?> fetchAddress() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-      // String? address_pos=prefs.getString("address_pos");
-      // int address_pos=prefs.getString("address_pos").toInt();
-      if (prefs.getString("address_pos") == null) {
-        address_pos = 0;
-      } else {
-        address_pos = prefs.getString("address_pos").toInt();
+    await traceShippingAddress.start();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? final_token = prefs.getString('token');
+    if (final_token != null && final_token != '') {
+      isLogedIn=true;
+      try {
+        // String UserId = prefs.getString('UserId');
+        String? token = prefs.getString('token');
+        // String? address_pos=prefs.getString("address_pos");
+        // int address_pos=prefs.getString("address_pos").toInt();
+        if (prefs.getString("address_pos") == null) {
+          address_pos = 0;
+        } else {
+          address_pos = int.parse(prefs.getString("address_pos")!);
+        }
+        Map<String, String> headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        };
+        print(token);
+
+        Response response = await get(
+            Uri.parse(
+                '${Url.BASE_URL}wp-json/wooapp/v3/list_shipping_addres'),
+            headers: headers);
+        print(
+            "${Url.BASE_URL}wp-json/wooapp/v3/list_shipping_addres");
+
+        print('CartScreen list_shipping_addres Response status2: ${response
+            .statusCode}');
+        print(
+            'CartScreen list_shipping_addres Response body2: ${response.body}');
+
+        final jsonResponse = json.decode(response.body);
+
+
+        _addressModel = new AddressListModel.fromJson(jsonResponse);
+        if (_addressModel!.data!.length == 0) {
+
+        } else {
+          prefs.setString(
+              'firstname', _addressModel!.data![address_pos!]!.firstName!);
+          prefs.setString(
+              "lastname", _addressModel!.data![address_pos!]!.lastName!);
+          prefs.setString(
+              "address1", _addressModel!.data![address_pos!]!.address!);
+          prefs.setString("city", _addressModel!.data![address_pos!]!.city!);
+          prefs.setString(
+              "postcode", _addressModel!.data![address_pos!]!.postcode!);
+          prefs.setString(
+              "country_id", _addressModel!.data![address_pos!]!.country!);
+          prefs.setString(
+              "zone_id", _addressModel!.data![address_pos!]!.state!);
+        }
+        await traceShippingAddress.stop();
+        return _addressModel;
+      } catch (e) {
+        await traceShippingAddress.stop();
+        Alert(
+          context: context,
+          type: AlertType.warning,
+          title: "Reload",
+          desc: e.toString(),
+          buttons: [
+            DialogButton(
+              child: const Text(
+                "Reload",
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              color: sh_colorPrimary2,
+            ),
+          ],
+        ).show().then((value) {setState(() {
+          fetchAddressmy = fetchAddress();
+          fetchPaymentmy=fetchPayment();
+          fetchShipmentmy=fetchShipment();
+        });} );
+        print('caught error $e');
       }
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-      print(token);
-
-      Response response = await get(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres'),
-          headers: headers);
-      print(
-          "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/list_shipping_addres");
-
-      print('CartScreen list_shipping_addres Response status2: ${response.statusCode}');
-      print('CartScreen list_shipping_addres Response body2: ${response.body}');
-
-      final jsonResponse = json.decode(response.body);
-
-
-      _addressModel = new AddressListModel.fromJson(jsonResponse);
-      if(_addressModel!.data!.length == 0){
-
-      }else {
-        prefs.setString(
-            'firstname', _addressModel!.data![address_pos!]!.firstName!);
-        prefs.setString("lastname", _addressModel!.data![address_pos!]!.lastName!);
-        prefs.setString("address1", _addressModel!.data![address_pos!]!.address!);
-        prefs.setString("city", _addressModel!.data![address_pos!]!.city!);
-        prefs.setString("postcode", _addressModel!.data![address_pos!]!.postcode!);
-        prefs.setString(
-            "country_id", _addressModel!.data![address_pos!]!.country!);
-        prefs.setString("zone_id", _addressModel!.data![address_pos!]!.state!);
-      }
-
-      return _addressModel;
-    } catch (e) {
-      print('caught error $e');
+    }else{
+      isLogedIn=false;
     }
   }
 
   Future<NewShipmentModel?> fetchShipment() async {
+    await traceShippingMethod.start();
     // EasyLoading.show(status: 'Please wait...');
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -175,8 +221,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await get(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_shipping_methods?country=$user_country'),
-          headers: headers);
+              '${Url.BASE_URL}wp-json/wooapp/v3/get_shipping_methods?country=$user_country'));
       // EasyLoading.dismiss();
       print('CartScreen get_shipping_methods Response status2: ${response.statusCode}');
       print('CartScreen get_shipping_methods Response body2: ${response.body}');
@@ -192,19 +237,44 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         // selectedShipingIndex=-1;
         selectedShipingIndex=0;
 
-        GetShip(newShipmentModel!.methods![selectedShipingIndex!]!.id!.toString());
-
+        if (final_token != null && final_token != '') {
+          GetShip(newShipmentModel!.methods![selectedShipingIndex!]!.id!
+              .toString());
+        }
       }
-
+      await traceShippingMethod.stop();
 
       return newShipmentModel;
-    } catch (e) {
+    } on Exception catch (e) {
+      await traceShippingMethod.stop();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAddressmy = fetchAddress();
+        fetchPaymentmy=fetchPayment();
+        fetchShipmentmy=fetchShipment();
+      });} );
       print('caught error $e');
-      // return cat_model;
     }
   }
 
   Future<AddShipModel?> GetShip(String ship_id) async {
+    await traceShippingCharge.start();
     // EasyLoading.show(status: 'Please wait...');
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -212,46 +282,72 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       String? token = prefs.getString('token');
       String? user_country = prefs.getString('user_selected_country');
 //      print
+      if (final_token != null && final_token != '') {
+        Map<String, String> headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        };
 
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+        final msg =
+        jsonEncode({"shipping_method": ship_id, "country": user_country});
+        print(msg);
 
-      final msg =
-          jsonEncode({"shipping_method": ship_id, "country": user_country});
-      print(msg);
-
-      Response response = await post(
-          Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/add_shipping_charge'),
-          headers: headers,
-          body: msg);
-      // EasyLoading.dismiss();
-      print('CartScreen add_shipping_charge Response status2: ${response.statusCode}');
-      print('CartScreen add_shipping_charge Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
+        Response response = await post(
+            Uri.parse(
+                '${Url.BASE_URL}wp-json/wooapp/v3/add_shipping_charge'),
+            headers: headers,
+            body: msg);
+        // EasyLoading.dismiss();
+        print('CartScreen add_shipping_charge Response status2: ${response
+            .statusCode}');
+        print(
+            'CartScreen add_shipping_charge Response body2: ${response.body}');
+        final jsonResponse = json.decode(response.body);
 
 
-      addShipModel = new AddShipModel.fromJson(jsonResponse);
-      prefs.setString(
-          "shipping_charge", addShipModel!.shippingCharge!.toString());
-      // print("mypricess"+addShipModel!.total.toString());
-      prefs.setString("total_amnt", addShipModel!.total.toString());
-      // SharedPreferences prefs = await SharedPreferences.getInstance();
-      // prefs.setInt("shiping_index", selectedShipingIndex!);
+        addShipModel = new AddShipModel.fromJson(jsonResponse);
+        prefs.setString(
+            "shipping_charge", addShipModel!.shippingCharge!.toString());
+        // print("mypricess"+addShipModel!.total.toString());
+        prefs.setString("total_amnt", addShipModel!.total.toString());
+        // SharedPreferences prefs = await SharedPreferences.getInstance();
+        // prefs.setInt("shiping_index", selectedShipingIndex!);
 
-      // total_amount=addShipModel!.total.toString();
+        // total_amount=addShipModel!.total.toString();
 
-      // fetchAlbum();
-      // launchScreen(context, NewConfirmScreen.tag);
+        // fetchAlbum();
+        // launchScreen(context, NewConfirmScreen.tag);
 
 //      print(cat_model.data);
+      }
+      await traceShippingCharge.stop();
       return addShipModel;
-    } catch (e) {
+    }on Exception catch (e) {
+      await traceShippingCharge.stop();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAddressmy = fetchAddress();
+        fetchPaymentmy=fetchPayment();
+        fetchShipmentmy=fetchShipment();
+      });} );
       print('caught error $e');
-      // return cat_model;
     }
   }
 
@@ -272,7 +368,29 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         selectedPaymentIndex=-1;
       }
       return staticpaymentListModel;
-    } catch (e) {
+    }on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAddressmy = fetchAddress();
+        fetchPaymentmy=fetchPayment();
+        fetchShipmentmy=fetchShipment();
+      });} );
       print('caught error $e');
     }
   }
@@ -368,7 +486,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/remove_cart_item'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/remove_cart_item'),
           headers: headers,
           body: msg);
       print('CartScreen remove_cart_item Response status2: ${response.statusCode}');
@@ -380,9 +498,30 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
 //      print(cat_model.data);
       return cat_model;
-    } catch (e) {
+    } on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAddressmy = fetchAddress();
+        fetchPaymentmy=fetchPayment();
+        fetchShipmentmy=fetchShipment();
+      });} );
       print('caught error $e');
-      // return cat_model;
     }
   }
 
@@ -417,7 +556,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
         response = await post(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/remove_cart_item'),
+                '${Url.BASE_URL}wp-json/wooapp/v3/remove_cart_item'),
             headers: headers,
             body: msg);
       } else {
@@ -429,7 +568,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         print(msg);
         response = await post(
             Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/update_cart'),
+                '${Url.BASE_URL}wp-json/wooapp/v3/update_cart'),
             headers: headers,
             body: msg);
       }
@@ -442,13 +581,34 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       // if(prefs.getInt('cart_count')!=null){
       // int cart_tot=prefs.getInt('cart_count')!-1;
       // prefs.setInt("cart_count", prefs.getInt('cart_count')!-1);
-      EasyLoading.dismiss();
 
 //      print(cat_model.data);
       return cat_model;
-    } catch (e) {
+    } on Exception catch (e) {
+      EasyLoading.dismiss();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAddressmy = fetchAddress();
+        fetchPaymentmy=fetchPayment();
+        fetchShipmentmy=fetchShipment();
+      });} );
       print('caught error $e');
-      // return cat_model;
     }
   }
 
@@ -474,7 +634,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
       Response response = await post(
           Uri.parse(
-              'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/apply_coupon'),
+              '${Url.BASE_URL}wp-json/wooapp/v3/apply_coupon'),
           headers: headers,
           body: msg);
       print('CartScreen apply_coupon Response status2: ${response.statusCode}');
@@ -488,12 +648,35 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         setState(() {});
       } else {
         couponErrorModel = new CouponErrorModel.fromJson(jsonResponse);
-        toast(couponErrorModel!.error);
+        toast(couponErrorModel!.error!);
       }
       EasyLoading.dismiss();
 
       return couponModel;
-    } catch (e) {
+    }on Exception catch (e) {
+      EasyLoading.dismiss();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAddressmy = fetchAddress();
+        fetchPaymentmy=fetchPayment();
+        fetchShipmentmy=fetchShipment();
+      });} );
       print('caught error $e');
     }
   }
@@ -542,9 +725,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? pro_id = cartPro[0].product_id;
       // print(
-      //     "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id");
+      //     "${Url.BASE_URL}wp-json/wooapp/v3/get_product_seller?product_id=$pro_id");
       Response response = await get(Uri.parse(
-          'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_product_seller?product_id=$pro_id'));
+          '${Url.BASE_URL}wp-json/wooapp/v3/get_product_seller?product_id=$pro_id'));
       final jsonResponse = json.decode(response.body);
 
       print('CartScreen get_product_seller Response status2: ${response.statusCode}');
@@ -556,8 +739,30 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
       EasyLoading.dismiss();
       launchScreen(context, NewConfirmScreen.tag);
       return productSellerModel;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchAddressmy = fetchAddress();
+        fetchPaymentmy=fetchPayment();
+        fetchShipmentmy=fetchShipment();
+      });} );
       print('caught error $e');
     }
   }
@@ -566,13 +771,15 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     var height = MediaQuery.of(context).size.height;
-
-    void _delete(id) async {
+print("myvalue");
+    void _delete(id,position) async {
       // Assuming that the number of rows is the id for the last row.
       final rowsDeleted = await dbHelper.delete(id);
 
-
-      setState(() {});
+      Provider.of<HomeProductListProvider>(context, listen: false).getLocalCart();
+      setState(() {
+        cartPro.removeAt(position);
+      });
       // _showMessageInScaffold('deleted $rowsDeleted row(s): row $id');
     }
 
@@ -587,15 +794,16 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         qty,
         line_subtotal,
         line_total,
-        st_status) async {
+        st_status,position) async {
       // row to update
       int? quantity;
         quantity = int.parse(qty) - 1;
       String quantitys = quantity.toString();
 
       if (quantity == 0) {
-        _delete(id);
-      } else {
+        _delete(id,position);
+      }
+      else {
         double fnlamnt = double.parse(line_subtotal) * double.parse(qty);
 
         CartPro car = CartPro(
@@ -611,7 +819,11 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
             fnlamnt.toString());
 
         final rowsAffected = await dbHelper.update(car);
-        setState(() {});
+        Provider.of<HomeProductListProvider>(context, listen: false).getLocalCart();
+        setState(() {
+          cartPro.removeAt(position);
+
+        });
         // _showMessageInScaffold('updated $rowsAffected row(s)');
       }
     }
@@ -625,330 +837,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           textColor: sh_app_black, fontFamily: fontBold, fontSize: 14.0);
     }
 
-    Cart(List<CartPro> models, int positions, animation, bool rsize) {
-      if (rsize) {
-        return Container(
-          color: sh_white,
-          // margin: EdgeInsets.only(bottom: spacing_standard_new),
-          child: Column(
-            children: [
-              SizedBox(
-                height: 8,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  SizedBox(
-                    width: 8,
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: AnimatedSize(
-                      curve: Curves.bounceInOut,
-                      child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.all(Radius.circular(spacing_standard_new)),
-                        child: Image.network(
-                          cartPro[positions].product_img!,
-                          fit: BoxFit.fill,
-                          height: width * _height,
-                        ),
-                      ),
-                      vsync: this,
-                      duration: new Duration(seconds: 3),
-                    ),
-                  ),
-                  SizedBox(
-                    width: spacing_standard_new,
-                  ),
-                  Expanded(
-                    flex: 6,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(1, 0),
-                        end: Offset(0, 0),
-                      ).animate(animation),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            cartPro[positions].product_name!,
-                            style: TextStyle(
-                                color: sh_black,
-                                fontSize: 16,
-                                fontFamily: fontSemibold),
-                          ),
-
-                          SizedBox(
-                            height: 4,
-                          ),
-                          CartPrice(positions),
-                          SizedBox(
-                            height: 9,
-                          ),
-                          InkWell(
-                            onTap: () async {
-                              // BecameSeller();
-                              setState(() {
-                                user_total = '';
-                              });
-
-                              UpdateCart(
-                                  cartPro[positions].product_id!,
-                                  cartPro[positions].quantity
-                                      .toString(),
-                                  "REMOVE",
-                                  cartPro[positions].variation_id!);
-                              _update(
-                                  cartPro[positions].id,
-                                  cartPro[positions].product_id,
-                                  cartPro[positions].product_name,
-                                  cartPro[positions].product_img,
-                                  cartPro[positions].variation_id,
-                                  cartPro[positions].variation_name,
-                                  cartPro[positions].variation_value,
-                                  cartPro[positions].quantity,
-                                  cartPro[positions].line_subtotal,
-                                  cartPro[positions].line_total,
-                                  "REMOVE");
-                              if (cartPro[positions].quantity == 1) {
-                                if (positions > 0) {
-                                  if (positions ==
-                                      cartPro.length - 1) {
-                                    listKey.currentState!.removeItem(
-                                        positions,
-                                        (_, animation) => Cart(cartPro,
-                                            positions, animation, true),
-                                        duration:
-                                            const Duration(milliseconds: 500));
-                                  } else {
-                                    listKey.currentState!.removeItem(
-                                        positions,
-                                        (_, animation) => Cart(cartPro,
-                                            positions, animation, true),
-                                        duration:
-                                            const Duration(milliseconds: 500));
-                                    cartPro.removeAt(positions);
-                                  }
-                                } else {
-                                  cartPro.removeAt(positions);
-
-                                  listKey.currentState!.removeItem(
-                                      positions,
-                                      (_, animation) => Cart(cartPro,
-                                          positions, animation, true),
-                                      duration:
-                                          const Duration(milliseconds: 500));
-                                }
-                              } else {
-                                UpdateCart(
-                                    cartPro[positions].product_id!,
-                                    cartPro[positions].quantity
-                                        .toString(),
-                                    "REMOVE",
-                                    cartPro[positions].variation_id!);
-                                _update(
-                                    cartPro[positions].id,
-                                    cartPro[positions].product_id,
-                                    cartPro[positions].product_name,
-                                    cartPro[positions].product_img,
-                                    cartPro[positions].variation_id,
-                                    cartPro[positions].variation_name,
-                                    cartPro[positions].variation_value,
-                                    cartPro[positions].quantity,
-                                    cartPro[positions].line_subtotal,
-                                    cartPro[positions].line_total,
-                                    "REMOVE");
-                              }
-                            },
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * .7,
-                              padding: EdgeInsets.only(top: 6, bottom: 10),
-                              decoration: boxDecoration(
-                                  bgColor: sh_btn_color,
-                                  radius: 10,
-                                  showShadow: true),
-                              child: text("Remove",
-                                  fontSize: 16.0,
-                                  textColor: sh_colorPrimary2,
-                                  isCentered: true,
-                                  fontFamily: 'Bold'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Container(
-                height: 1,
-                color: sh_view_color,
-              )
-            ],
-          ),
-        );
-      } else {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1, 0),
-            end: Offset(0, 0),
-          ).animate(animation),
-          child: Container(
-            color: sh_white,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 8,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    SizedBox(
-                      width: 8,
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.all(Radius.circular(spacing_standard_new)),
-                        child: Image.network(
-                          cartPro[positions].product_img!,
-                          fit: BoxFit.fill,
-                          height: width * 0.26,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: spacing_standard_new,
-                    ),
-                    Expanded(
-                      flex: 6,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            cartPro[positions].product_name!,
-                            style: TextStyle(
-                                color: sh_colorPrimary2,
-                                fontSize: 14,
-                                fontFamily: fontBold),
-                          ),
-                          SizedBox(
-                            height: 4,
-                          ),
-                          CartPrice(positions),
-                          // text(currency! + cat_model!.cart![positions]!.productPrice!,
-                          //     textColor: sh_app_black, fontFamily: 'Bold'),
-                          SizedBox(
-                            height: 9,
-                          ),
-                          InkWell(
-                            onTap: () async {
-                              // BecameSeller();
-                              setState(() {
-                                user_total = '';
-                              });
-
-                              UpdateCart(
-                                  cartPro[positions].product_id!,
-                                  cartPro[positions].quantity
-                                      .toString(),
-                                  "REMOVE",
-                                  cartPro[positions].variation_id!);
-                              _update(
-                                  cartPro[positions].id,
-                                  cartPro[positions].product_id,
-                                  cartPro[positions].product_name,
-                                  cartPro[positions].product_img,
-                                  cartPro[positions].variation_id,
-                                  cartPro[positions].variation_name,
-                                  cartPro[positions].variation_value,
-                                  cartPro[positions].quantity,
-                                  cartPro[positions].line_subtotal,
-                                  cartPro[positions].line_total,
-                                  "REMOVE");
-                              if (cartPro[positions].quantity == 1) {
-                                if (positions > 0) {
-                                  if (positions ==
-                                      cartPro.length - 1) {
-                                    listKey.currentState!.removeItem(
-                                        positions,
-                                        (_, animation) => Cart(cartPro,
-                                            positions, animation, true),
-                                        duration:
-                                            const Duration(milliseconds: 500));
-                                  } else {
-                                    listKey.currentState!.removeItem(
-                                        positions,
-                                        (_, animation) => Cart(cartPro,
-                                            positions, animation, true),
-                                        duration:
-                                            const Duration(milliseconds: 500));
-                                    cartPro.removeAt(positions);
-                                  }
-                                } else {
-                                  cartPro.removeAt(positions);
-
-                                  listKey.currentState!.removeItem(
-                                      positions,
-                                      (_, animation) => Cart(cartPro,
-                                          positions, animation, true),
-                                      duration:
-                                          const Duration(milliseconds: 500));
-                                }
-                              } else {
-                                UpdateCart(
-                                    cartPro[positions].product_id!,
-                                    cartPro[positions].quantity
-                                        .toString(),
-                                    "REMOVE",
-                                    cartPro[positions].variation_id!);
-                                _update(
-                                    cartPro[positions].id,
-                                    cartPro[positions].product_id,
-                                    cartPro[positions].product_name,
-                                    cartPro[positions].product_img,
-                                    cartPro[positions].variation_id,
-                                    cartPro[positions].variation_name,
-                                    cartPro[positions].variation_value,
-                                    cartPro[positions].quantity,
-                                    cartPro[positions].line_subtotal,
-                                    cartPro[positions].line_total,
-                                    "REMOVE");
-                              }
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(4.0),
-                              decoration: boxDecoration(
-                                  bgColor: sh_btn_color,
-                                  radius: 6,
-                                  showShadow: true),
-                              child: text("Remove",
-                                  fontSize: 12.0,
-                                  textColor: sh_colorPrimary2,
-                                  isCentered: true,
-                                  fontFamily: fontSemibold),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-
-              ],
-            ),
-          ),
-        );
-      }
-    }
 
      TotalPrice() {
       var myprice2;
@@ -1121,12 +1009,16 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
     }
 
     CheckPayButton() {
+
       if (val == 1) {
         return InkWell(
           onTap: () async {
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            String? UserId = prefs.getString('UserId');
+            String? token = prefs.getString('token');
+            if (UserId != null && UserId != '') {
             // BecameSeller();
             // launchScreen(context, PaymentScreen.tag);
-            SharedPreferences prefs = await SharedPreferences.getInstance();
             String? user_country = prefs.getString('user_selected_country');
             if(isSwitched){
             if (_addressModel!.data!.length == 0) {
@@ -1171,54 +1063,60 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 fetchSeller();
               }
             }
+            }else {
+              if (selectedPaymentIndex == -1) {
+                toast("Please Select Payment Method");
+              } else {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                // prefs.setString(
+                //     'firstname', _addressModel!.data![0]!.firstName!);
+                // prefs.setString("lastname", _addressModel!.data![0]!.lastName!);
+                // prefs.setString("address1", _addressModel!.data![0]!.address!);
+                // prefs.setString("city", _addressModel!.data![0]!.city!);
+                // prefs.setString("postcode", _addressModel!.data![0]!.postcode!);
+                // prefs.setString(
+                //     "country_id", _addressModel!.data![0]!.country!);
+                // prefs.setString("zone_id", _addressModel!.data![0]!.state!);
+                //
+                // prefs.setString('shipment_title', "free_shipping");
+                // prefs.setString('shipment_method', "Free shipping");
+
+                // prefs.setString("shipping_charge", "0");
+
+                // prefs.setString(
+                //     'shipment_title',
+                //     newShipmentModel!.methods![selectedShipingIndex!]!.id!
+                //         .toString());
+                // prefs.setString('shipment_method',
+                //     newShipmentModel!.methods![selectedShipingIndex!]!.title!);
+
+                prefs.setString('payment_method',
+                    staticpaymentListModel[selectedPaymentIndex!].id!);
+                prefs.setString('payment_type',
+                    staticpaymentListModel[selectedPaymentIndex!].title!);
+                prefs.setString('publish_key', '');
+                prefs.setString('secret_key', '');
+                // if (paymentModel!.data![selectedPaymentIndex!]!.testmode!) {
+                //   prefs.setString('testmode', "True");
+                // } else {
+                prefs.setString('testmode', "False");
+                // }
+                // print("mypricess"+cat_model!.total.toString());
+                prefs.setString("total_amnt", fl_total.toString());
+                prefs.setString("delivery_status", "no");
+                // GetShip(newShipmentModel!.methods![selectedShipingIndex]!.id!
+                //     .toString());
+                // launchScreen(context, NewConfirmScreen.tag);
+                fetchSeller();
+              }
+            }
             }else{
-
-                if (selectedPaymentIndex == -1) {
-                  toast("Please Select Payment Method");
-                } else {
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                  // prefs.setString(
-                  //     'firstname', _addressModel!.data![0]!.firstName!);
-                  // prefs.setString("lastname", _addressModel!.data![0]!.lastName!);
-                  // prefs.setString("address1", _addressModel!.data![0]!.address!);
-                  // prefs.setString("city", _addressModel!.data![0]!.city!);
-                  // prefs.setString("postcode", _addressModel!.data![0]!.postcode!);
-                  // prefs.setString(
-                  //     "country_id", _addressModel!.data![0]!.country!);
-                  // prefs.setString("zone_id", _addressModel!.data![0]!.state!);
-                  //
-                  // prefs.setString('shipment_title', "free_shipping");
-                  // prefs.setString('shipment_method', "Free shipping");
-
-                  // prefs.setString("shipping_charge", "0");
-
-                  // prefs.setString(
-                  //     'shipment_title',
-                  //     newShipmentModel!.methods![selectedShipingIndex!]!.id!
-                  //         .toString());
-                  // prefs.setString('shipment_method',
-                  //     newShipmentModel!.methods![selectedShipingIndex!]!.title!);
-
-                  prefs.setString('payment_method',
-                      staticpaymentListModel[selectedPaymentIndex!].id!);
-                  prefs.setString('payment_type',
-                      staticpaymentListModel[selectedPaymentIndex!].title!);
-                  prefs.setString('publish_key','');
-                  prefs.setString('secret_key','');
-                  // if (paymentModel!.data![selectedPaymentIndex!]!.testmode!) {
-                  //   prefs.setString('testmode', "True");
-                  // } else {
-                    prefs.setString('testmode', "False");
-                  // }
-                  // print("mypricess"+cat_model!.total.toString());
-                  prefs.setString("total_amnt", fl_total.toString());
-                  prefs.setString("delivery_status", "no");
-                  // GetShip(newShipmentModel!.methods![selectedShipingIndex]!.id!
-                  //     .toString());
-                  // launchScreen(context, NewConfirmScreen.tag);
-                  fetchSeller();
-                }
-
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(),
+                ),
+              );
             }
           },
           child: Container(
@@ -1237,6 +1135,9 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         return InkWell(
           onTap: () async {
             SharedPreferences prefs = await SharedPreferences.getInstance();
+            String? UserId = prefs.getString('UserId');
+            String? token = prefs.getString('token');
+            if (UserId != null && UserId != '') {
             String? user_country = prefs.getString('user_selected_country');
             if(isSwitched){
             if (_addressModel!.data!.length == 0) {
@@ -1281,42 +1182,48 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 fetchSeller();
               }
             }
+            }else {
+              if (selectedPaymentIndex == -1) {
+                toast("Please Select Payment Method");
+              } else {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                // prefs.setString(
+                //     'firstname', _addressModel!.data![0]!.firstName!);
+                // prefs.setString("lastname", _addressModel!.data![0]!.lastName!);
+                // prefs.setString("address1", _addressModel!.data![0]!.address!);
+                // prefs.setString("city", _addressModel!.data![0]!.city!);
+                // prefs.setString("postcode", _addressModel!.data![0]!.postcode!);
+                // prefs.setString(
+                //     "country_id", _addressModel!.data![0]!.country!);
+                // prefs.setString("zone_id", _addressModel!.data![0]!.state!);
+                //
+                // prefs.setString('shipment_title', "free_shipping");
+                // prefs.setString('shipment_method', "Free shipping");
+                //
+                // // prefs.setString("shipping_charge", "0");
+                //
+                // prefs.setString(
+                //     'shipment_title',
+                //     newShipmentModel!.methods![selectedShipingIndex!]!.id!
+                //         .toString());
+                // prefs.setString('shipment_method',
+                //     newShipmentModel!.methods![selectedShipingIndex!]!.title!);
+                // GetShip(newShipmentModel!.methods![selectedShipingIndex]!.id!
+                //     .toString());
+                // print("mypricess"+cat_model!.total.toString());
+                prefs.setString("total_amnt", fl_total.toString());
+                prefs.setString("delivery_status", "no");
+                // launchScreen(context, NewConfirmScreen.tag);
+                fetchSeller();
+              }
+            }
             }else{
-
-                if (selectedPaymentIndex == -1) {
-                  toast("Please Select Payment Method");
-                } else {
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                  // prefs.setString(
-                  //     'firstname', _addressModel!.data![0]!.firstName!);
-                  // prefs.setString("lastname", _addressModel!.data![0]!.lastName!);
-                  // prefs.setString("address1", _addressModel!.data![0]!.address!);
-                  // prefs.setString("city", _addressModel!.data![0]!.city!);
-                  // prefs.setString("postcode", _addressModel!.data![0]!.postcode!);
-                  // prefs.setString(
-                  //     "country_id", _addressModel!.data![0]!.country!);
-                  // prefs.setString("zone_id", _addressModel!.data![0]!.state!);
-                  //
-                  // prefs.setString('shipment_title', "free_shipping");
-                  // prefs.setString('shipment_method', "Free shipping");
-                  //
-                  // // prefs.setString("shipping_charge", "0");
-                  //
-                  // prefs.setString(
-                  //     'shipment_title',
-                  //     newShipmentModel!.methods![selectedShipingIndex!]!.id!
-                  //         .toString());
-                  // prefs.setString('shipment_method',
-                  //     newShipmentModel!.methods![selectedShipingIndex!]!.title!);
-                  // GetShip(newShipmentModel!.methods![selectedShipingIndex]!.id!
-                  //     .toString());
-                  // print("mypricess"+cat_model!.total.toString());
-                  prefs.setString("total_amnt", fl_total.toString());
-                  prefs.setString("delivery_status", "no");
-                  // launchScreen(context, NewConfirmScreen.tag);
-                  fetchSeller();
-                }
-
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(),
+                ),
+              );
             }
           },
           child: Container(
@@ -1517,15 +1424,185 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                 SizedBox(
                   height: 8,
                 ),
-                AnimatedList(
+                ListView.builder(
                   key: listKey,
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  initialItemCount: cartPro.length,
-                  itemBuilder: (context, index, animation) {
-                    return Cart(cartPro, index, animation,
-                        false); // Refer step 3
+                  // initialItemCount: cartPro.length,
+                  itemCount: cartPro.length,
+                  itemBuilder: (context, positions) {
+                    print('myIndex'+positions.toString());
+                    return
+                      Container(
+                        color: sh_white,
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 8,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Expanded(
+                                  flex: 3,
+                                  child: ClipRRect(
+                                    borderRadius:
+                                    BorderRadius.all(Radius.circular(spacing_standard_new)),
+                                    child: Image.network(
+                                      cartPro[positions].product_img!,
+                                      fit: BoxFit.fill,
+                                      height: width * 0.26,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: spacing_standard_new,
+                                ),
+                                Expanded(
+                                  flex: 6,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Html(
+                                        data: cartPro[positions].product_name!,
+                                        style: {
+                                          "body": Style(
+                                            maxLines: 2,
+                                            margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                            fontSize: FontSize(14.0),
+                                            fontWeight: FontWeight.bold,
+                                            color: sh_colorPrimary2,
+                                            fontFamily: fontBold,
+                                          ),
+                                        },
+                                      ),
+                                      // Text(
+                                      //   cartPro[positions].product_name!,
+                                      //   style: TextStyle(
+                                      //       color: sh_colorPrimary2,
+                                      //       fontSize: 14,
+                                      //       fontFamily: fontBold),
+                                      // ),
+                                      SizedBox(
+                                        height: 4,
+                                      ),
+                                      CartPrice(positions),
+                                      // text(currency! + cat_model!.cart![positions]!.productPrice!,
+                                      //     textColor: sh_app_black, fontFamily: 'Bold'),
+                                      SizedBox(
+                                        height: 9,
+                                      ),
+                                      InkWell(
+                                        onTap: () async {
+                                          // BecameSeller();
+                                          // setState(() {
+                                          //   user_total = '';
+                                          // });
+
+
+                                          UpdateCart(
+                                              cartPro[positions].product_id!,
+                                              cartPro[positions].quantity
+                                                  .toString(),
+                                              "REMOVE",
+                                              cartPro[positions].variation_id!);
+                                          _update(
+                                              cartPro[positions].id,
+                                              cartPro[positions].product_id,
+                                              cartPro[positions].product_name,
+                                              cartPro[positions].product_img,
+                                              cartPro[positions].variation_id,
+                                              cartPro[positions].variation_name,
+                                              cartPro[positions].variation_value,
+                                              cartPro[positions].quantity,
+                                              cartPro[positions].line_subtotal,
+                                              cartPro[positions].line_total,
+                                              "REMOVE",positions);
+                                          setState(() {
+                                            user_total = '';
+                                          });
+
+
+
+                                          // if (cartPro[positions].quantity == 1) {
+                                          //   if (positions > 0) {
+                                          //     if (positions ==
+                                          //         cartPro.length - 1) {
+                                          //       listKey.currentState!.removeItem(
+                                          //           positions,
+                                          //           (_, animation) => Cart(cartPro,
+                                          //               positions, animation, true),
+                                          //           duration:
+                                          //               const Duration(milliseconds: 500));
+                                          //     } else {
+                                          //       listKey.currentState!.removeItem(
+                                          //           positions,
+                                          //           (_, animation) => Cart(cartPro,
+                                          //               positions, animation, true),
+                                          //           duration:
+                                          //               const Duration(milliseconds: 500));
+                                          //       cartPro.removeAt(positions);
+                                          //     }
+                                          //   } else {
+                                          //     cartPro.removeAt(positions);
+                                          //
+                                          //     listKey.currentState!.removeItem(
+                                          //         positions,
+                                          //         (_, animation) => Cart(cartPro,
+                                          //             positions, animation, true),
+                                          //         duration:
+                                          //             const Duration(milliseconds: 500));
+                                          //   }
+                                          // } else {
+                                          //   UpdateCart(
+                                          //       cartPro[positions].product_id!,
+                                          //       cartPro[positions].quantity
+                                          //           .toString(),
+                                          //       "REMOVE",
+                                          //       cartPro[positions].variation_id!);
+                                          //   _update(
+                                          //       cartPro[positions].id,
+                                          //       cartPro[positions].product_id,
+                                          //       cartPro[positions].product_name,
+                                          //       cartPro[positions].product_img,
+                                          //       cartPro[positions].variation_id,
+                                          //       cartPro[positions].variation_name,
+                                          //       cartPro[positions].variation_value,
+                                          //       cartPro[positions].quantity,
+                                          //       cartPro[positions].line_subtotal,
+                                          //       cartPro[positions].line_total,
+                                          //       "REMOVE");
+                                          // }
+                                        },
+                                        child: Container(
+                                          padding: EdgeInsets.all(4.0),
+                                          decoration: boxDecoration(
+                                              bgColor: sh_btn_color,
+                                              radius: 6,
+                                              showShadow: true),
+                                          child: text("Remove",
+                                              fontSize: 12.0,
+                                              textColor: sh_colorPrimary2,
+                                              isCentered: true,
+                                              fontFamily: fontSemibold),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+
+                          ],
+                        ),
+                      ); // Refer step 3
                   },
                 ),
                 Container(
@@ -1806,37 +1883,40 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
                             ),
 
                             Visibility(
-                              visible: isSwitched,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  text("Delivered to",
-                                      fontSize: textSizeSMedium,
-                                      fontFamily: fontBold,
-                                      textColor: sh_colorPrimary2),
-                                  SizedBox(
-                                    height: spacing_standard,
-                                  ),
+                              visible: isLogedIn,
+                              child: Visibility(
+                                visible: isSwitched,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    text("Delivered to",
+                                        fontSize: textSizeSMedium,
+                                        fontFamily: fontBold,
+                                        textColor: sh_colorPrimary2),
+                                    SizedBox(
+                                      height: spacing_standard,
+                                    ),
 
-                                  Container(
-                                    child: Center(
-                                      child: FutureBuilder<AddressListModel?>(
-                                        future: fetchAddressmy,
-                                        builder: (context, snapshot) {
-                                          if (snapshot.hasData) {
-                                            return Container(
-                                              child: ListAddressValidation(),
-                                            );
-                                          } else if (snapshot.hasError) {
-                                            return Text("${snapshot.error}");
-                                          }
-                                          // By default, show a loading spinner.
-                                          return Container();
-                                        },
+                                    Container(
+                                      child: Center(
+                                        child: FutureBuilder<AddressListModel?>(
+                                          future: fetchAddressmy,
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              return Container(
+                                                child: ListAddressValidation(),
+                                              );
+                                            } else if (snapshot.hasError) {
+                                              return Text("${snapshot.error}");
+                                            }
+                                            // By default, show a loading spinner.
+                                            return Container();
+                                          },
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
 

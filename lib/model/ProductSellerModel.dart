@@ -776,6 +776,7 @@ class ProductSellerModelSeller {
       });
       data['rich_editing'] = arr0;
     }
+
     if (syntaxHighlighting != null) {
       final v = syntaxHighlighting;
       final arr0 = [];
@@ -784,6 +785,7 @@ class ProductSellerModelSeller {
       });
       data['syntax_highlighting'] = arr0;
     }
+
     if (commentShortcuts != null) {
       final v = commentShortcuts;
       final arr0 = [];

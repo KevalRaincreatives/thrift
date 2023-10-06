@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/ProfileUpdateModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/DashboardScreen.dart';
@@ -183,7 +183,7 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
       // String body = json.encode(data2);
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/edit_profile'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/edit_profile'),
           headers: headers,
           body: msg);
       EasyLoading.dismiss();
@@ -193,7 +193,7 @@ class _OtpNewScreenState extends State<OtpNewScreen> {
       print('OtpNewScreen edit_profile Response status2: ${response.statusCode}');
       print('OtpNewScreen edit_profile Response body2: ${response.body}');
       profileUpdateModel = new ProfileUpdateModel.fromJson(jsonResponse);
-      toast(profileUpdateModel!.msg);
+      toast(profileUpdateModel!.msg!);
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(

@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
-
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/ViewProModel.dart';
 import 'package:thrift/utils/custom_pop_up_menu.dart';
@@ -7,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/ProductDetailModel.dart';
 import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/model/ProductListSellerModel.dart';
@@ -28,6 +31,9 @@ import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
 
+import '../provider/profile_provider.dart';
+import '../provider/seller_profile_provider.dart';
+
 class ItemModel {
   String title;
 
@@ -35,11 +41,13 @@ class ItemModel {
 }
 
 class SellerEditProfileScreen extends StatefulWidget {
-  static String tag='/SellerEditProfileScreen';
+  static String tag = '/SellerEditProfileScreen';
+
   const SellerEditProfileScreen({Key? key}) : super(key: key);
 
   @override
-  _SellerEditProfileScreenState createState() => _SellerEditProfileScreenState();
+  _SellerEditProfileScreenState createState() =>
+      _SellerEditProfileScreenState();
 }
 
 class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
@@ -49,18 +57,20 @@ class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
   final double runSpacing = 4;
   final double spacing = 4;
   final columns = 2;
+
   // List<ProductListModel> productListModel = [];
-  ProductListSellerModel? productListModel;
-  ProfileModel? profileModel;
-  String? seller_name,seller_id,profile_name;
+  // ProductListSellerModel? productListModel;
+  // ProfileModel? profileModel;
+  String? seller_name, seller_id, profile_name;
   String? filter_str = 'Newest to Oldest';
-  ReviewModel? reviewModel;
-  String fnl_img = 'https://secure.gravatar.com/avatar/598b1f668254d0f7097133846aa32daf?s=96&d=mm&r=g';
-  ViewProModel? viewProModel;
+
+  // ReviewModel? reviewModel;
+  // String fnl_img = 'https://secure.gravatar.com/avatar/598b1f668254d0f7097133846aa32daf?s=96&d=mm&r=g';
+  // ViewProModel? viewProModel;
 
   int? cart_count;
-  Future<ViewProModel?>? ViewProfilePicMain;
 
+  // Future<ViewProModel?>? ViewProfilePicMain;
 
   @override
   void initState() {
@@ -70,16 +80,22 @@ class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
       ItemModel('Price High to Low'),
       ItemModel('Price Low to High'),
     ];
+    final postMdl = Provider.of<SellerProfileProvider>(context, listen: false);
+    postMdl.getProduct('Newest to Oldest');
+
+    final pro_provider = Provider.of<ProfileProvider>(context, listen: false);
+    pro_provider.getReview();
+    pro_provider.getProfile();
+    pro_provider.getProfilePic();
     super.initState();
   }
-
 
   Future<String?> fetchtotal() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      if(prefs.getInt('cart_count')!=null){
+      if (prefs.getInt('cart_count') != null) {
         cart_count = prefs.getInt('cart_count');
-      }else{
+      } else {
         cart_count = 0;
       }
 
@@ -89,145 +105,7 @@ class _SellerEditProfileScreenState extends State<SellerEditProfileScreen> {
     }
   }
 
-
-
-  Future<ReviewModel?> fetchREview() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? cat_id = prefs.getString('cat_id');
-      String? seller_id = prefs.getString('UserId');
-      // toast(cat_id);
-print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id");
-      var response;
-      response = await http.get(Uri.parse(
-          "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller_id=$seller_id"));
-      print('SellerEditProfileScreen seller_reviews Response status2: ${response.statusCode}');
-      print('SellerEditProfileScreen seller_reviews Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-      // for (Map i in jsonResponse) {
-      //
-      //     // reviewModel.add(ReviewModel.fromJson(i));
-      reviewModel = new ReviewModel.fromJson(jsonResponse);
-//       }
-
-
-      return reviewModel;
-    } catch (e) {
-//      return orderListModel;
-      print('caught error $e');
-    }
-  }
-
-
-
-  Future<ProductListSellerModel?> fetchAlbum() async {
-    try {
-//      prefs = await SharedPreferences.getInstance();
-//      String UserId = prefs.getString('UserId');
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? cat_id = prefs.getString('cat_id');
-      String? user_country = prefs.getString('user_selected_country');
-      seller_id = prefs.getString('seller_id');
-      String? UserId= prefs.getString('UserId');
-      // toast(cat_id);
-
-      var response;
-      if (filter_str == 'Newest to Oldest') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=desc&per_page=100&country=$user_country&seller_id=$UserId"));
-
-        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=desc&per_page=100&country=$user_country&seller_id=$UserId");
-      } else if (filter_str == 'Oldest to Newest') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=asc&per_page=100&country=$user_country&seller_id=$UserId"));
-        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=date&order=asc&per_page=100&country=$user_country&seller_id=$UserId");
-      } else if (filter_str == 'Price High to Low') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=desc&per_page=100&country=$user_country&seller_id=$UserId"));
-        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=desc&per_page=100&country=$user_country&seller_id=$UserId");
-      } else if (filter_str == 'Price Low to High') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=asc&per_page=100&country=$user_country&seller_id=$UserId"));
-        print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_products?orderby=price&order=asc&per_page=100&country=$user_country&seller_id=$UserId");
-      }
-      print('SellerEditProfileScreen seller_products Response status2: ${response.statusCode}');
-      print('SellerEditProfileScreen seller_products Response body2: ${response.body}');
-
-      // productListModel!.products!.clear();
-      final jsonResponse = json.decode(response.body);
-//       for (Map i in jsonResponse) {
-//         productListModel.add(ProductListModel.fromJson(i));
-      productListModel = new ProductListSellerModel.fromJson(jsonResponse);
-//       }
-
-      // if (productListModel.length > 0) {
-      //   prefs.setString(
-      //       "fnl_currency", productListModel[0].currency.toString());
-      // }
-
-
-      return productListModel;
-    } catch (e) {
-//      return orderListModel;
-      print('caught error $e');
-    }
-  }
-
-  Future<ProfileModel?> fetchProfile() async {
-//    Dialogs.showLoadingDialog(context, _keyLoader);
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-
-
-      // final msg = jsonEncode({"ID": UserId});
-
-      // Response response = await post(
-      //     'http://zoo.webstylze.com/wp-json/v3/viewprofile',
-      //     headers: headers,
-      //     body: msg);
-
-      print('Token : ${token}');
-      // final response = await http.get("https://encros.rcstaging.co.in/wp-json/wooapp/v3/profile",
-      //   // headers: {HttpHeaders.authorizationHeader: "Basic $token"},
-      //     headers: {
-      //   'Content-Type': 'application/json',
-      //   'Accept': 'application/json',
-      //   'Authorization': 'Bearer $token',
-      // }
-      // );
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      // Response response = await get(
-      //   'https://encros.rcstaging.co.in/wp-json/wooapp/v3/profile',
-      //   headers: headers
-      // );
-
-      var response =await http.get(Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/profile"),
-          headers: headers);
-
-
-      final jsonResponse = json.decode(response.body);
-      print('SellerEditProfileScreen profile Response status2: ${response.statusCode}');
-      print('SellerEditProfileScreen profile Response body2: ${response.body}');
-
-      profileModel = new ProfileModel.fromJson(jsonResponse);
-
-      prefs.setString("seller_name", profileModel!.data!.firstName!+" "+profileModel!.data!.lastName!);
-
-      return profileModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
-
-  Future<String?> ChangeReserve(String reserver,String pro_id) async {
+  Future<String?> ChangeReserve(String reserver, String pro_id) async {
     EasyLoading.show(status: 'Please wait...');
 
     try {
@@ -245,27 +123,29 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       final msg = jsonEncode({"product_id": pro_id});
       print(msg);
       Response response;
-      if(reserver=="Reserved") {
+      if (reserver == "Reserved") {
         response = await post(
-            Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/mark_as_reserved'),
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/mark_as_reserved'),
             headers: headers,
             body: msg);
-      }else{
+      } else {
         response = await post(
-            Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/mark_as_unreserved'),
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/mark_as_unreserved'),
             headers: headers,
             body: msg);
       }
-      print('SellerEditProfileScreen mark_as_unreserved Response status2: ${response.statusCode}');
-      print('SellerEditProfileScreen mark_as_unreserved Response body2: ${response.body}');
+      print(
+          'SellerEditProfileScreen mark_as_unreserved Response status2: ${response.statusCode}');
+      print(
+          'SellerEditProfileScreen mark_as_unreserved Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
 
-      setState(() {
-
-      });
-
+      // setState(() {
+      //
+      // });
+      final postMdl =
+          Provider.of<SellerProfileProvider>(context, listen: false);
+      postMdl.getProduct(filter_str);
       // couponModel = new CouponModel.fromJson(jsonResponse);
 
       EasyLoading.dismiss();
@@ -275,7 +155,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       //   toast(couponErrorModel.error);
       // }
       return "couponModel";
-    } catch (e) {
+    } on Exception catch (e) {
       print('caught error $e');
     }
   }
@@ -298,31 +178,34 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       final msg = jsonEncode({"product_id": pro_id});
       print(msg);
       Response response = await post(
-            Uri.parse(
-                'https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/mark_as_sold'),
-            headers: headers,
-            body: msg);
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/mark_as_sold'),
+          headers: headers,
+          body: msg);
 
-      print('SellerEditProfileScreen mark_as_sold Response status2: ${response.statusCode}');
-      print('SellerEditProfileScreen mark_as_sold Response body2: ${response.body}');
+      print(
+          'SellerEditProfileScreen mark_as_sold Response status2: ${response.statusCode}');
+      print(
+          'SellerEditProfileScreen mark_as_sold Response body2: ${response.body}');
       final jsonResponse = json.decode(response.body);
 
       EasyLoading.dismiss();
-      setState(() {
-
-      });
+      // setState(() {
+      //
+      // });
+      final postMdl =
+          Provider.of<SellerProfileProvider>(context, listen: false);
+      postMdl.getProduct(filter_str);
 
       // couponModel = new CouponModel.fromJson(jsonResponse);
-
-
 
       // } else {
       //   couponErrorModel = new CouponErrorModel.fromJson(jsonResponse);
       //   toast(couponErrorModel.error);
       // }
       return "couponModel";
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
+
       print('caught error $e');
     }
   }
@@ -333,77 +216,41 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String? pro_id = prefs.getString('pro_id');
       toast(pro_id);
-      print(
-          "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id");
-      var response = await http.delete(Uri.parse(
-          'https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/$pro_id'));
+      print("${Url.BASE_URL}wp-json/wc/v3/products/$pro_id");
+      var response = await http
+          .delete(Uri.parse('${Url.BASE_URL}wp-json/wc/v3/products/$pro_id'));
       final jsonResponse = json.decode(response.body);
-      print('SellerEditProfileScreen products Response status2: ${response.statusCode}');
-      print('SellerEditProfileScreen products Response body2: ${response.body}');
+      print(
+          'SellerEditProfileScreen products Response status2: ${response.statusCode}');
+      print(
+          'SellerEditProfileScreen products Response body2: ${response.body}');
       // pro_det_model = new ProductDetailModel.fromJson(jsonResponse);
       EasyLoading.dismiss();
-      setState(() {
-
-      });
-
+      // setState(() {
+      //
+      // });
+      final postMdl =
+          Provider.of<SellerProfileProvider>(context, listen: false);
+      postMdl.getProduct(filter_str);
       // if(pro_det_model.type=='variable'){
       //   fetchVariant();
       // }
       return "pro_det_model";
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
+
       print('caught error $e');
     }
   }
-
 
   Future<String?> fetchadd() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       seller_name = prefs.getString('seller_name');
       seller_id = prefs.getString('seller_id');
-      profile_name=prefs.getString("profile_name");
+      profile_name = prefs.getString("profile_name");
       return '';
     } catch (e) {
-      print('caught error $e');
-    }
-  }
-
-  Future<ViewProModel?> ViewProfilePic() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-
-
-      final msg = jsonEncode({
-        "customer_id": UserId,
-      });
-      print(msg);
-
-      Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/v3/view_profile_picture'),
-          headers: headers,
-          body: msg);
-      print('SellerEditProfileScreen view_profile_picture Response status2: ${response.statusCode}');
-      print('SellerEditProfileScreen view_profile_picture Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-
-      viewProModel = new ViewProModel.fromJson(jsonResponse);
-
-      fnl_img = viewProModel!.profilePicture!;
-      print(fnl_img);
-
-
-
-      return viewProModel;
-    } catch (e) {
-      // Navigator.of(_keyLoader.currentContext, rootNavigator: true).pop();
       print('caught error $e');
     }
   }
@@ -413,8 +260,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
-    BadgeCount(){
-      if(cart_count==0){
+    BadgeCount() {
+      if (cart_count == 0) {
         return Image.asset(
           sh_new_cart,
           height: 44,
@@ -422,10 +269,13 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
           fit: BoxFit.fill,
           color: sh_white,
         );
-      }else{
+      } else {
         return Badge(
           position: BadgePosition.topEnd(top: 4, end: 6),
-          badgeContent: Text(cart_count.toString(),style: TextStyle(color: sh_white,fontSize: 8),),
+          badgeContent: Text(
+            cart_count.toString(),
+            style: TextStyle(color: sh_white, fontSize: 8),
+          ),
           child: Image.asset(
             sh_new_cart,
             height: 44,
@@ -437,7 +287,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       }
     }
 
-    Imagevw4(int index) {
+    Imagevw4(int index, productListModel) {
       if (productListModel!.products![index]!.data!.images!.length < 1) {
         return Stack(
           children: [
@@ -446,55 +296,6 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
               child: Image.asset(
                 sh_no_img,
                 fit: BoxFit.cover,
-                height: width * 0.26,
-
-
-              ),
-            ),
-            Positioned.fill(
-              child: Align(
-                alignment: Alignment.center,
-                child: InkWell(
-                  onTap: () async{
-                    SharedPreferences prefs =
-                    await SharedPreferences
-                        .getInstance();
-                    prefs.setString(
-                        'seller_pro_id',
-                        productListModel!.products![index]!.data!.id
-                            .toString());
-                    // launchScreen(context, ProductUpdateScreen.tag);
-                    // Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
-                    Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => ProductUpdateScreen()),
-                    ).then((_) => setState(() {}));
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(6.0),
-                    decoration: boxDecoration(
-                        bgColor: Colors.black.withOpacity(0.4), radius: 4, showShadow: true),
-                    child: text(productListModel!.products![index]!.data!.stockStatus=="instock" ? "EDIT" : "VIEW" ,
-                        textColor: sh_white,
-                        fontSize: 12.0,
-                        isCentered: true,
-                        fontFamily: 'Bold'),
-                  ),
-                ),
-              ),
-            )
-          ],
-
-        );
-      } else {
-        return
-        Stack(
-          children: [
-            ClipRRect(
-              borderRadius:
-              BorderRadius.all(Radius.circular(spacing_middle)),
-              child: Image.network(
-                productListModel!.products![index]!.data!.images![0]!.src!,
-                fit: BoxFit.fill,
                 height: width * 0.28,
               ),
             ),
@@ -502,32 +303,35 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
               child: Align(
                 alignment: Alignment.center,
                 child: InkWell(
-                  onTap: () async{
-                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                  onTap: () async {
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
                     prefs.setString(
                         'seller_pro_id',
                         productListModel!.products![index]!.data!.id
                             .toString());
                     // launchScreen(context, ProductUpdateScreen.tag);
                     // Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
-                    // SharedPreferences prefs = await SharedPreferences.getInstance();
-                    prefs.setString('pro_id', productListModel!.products![index]!.data!.id.toString());
-                    List<String> myimages = [];
-                    for (var i = 0;
-                    productListModel!.products![index]!.data!.images!.length > i;
-                    i++) {
-                      myimages.add(
-                          productListModel!.products![index]!.data!.images![i]!.src!);
-                    }
-                    Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => productListModel!.products![index]!.data!.stockStatus=="instock" ? ProductUpdateScreen() : ProductDetailScreen(proName: productListModel!.products![index]!.data!.name,proPrice: productListModel!.products![index]!.data!.price,proImage: myimages)),
-                    ).then((_) => setState(() {}));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ProductUpdateScreen()),
+                    ).then((_) {
+                      final postMdl = Provider.of<SellerProfileProvider>(context, listen: false);
+                      postMdl.getProduct('Newest to Oldest');
+                    } );
                   },
                   child: Container(
                     padding: EdgeInsets.all(6.0),
                     decoration: boxDecoration(
-                        bgColor: Colors.black.withOpacity(0.4), radius: 4, showShadow: true),
-                    child: text(productListModel!.products![index]!.data!.stockStatus=="instock" ? "EDIT" : "VIEW" ,
+                        bgColor: Colors.black.withOpacity(0.4),
+                        radius: 4,
+                        showShadow: true),
+                    child: text(
+                        productListModel!.products![index]!.data!.stockStatus ==
+                                "instock"
+                            ? "EDIT"
+                            : "VIEW",
                         textColor: sh_white,
                         fontSize: 12.0,
                         isCentered: true,
@@ -537,21 +341,108 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
               ),
             )
           ],
-
+        );
+      } else {
+        return Stack(
+          children: [
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(spacing_middle)),
+                child: CachedNetworkImage(
+                  imageUrl:
+                      productListModel!.products![index]!.data!.images![0]!.src!,
+                  fit: BoxFit.fill,
+                  height: width * 0.28,
+                  // width: width,
+                  // memCacheWidth: width,
+                  filterQuality: FilterQuality.low,
+                  placeholder: (context, url) => Center(
+                    child: SizedBox(
+                        height: 30,
+                        width: 30,
+                        child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => new Icon(Icons.error),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.center,
+                child: InkWell(
+                  onTap: () async {
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    prefs.setString(
+                        'seller_pro_id',
+                        productListModel!.products![index]!.data!.id
+                            .toString());
+                    // launchScreen(context, ProductUpdateScreen.tag);
+                    // Navigator.pushNamed(context, ProductUpdateScreen.tag).then((_) => setState(() {}));
+                    // SharedPreferences prefs = await SharedPreferences.getInstance();
+                    prefs.setString(
+                        'pro_id',
+                        productListModel!.products![index]!.data!.id
+                            .toString());
+                    List<String> myimages = [];
+                    for (var i = 0;
+                        productListModel!
+                                .products![index]!.data!.images!.length >
+                            i;
+                        i++) {
+                      myimages.add(productListModel!
+                          .products![index]!.data!.images![i]!.src!);
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => productListModel!
+                                      .products![index]!.data!.stockStatus ==
+                                  "instock"
+                              ? ProductUpdateScreen()
+                              : ProductDetailScreen(
+                                  proName: productListModel!
+                                      .products![index]!.data!.name,
+                                  proPrice: productListModel!
+                                      .products![index]!.data!.price,
+                                  proImage: myimages)),
+                    ).then((_) => setState(() {}));
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(6.0),
+                    decoration: boxDecoration(
+                        bgColor: Colors.black.withOpacity(0.4),
+                        radius: 4,
+                        showShadow: true),
+                    child: text(
+                        productListModel!.products![index]!.data!.stockStatus ==
+                                "instock"
+                            ? "EDIT"
+                            : "VIEW",
+                        textColor: sh_white,
+                        fontSize: 12.0,
+                        isCentered: true,
+                        fontFamily: 'Bold'),
+                  ),
+                ),
+              ),
+            )
+          ],
         );
       }
     }
 
-    NewImagevw(int index) {
-      return Imagevw4(index);
+    NewImagevw(int index, productListModel) {
+      return Imagevw4(index, productListModel);
     }
 
-    MyPrice(int index){
-      var myprice2,myprice;
-      if(productListModel!.products![index]!.data!.price==''){
-        myprice='0.00';
-      }else {
-        myprice2 = double.parse(productListModel!.products![index]!.data!.price!);
+    MyPrice(int index, productListModel) {
+      var myprice2, myprice;
+      if (productListModel!.products![index]!.data!.price == '') {
+        myprice = '0.00';
+      } else {
+        myprice2 =
+            double.parse(productListModel!.products![index]!.data!.price!);
         myprice = myprice2.toStringAsFixed(2);
       }
       return Row(
@@ -563,14 +454,13 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 fontFamily: fontSemibold,
                 fontSize: textSizeSMedium),
           ),
-
         ],
       );
     }
 
-
-    void _openCustomDialogReserve(String reserver,String prod_id) {
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+    void _openCustomDialogReserve(String reserver, String prod_id) {
+      showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
             return Transform.scale(
               scale: a1.value,
@@ -579,24 +469,35 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Mark this listing as $reserver?',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  title: Center(
+                      child: Text(
+                    'Mark this listing as $reserver?',
+                    style: TextStyle(
+                        color: sh_colorPrimary2,
+                        fontSize: 18,
+                        fontFamily: 'Bold'),
+                    textAlign: TextAlign.center,
+                  )),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: 16,),
+                      SizedBox(
+                        height: 16,
+                      ),
                       InkWell(
                         onTap: () async {
                           // BecameSeller();
                           Navigator.of(context, rootNavigator: true).pop();
-                          ChangeReserve(reserver,prod_id);
+                          ChangeReserve(reserver, prod_id);
                           // _openCustomDialog2();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                              bgColor: sh_colorPrimary2,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Confirm",
                               fontSize: 16.0,
                               textColor: sh_white,
@@ -604,17 +505,20 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                               fontFamily: 'Bold'),
                         ),
                       ),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       InkWell(
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                              bgColor: sh_btn_color,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Cancel",
                               fontSize: 16.0,
                               textColor: sh_colorPrimary2,
@@ -638,7 +542,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
     }
 
     void _openCustomDialogSold(String prod_id) {
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+      showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
             return Transform.scale(
               scale: a1.value,
@@ -647,11 +552,21 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Mark this listing as sold?',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  title: Center(
+                      child: Text(
+                    'Mark this listing as sold?',
+                    style: TextStyle(
+                        color: sh_colorPrimary2,
+                        fontSize: 18,
+                        fontFamily: 'Bold'),
+                    textAlign: TextAlign.center,
+                  )),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: 16,),
+                      SizedBox(
+                        height: 16,
+                      ),
                       InkWell(
                         onTap: () async {
                           // BecameSeller();
@@ -660,11 +575,12 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                           // _openCustomDialog2();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                              bgColor: sh_colorPrimary2,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Confirm",
                               fontSize: 16.0,
                               textColor: sh_white,
@@ -672,17 +588,20 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                               fontFamily: 'Bold'),
                         ),
                       ),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       InkWell(
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                              bgColor: sh_btn_color,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Cancel",
                               fontSize: 16.0,
                               textColor: sh_colorPrimary2,
@@ -706,7 +625,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
     }
 
     void _openCustomDialogDelete(String prod_id) {
-      showGeneralDialog(barrierColor: Colors.black.withOpacity(0.5),
+      showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
           transitionBuilder: (context, a1, a2, widget) {
             return Transform.scale(
               scale: a1.value,
@@ -715,11 +635,21 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 child: AlertDialog(
                   shape: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.0)),
-                  title: Center(child: Text('Do you want to delete this listing?',style: TextStyle(color: sh_colorPrimary2,fontSize: 18,fontFamily: 'Bold'),textAlign: TextAlign.center,)),
+                  title: Center(
+                      child: Text(
+                    'Do you want to delete this listing?',
+                    style: TextStyle(
+                        color: sh_colorPrimary2,
+                        fontSize: 18,
+                        fontFamily: 'Bold'),
+                    textAlign: TextAlign.center,
+                  )),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: 16,),
+                      SizedBox(
+                        height: 16,
+                      ),
                       InkWell(
                         onTap: () async {
                           // BecameSeller();
@@ -728,11 +658,12 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                           // _openCustomDialog2();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_colorPrimary2, radius: 10, showShadow: true),
+                              bgColor: sh_colorPrimary2,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Confirm",
                               fontSize: 16.0,
                               textColor: sh_white,
@@ -740,17 +671,20 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                               fontFamily: 'Bold'),
                         ),
                       ),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       InkWell(
                         onTap: () async {
                           Navigator.of(context, rootNavigator: true).pop();
                         },
                         child: Container(
-                          width: MediaQuery.of(context).size.width*.7,
-                          padding: EdgeInsets.only(
-                              top: 6, bottom: 10),
+                          width: MediaQuery.of(context).size.width * .7,
+                          padding: EdgeInsets.only(top: 6, bottom: 10),
                           decoration: boxDecoration(
-                              bgColor: sh_btn_color, radius: 10, showShadow: true),
+                              bgColor: sh_btn_color,
+                              radius: 10,
+                              showShadow: true),
                           child: text("Cancel",
                               fontSize: 16.0,
                               textColor: sh_colorPrimary2,
@@ -773,40 +707,9 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
           });
     }
 
-    CheckSoldReserve(int index){
-      if(productListModel!.products![index]!.data!.status!="publish"&&productListModel!.products![index]!.data!.stockStatus!="instock"){
-        return Text(
-          "Reserved,Sold",
-          style: TextStyle(
-              color: sh_colorPrimary2,
-              fontSize: 14,
-              fontFamily: fontBold),
-        );
-      }else{
-        if(productListModel!.products![index]!.data!.status!="publish"){
-          return Text(
-            "Reserved",
-            style: TextStyle(
-                color: sh_colorPrimary2,
-                fontSize: 14,
-                fontFamily: fontBold),
-          );
-      }else if(productListModel!.products![index]!.data!.stockStatus!="instock"){
-          return Text(
-            "Sold",
-            style: TextStyle(
-                color: sh_colorPrimary2,
-                fontSize: 14,
-                fontFamily: fontBold),
-          );
-        } else{
-          return Container();
-        }
-        }
-    }
-
-    CheckSoldReserve2(int index){
-      if(productListModel!.products![index]!.data!.status!="publish"&&productListModel!.products![index]!.data!.stockStatus!="instock"){
+    CheckSoldReserve2(int index, productListModel) {
+      if (productListModel!.products![index]!.data!.status != "publish" &&
+          productListModel!.products![index]!.data!.stockStatus != "instock") {
         return Row(
           children: [
             Container(
@@ -828,13 +731,15 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 ],
               ),
             ),
-            SizedBox(width: 6,),
+            SizedBox(
+              width: 6,
+            ),
             Container(
               height: 16,
               width: 16,
               // padding: EdgeInsets.all(4.0),
-              decoration: boxDecoration(
-                  bgColor: sh_red, radius: 4, showShadow: true),
+              decoration:
+                  boxDecoration(bgColor: sh_red, radius: 4, showShadow: true),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -850,14 +755,14 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
             )
           ],
         );
-      }else{
-        if(productListModel!.products![index]!.data!.status!="publish"){
+      } else {
+        if (productListModel!.products![index]!.data!.status != "publish") {
           return Container(
             height: 16,
             width: 16,
             // padding: EdgeInsets.all(4.0),
-            decoration: boxDecoration(
-                bgColor: myorange2, radius: 4, showShadow: true),
+            decoration:
+                boxDecoration(bgColor: myorange2, radius: 4, showShadow: true),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -871,13 +776,14 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
               ],
             ),
           );
-        }else if(productListModel!.products![index]!.data!.stockStatus!="instock"){
+        } else if (productListModel!.products![index]!.data!.stockStatus !=
+            "instock") {
           return Container(
             height: 16,
             width: 16,
             // padding: EdgeInsets.all(4.0),
-            decoration: boxDecoration(
-                bgColor: sh_red, radius: 4, showShadow: true),
+            decoration:
+                boxDecoration(bgColor: sh_red, radius: 4, showShadow: true),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -891,18 +797,19 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
               ],
             ),
           );
-        } else{
+        } else {
           return Container();
         }
       }
     }
 
-    CheckReserve(int index){
-      if(productListModel!.products![index]!.data!.status=="publish"){
+    CheckReserve(int index, productListModel) {
+      if (productListModel!.products![index]!.data!.status == "publish") {
         return InkWell(
           onTap: () async {
             // BecameSeller();
-            _openCustomDialogReserve("Reserved",productListModel!.products![index]!.data!.id.toString());
+            _openCustomDialogReserve("Reserved",
+                productListModel!.products![index]!.data!.id.toString());
           },
           child: Container(
             padding: EdgeInsets.all(4.0),
@@ -915,11 +822,12 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 fontFamily: fontSemibold),
           ),
         );
-      }else{
+      } else {
         return InkWell(
           onTap: () async {
             // BecameSeller();
-            _openCustomDialogReserve("Unreserved",productListModel!.products![index]!.data!.id.toString());
+            _openCustomDialogReserve("Unreserved",
+                productListModel!.products![index]!.data!.id.toString());
           },
           child: Container(
             padding: EdgeInsets.all(4.0),
@@ -935,12 +843,13 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
       }
     }
 
-    CheckSold(int index){
-      if(productListModel!.products![index]!.data!.stockStatus=="instock"){
+    CheckSold(int index, productListModel) {
+      if (productListModel!.products![index]!.data!.stockStatus == "instock") {
         return InkWell(
           onTap: () async {
             // BecameSeller();
-            _openCustomDialogSold(productListModel!.products![index]!.data!.id.toString());
+            _openCustomDialogSold(
+                productListModel!.products![index]!.data!.id.toString());
           },
           child: Container(
             padding: EdgeInsets.all(4.0),
@@ -953,7 +862,7 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
                 fontFamily: fontSemibold),
           ),
         );
-      }else{
+      } else {
         return InkWell(
           onTap: () async {
             // BecameSeller();
@@ -980,12 +889,12 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
         title: Text(
           "TheBuyerman2022",
           style:
-          TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
+              TextStyle(color: sh_white, fontFamily: 'Cursive', fontSize: 40),
         ),
         iconTheme: IconThemeData(color: sh_white),
         actions: <Widget>[
           GestureDetector(
-            onTap: () async{
+            onTap: () async {
               SharedPreferences prefs = await SharedPreferences.getInstance();
               prefs.setInt("shiping_index", -2);
               prefs.setInt("payment_index", -2);
@@ -1010,8 +919,8 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
             height: 120,
             width: width,
             child: Image.asset(sh_upper2, fit: BoxFit.fill)
-          // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
-        ),
+            // SvgPicture.asset(sh_spls_upper2,fit: BoxFit.cover,),
+            ),
         //Above card
 
         Container(
@@ -1022,427 +931,494 @@ print("https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/seller_reviews?seller
           child: Container(
             height: height,
             width: width,
-            margin: EdgeInsets.fromLTRB(26,0,26,0),
+            margin: EdgeInsets.fromLTRB(26, 0, 26, 0),
             child: Column(
               children: [
-                FutureBuilder<ViewProModel?>(
-                  future: ViewProfilePic(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Stack(
-                        alignment: Alignment.bottomRight,
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.all(spacing_standard),
-                            child: Card(
-                              semanticContainer: true,
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              elevation: spacing_standard,
-                              margin: EdgeInsets.all(spacing_control),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100.0),
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  // getImage();
-                                  // _showPicker(context);
-                                },
-                                child: Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: fnl_img == null
-                                        ? CircleAvatar(
-                                      // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                                        backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                Consumer<ProfileProvider>(builder: ((context, value, child) {
+                  return value.loader_profile_pic
+                      ? Padding(
+                          padding: const EdgeInsets.all(spacing_standard_new),
+                          child: Card(
+                            semanticContainer: true,
+                            clipBehavior: Clip.antiAliasWithSaveLayer,
+                            elevation: spacing_standard,
+                            margin: EdgeInsets.all(spacing_control),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100.0),
+                            ),
+                            child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: CircleAvatar(
+                                  // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                  backgroundImage: NetworkImage(value.fnl_img),
+                                  radius: 55,
+                                )),
+                          ),
+                        )
+                      : Stack(
+                          alignment: Alignment.bottomRight,
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.all(spacing_standard),
+                              child: Card(
+                                semanticContainer: true,
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                elevation: spacing_standard,
+                                margin: EdgeInsets.all(spacing_control),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100.0),
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // getImage();
+                                    // _showPicker(context);
+                                  },
+                                  child: Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: value.fnl_img == null
+                                          ? CircleAvatar(
+                                              // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
+                                              backgroundImage: NetworkImage(
+                                                  'https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
 
-                                      radius: 55,
-                                    )
-                                        : CircleAvatar(
-                                      backgroundImage: NetworkImage(fnl_img),
-                                      radius: 55,
-                                    )),
+                                              radius: 55,
+                                            )
+                                          : CircleAvatar(
+                                              backgroundImage:
+                                                  NetworkImage(value.fnl_img),
+                                              radius: 55,
+                                            )),
+                                ),
                               ),
                             ),
-                          ),
-
-
-                        ],
-                      );
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.all(spacing_standard_new),
-                      child: Card(
-                        semanticContainer: true,
-                        clipBehavior: Clip.antiAliasWithSaveLayer,
-                        elevation: spacing_standard,
-                        margin: EdgeInsets.all(spacing_control),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100.0),
-                        ),
-                        child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: CircleAvatar(
-                              // backgroundImage: NetworkImage('https://en.gravatar.com/avatar/491302567ea4eb1e519b54990b8da162'),
-                              backgroundImage: NetworkImage(
-                                  fnl_img),
-                              radius: 55,
-                            )),
-                      ),
-                    );
-                  },
-                ),
-                FutureBuilder<ProfileModel?>(
-                    future: fetchProfile(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return     InkWell(
+                          ],
+                        );
+                })),
+                Consumer<ProfileProvider>(builder: ((context, value, child) {
+                  return value.loader_profile
+                      ? Center(child: CircularProgressIndicator())
+                      : InkWell(
                           onTap: () {
                             // launchScreen(context, ProfileScreen.tag);
-                            Navigator.push(context,
-                              MaterialPageRoute(builder: (context) => ProfileScreen()),
-                            ).then((_) => setState(() {}));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ProfileScreen()),
+                            ).then((_) {
+                              final postMdl = Provider.of<ProfileProvider>(
+                                  context,
+                                  listen: false);
+                              postMdl.getProfile();
+                              postMdl.getProfilePic();
+                            });
                           },
                           child: Container(
-                            padding: EdgeInsets.fromLTRB(6,4,6,4.0),
+                            padding: EdgeInsets.fromLTRB(6, 4, 6, 4.0),
                             decoration: boxDecoration(
-                                bgColor: sh_btn_color2, radius: 6, showShadow: true),
-                            child: text(profileModel!.data!.firstName!+" "+profileModel!.data!.lastName!,
+                                bgColor: sh_btn_color2,
+                                radius: 6,
+                                showShadow: true),
+                            child: text(
+                                value.profileModel!.data!.firstName! +
+                                    " " +
+                                    value.profileModel!.data!.lastName!,
                                 fontSize: 13.0,
                                 textColor: sh_colorPrimary2,
                                 isCentered: true,
                                 fontFamily: fontBold),
-                          )
-
-                        );
-                      } else if (snapshot.hasError) {
-//                    return Text("${snapshot.error}");
-                        return Center(
-                            child: Container());
-                      }
-                      // By default, show a loading spinner.
-                      return Center(child: CircularProgressIndicator());
-                    }),
-
+                          ));
+                })),
                 SizedBox(
                   height: 16,
                 ),
-                FutureBuilder<ReviewModel?>(
-                  future: fetchREview(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return InkWell(
-onTap: () {
-  launchScreen(context, SellerReviewScreen.tag);
-},
-                        child: Column(
-                          children: [
-                            Text(
-                              "User Rating",
-                              style: TextStyle(
-                                  color: sh_colorPrimary2,
-                                  fontSize: 13,
-                                  fontFamily: fontMedium),
-                            ),
-                            RatingBar.builder(
-                              initialRating: double.parse(reviewModel!.average.toString()),
-                              minRating: 1,
-                              itemSize: 16,
-                              ignoreGestures: true,
-                              direction: Axis.horizontal,
-                              allowHalfRating: true,
-                              itemCount: 5,
-                              unratedColor: sh_rating_unrated,
-                              itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
-                              itemBuilder: (context, _) => Icon(
-                                Icons.star,
-                                color: sh_rating,
-                              ),
-                              onRatingUpdate: (rating) {
-                                print(rating);
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      direction: ShimmerDirection.ltr,
-                      child: Container(
-                        width: width,
-                        padding: EdgeInsets.fromLTRB(1,12,1,12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                                child: InkWell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        1.0, 12, 1, 12),
-                                    child:                             Container(
-                                      width: width*.3,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
-                            SizedBox(height: 10,),
-                            Container(
-                                child: InkWell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        1.0, 12, 1, 12),
-                                    child:                             Container(
-                                      width: width*.3,
-                                      height: 12.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                )),
-                          ],
-                        ),
-
-                      ),
-                    );
-                  },
-                ),
-
-
-                SizedBox(
-                  height: 26,
-                ),
-                Container(height: .5,color: sh_colorPrimary2,),
-                SizedBox(height: 16,),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text("Listing",style: TextStyle(color: sh_colorPrimary2,fontSize: 16,fontFamily: fontSemibold),),
-                  ],
-                ),
-                SizedBox(height: 16,),
-                CustomPopupMenu(
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        sh_menu_filter,
-                        color: sh_colorPrimary2,
-                        height: 22,
-                        width: 16,
-                        fit: BoxFit.fill,
-                      ),
-                      SizedBox(width: 12,),
-                      Text(filter_str!,style: TextStyle(color: sh_colorPrimary2,fontSize: 13),)
-                    ],
-                  ),
-                  menuBuilder: () => ClipRRect(
-                    borderRadius: BorderRadius.circular(5),
-                    child: Container(
-                      color: sh_btn_color,
-                      child: IntrinsicWidth(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: menuItems
-                              .map(
-                                (item) => GestureDetector(
-                              behavior: HitTestBehavior.translucent,
-                              onTap: () {
-                                print("onTap");
-                                _controller.hideMenu();
-                                setState(() {
-                                  toast("Please wait..");
-                                  filter_str=item.title;
-                                });
-                              },
-                              child: Container(
-                                height: 40,
-                                padding: EdgeInsets.symmetric(horizontal: 20),
-                                child: Row(
-                                  children: <Widget>[
-
-                                    Expanded(
-                                      child: Container(
-                                        margin: EdgeInsets.only(left: 10),
-                                        padding:
-                                        EdgeInsets.symmetric(vertical: 10),
-                                        child: Text(
-                                          item.title,
-                                          style: TextStyle(
-                                            color: sh_colorPrimary2,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          )
-                              .toList(),
-                        ),
-                      ),
-                    ),
-                  ),
-                  pressType: PressType.singleClick,
-                  verticalMargin: -10,
-                  controller: _controller,
-                ),
-                SizedBox(height: 6,),
-                FutureBuilder<ProductListSellerModel?>(
-                  future: fetchAlbum(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Expanded(
-
-                        child: ListView.builder(
-                          scrollDirection: Axis.vertical,
-                          physics: AlwaysScrollableScrollPhysics(),
-                          padding: EdgeInsets.only(
-                              top: spacing_standard_new, bottom: spacing_standard_new),
-                          itemBuilder: (item, index) {
-                            return Container(
-                              color: sh_white,
-                              child: Column(
-                                children: [
-                                  SizedBox(height: 8,),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      SizedBox(width: 8,),
-                                      Expanded(
-                                        flex: 3,
-                                        child: NewImagevw(index),
-                                      ),
-                                      SizedBox(
-                                        width: spacing_standard_new,
-                                      ),
-                                      Expanded(
-                                        flex: 6,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              productListModel!.products![index]!.data!.name!,
-                                              style: TextStyle(
-                                                  color: sh_colorPrimary2,
-                                                  fontSize: 16,
-                                                  fontFamily: fontSemibold),
-                                            ),
-                                            SizedBox(
-                                              height: 4,
-                                            ),
-                                            Row(children: [
-                                              MyPrice(index),
-                                              SizedBox(width: 6,),
-                                              CheckSoldReserve2(index),
-                                            ],),
-                                            // text(currency! + cat_model!.cart![positions]!.productPrice!,
-                                            //     textColor: sh_app_black, fontFamily: 'Bold'),
-                                            // SizedBox(
-                                            //   height: 4,
-                                            // ),
-                                            // CheckSoldReserve(index),
-                                            SizedBox(
-                                              height: 9,
-                                            ),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                CheckReserve(index),
-
-                                                CheckSold(index),
-                                                InkWell(
-                                                  onTap: () async {
-                                                    // BecameSeller();
-                                                    _openCustomDialogDelete(productListModel!.products![index]!.data!.id.toString());
-                                                  },
-                                                  child: Container(
-                                                    padding: EdgeInsets.all(4.0),
-                                                    decoration: boxDecoration(
-                                                        bgColor: sh_btn_color, radius: 6, showShadow: true),
-                                                    child: text("Delete",
-                                                        fontSize: 12.0,
-                                                        textColor: sh_colorPrimary2,
-                                                        isCentered: true,
-                                                        fontFamily: fontSemibold),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 10,),
-                                ],
-                              ),
-                            );
-                          },
-                          shrinkWrap: true,
-                          itemCount: productListModel!.products!.length,
-                        ),
-                      );
-
-
-
-                    }
-                    return Expanded(
-                      child: Shimmer.fromColors(
-                        baseColor: Colors.grey[300]!,
-                        highlightColor: Colors.grey[100]!,
-                        enabled: true,
-                        child: ListView.builder(
-                          itemBuilder: (_, __) => Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
+                Consumer<ProfileProvider>(builder: ((context, value, child) {
+                  return value.loader_review
+                      ? Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          direction: ShimmerDirection.ltr,
+                          child: Container(
+                            width: width,
+                            padding: EdgeInsets.fromLTRB(1, 12, 1, 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
                                 Container(
-                                  width: 48.0,
-                                  height: 48.0,
-                                  color: Colors.white,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Container(
-                                        width: double.infinity,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 2.0),
-                                      ),
-                                      Container(
-                                        width: double.infinity,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 2.0),
-                                      ),
-                                      Container(
-                                        width: 40.0,
-                                        height: 8.0,
-                                        color: Colors.white,
-                                      ),
-                                    ],
+                                    child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        1.0, 12, 1, 12),
+                                    child: Container(
+                                      width: width * .3,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                )
+                                )),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Container(
+                                    child: InkWell(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        1.0, 12, 1, 12),
+                                    child: Container(
+                                      width: width * .3,
+                                      height: 12.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )),
                               ],
                             ),
                           ),
-                          itemCount: 6,
+                        )
+                      : InkWell(
+                          onTap: () {
+                            launchScreen(context, SellerReviewScreen.tag);
+                          },
+                          child: Column(
+                            children: [
+                              Text(
+                                "User Rating",
+                                style: TextStyle(
+                                    color: sh_colorPrimary2,
+                                    fontSize: 13,
+                                    fontFamily: fontMedium),
+                              ),
+                              RatingBar.builder(
+                                initialRating: double.parse(
+                                    value.reviewModel!.average.toString()),
+                                minRating: 1,
+                                itemSize: 16,
+                                ignoreGestures: true,
+                                direction: Axis.horizontal,
+                                allowHalfRating: true,
+                                itemCount: 5,
+                                unratedColor: sh_rating_unrated,
+                                itemPadding:
+                                    EdgeInsets.symmetric(horizontal: 4.0),
+                                itemBuilder: (context, _) => Icon(
+                                  Icons.star,
+                                  color: sh_rating,
+                                ),
+                                onRatingUpdate: (rating) {
+                                  print(rating);
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                })),
+                SizedBox(
+                  height: 26,
+                ),
+                Container(
+                  height: .5,
+                  color: sh_colorPrimary2,
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Listing",
+                      style: TextStyle(
+                          color: sh_colorPrimary2,
+                          fontSize: 16,
+                          fontFamily: fontSemibold),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Consumer<SellerProfileProvider>(
+                    builder: ((context, value, child) {
+                  return CustomPopupMenu(
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          sh_menu_filter,
+                          color: sh_colorPrimary2,
+                          height: 22,
+                          width: 16,
+                          fit: BoxFit.fill,
+                        ),
+                        SizedBox(
+                          width: 12,
+                        ),
+                        Text(
+                          value.filter_str!,
+                          style:
+                              TextStyle(color: sh_colorPrimary2, fontSize: 13),
+                        )
+                      ],
+                    ),
+                    menuBuilder: () => ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: Container(
+                        color: sh_btn_color,
+                        child: IntrinsicWidth(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: menuItems
+                                .map(
+                                  (item) => GestureDetector(
+                                    behavior: HitTestBehavior.translucent,
+                                    onTap: () {
+                                      print("onTap");
+                                      _controller.hideMenu();
+
+                                      // setState(() {
+                                      toast("Please wait..");
+                                      value.getProduct(item.title);
+                                      filter_str = item.title;
+                                      // });
+                                    },
+                                    child: Container(
+                                      height: 40,
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 20),
+                                      child: Row(
+                                        children: <Widget>[
+                                          Expanded(
+                                            child: Container(
+                                              margin: EdgeInsets.only(left: 10),
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 10),
+                                              child: Text(
+                                                item.title,
+                                                style: TextStyle(
+                                                  color: sh_colorPrimary2,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                    pressType: PressType.singleClick,
+                    verticalMargin: -10,
+                    controller: _controller,
+                  );
+                })),
+                SizedBox(
+                  height: 6,
                 ),
+                Consumer<SellerProfileProvider>(
+                    builder: ((context, value, child) {
+                  return value.loader
+                      ? Expanded(
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            enabled: true,
+                            child: ListView.builder(
+                              itemBuilder: (_, __) => Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Container(
+                                      width: 48.0,
+                                      height: 48.0,
+                                      color: Colors.white,
+                                    ),
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 8.0),
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Container(
+                                            width: double.infinity,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 2.0),
+                                          ),
+                                          Container(
+                                            width: double.infinity,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 2.0),
+                                          ),
+                                          Container(
+                                            width: 40.0,
+                                            height: 8.0,
+                                            color: Colors.white,
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              itemCount: 6,
+                            ),
+                          ),
+                        )
+                      : Expanded(
+                          child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            physics: AlwaysScrollableScrollPhysics(),
+                            padding: EdgeInsets.only(
+                                top: spacing_standard_new,
+                                bottom: spacing_standard_new),
+                            itemBuilder: (item, index) {
+                              return Container(
+                                color: sh_white,
+                                child: Column(
+                                  children: [
+                                    SizedBox(
+                                      height: 8,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        SizedBox(
+                                          width: 8,
+                                        ),
+                                        Expanded(
+                                          flex: 3,
+                                          child: NewImagevw(
+                                              index, value.productListModel),
+                                        ),
+                                        SizedBox(
+                                          width: spacing_standard_new,
+                                        ),
+                                        Expanded(
+                                          flex: 6,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              Html(
+                                                data: value
+                                                    .productListModel!
+                                                    .products![index]!
+                                                    .data!
+                                                    .name!,
+                                                style: {
+                                                  "body": Style(
+                                                    maxLines: 2,
+                                                    margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                                    fontSize: FontSize(16.0),
+                                                    color: sh_colorPrimary2,
+                                                    fontFamily: fontSemibold,
+                                                  ),
+                                                },
+                                              ),
+                                              // Text(
+                                              //   value
+                                              //       .productListModel!
+                                              //       .products![index]!
+                                              //       .data!
+                                              //       .name!,
+                                              //   style: TextStyle(
+                                              //       color: sh_colorPrimary2,
+                                              //       fontSize: 16,
+                                              //       fontFamily: fontSemibold),
+                                              // ),
+                                              SizedBox(
+                                                height: 4,
+                                              ),
+                                              Row(
+                                                children: [
+                                                  MyPrice(index,
+                                                      value.productListModel!),
+                                                  SizedBox(
+                                                    width: 6,
+                                                  ),
+                                                  CheckSoldReserve2(index,
+                                                      value.productListModel),
+                                                ],
+                                              ),
+                                              // text(currency! + cat_model!.cart![positions]!.productPrice!,
+                                              //     textColor: sh_app_black, fontFamily: 'Bold'),
+                                              // SizedBox(
+                                              //   height: 4,
+                                              // ),
+                                              // CheckSoldReserve(index),
+                                              SizedBox(
+                                                height: 9,
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  CheckReserve(index,
+                                                      value.productListModel),
+                                                  CheckSold(index,
+                                                      value.productListModel),
+                                                  InkWell(
+                                                    onTap: () async {
+                                                      // BecameSeller();
+                                                      _openCustomDialogDelete(
+                                                          value
+                                                              .productListModel!
+                                                              .products![index]!
+                                                              .data!
+                                                              .id
+                                                              .toString());
+                                                    },
+                                                    child: Container(
+                                                      padding:
+                                                          EdgeInsets.all(4.0),
+                                                      decoration: boxDecoration(
+                                                          bgColor: sh_btn_color,
+                                                          radius: 6,
+                                                          showShadow: true),
+                                                      child: text("Delete",
+                                                          fontSize: 12.0,
+                                                          textColor:
+                                                              sh_colorPrimary2,
+                                                          isCentered: true,
+                                                          fontFamily:
+                                                              fontSemibold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            shrinkWrap: true,
+                            itemCount: value.productListModel!.products!.length,
+                          ),
+                        );
+                })),
               ],
             ),
           ),
@@ -1453,7 +1429,7 @@ onTap: () {
           left: 0.0,
           right: 0.0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(10,18,10,0),
+            padding: const EdgeInsets.fromLTRB(10, 18, 10, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1462,26 +1438,33 @@ onTap: () {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
-                      }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
+                      padding: const EdgeInsets.fromLTRB(1.0, 2, 6, 2),
+                      child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          )),
                     ),
-
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0,6,6,6.0),
+                      padding: const EdgeInsets.fromLTRB(0, 6, 6, 6.0),
                       child: FutureBuilder<String?>(
                         future: fetchadd(),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
-                            return Text(profile_name!,style: TextStyle(color: Colors.white,fontSize: 24,fontFamily: 'TitleCursive'));
+                            return Text(profile_name!,
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontFamily: 'TitleCursive'));
                           } else if (snapshot.hasError) {
                             return Text("${snapshot.error}");
                           }
                           // By default, show a loading spinner.
-                          return CircularProgressIndicator(
-
-                          );
+                          return CircularProgressIndicator();
                         },
                       ),
                     )
@@ -1491,16 +1474,18 @@ onTap: () {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
                         prefs.setInt("shiping_index", -2);
                         prefs.setInt("payment_index", -2);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  CartScreen()),).then((value) {   setState(() {
-                          // refresh state
-                        });});
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        ).then((value) {
+                          setState(() {
+                            // refresh state
+                          });
+                        });
                       },
                       child: FutureBuilder<String?>(
                         future: fetchtotal(),
@@ -1514,7 +1499,6 @@ onTap: () {
                           return CircularProgressIndicator();
                         },
                       ),
-
                     ),
                     // SizedBox(width: 16,)
                   ],
@@ -1531,7 +1515,7 @@ onTap: () {
       body: StreamProvider<NetworkStatus>(
         initialData: NetworkStatus.Online,
         create: (context) =>
-        NetworkStatusService().networkStatusController.stream,
+            NetworkStatusService().networkStatusController.stream,
         child: NetworkAwareWidget(
           onlineChild: SafeArea(child: setUserForm()),
           offlineChild: Container(
@@ -1548,6 +1532,5 @@ onTap: () {
         ),
       ),
     );
-
   }
 }

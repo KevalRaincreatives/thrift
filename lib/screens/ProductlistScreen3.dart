@@ -1,8 +1,8 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:thrift/model/ProductListModel.dart';
@@ -92,8 +92,8 @@ class _ProductlistScreenState extends State<ProductlistScreen> {
 
 
       var response = await http.get(
-          Uri.parse("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?stock_status=instock&status=publish&order=desc&per_page=10&category=$cat_id&page=$pageno"));
-      print("https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products/?stock_status=instock&status=publish&order=desc&per_page=10&category=$cat_id&page=$pageno");
+          Uri.parse("${Url.BASE_URL}wp-json/wc/v3/products/?stock_status=instock&status=publish&order=desc&per_page=10&category=$cat_id&page=$pageno"));
+      print("${Url.BASE_URL}wp-json/wc/v3/products/?stock_status=instock&status=publish&order=desc&per_page=10&category=$cat_id&page=$pageno");
 
       print('ProductListScreen products Response status2: ${response.statusCode}');
       print('ProductListScreen products Response body2: ${response.body}');

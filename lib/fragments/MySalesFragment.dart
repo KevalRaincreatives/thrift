@@ -1,20 +1,22 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/OrderListModel.dart';
+import 'package:thrift/provider/order_provider.dart';
 import 'package:thrift/screens/CartScreen.dart';
-import 'package:thrift/screens/DashboardScreen.dart';
-import 'package:thrift/screens/OrderDetailScreen.dart';
+
 import 'package:thrift/screens/VendorOrderDetailScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
 import 'package:badges/badges.dart';
-
 class MySalesFragment extends StatefulWidget {
   const MySalesFragment({Key? key}) : super(key: key);
 
@@ -23,49 +25,54 @@ class MySalesFragment extends StatefulWidget {
 }
 
 class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAliveClientMixin<MySalesFragment>{
-  OrderListModel? orderListModel;
+  // OrderListModel? orderListModel;
   String? productPerRow,
       showDiscountPrice,
       showShortDesc,currency_symbol,price_decimal_sep,price_num_decimals;
   String? sh_app_bars;
-  Future<OrderListModel?>? fetchOrderMain;
+  // Future<OrderListModel?>? fetchOrderMain;
 
   @override
   void initState() {
     super.initState();
-    fetchOrderMain=fetchOrder();
-
+    // fetchOrderMain=fetchOrder();
+    final emp_pd = Provider.of<OrderProvider>(context, listen: false);
+    emp_pd.getVendorOrderList();
   }
+
   @override
   bool get wantKeepAlive => true;
 
-  Future<OrderListModel?> fetchOrder() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      // String UserId = prefs.getString('UserId');
-      String? token = prefs.getString('token');
-      print(token);
-
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      Response response = await get(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/view_vendor_order'),
-          headers: headers);
-
-      print('MySalesFragment view_vendor_order Response status2: ${response.statusCode}');
-      print('MySalesFragment view_vendor_order Response body2: ${response.body}');
-      final jsonResponse = json.decode(response.body);
-      orderListModel = new OrderListModel.fromJson(jsonResponse);
-
-      return orderListModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
+  // Future<OrderListModel?> fetchOrder() async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     // String UserId = prefs.getString('UserId');
+  //     String? token = prefs.getString('token');
+  //     print(token);
+  //
+  //     Map<String, String> headers = {
+  //       'Content-Type': 'application/json',
+  //       'Accept': 'application/json',
+  //       'Authorization': 'Bearer $token',
+  //     };
+  //
+  //     Response response = await get(
+  //         Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/view_vendor_order'),
+  //         headers: headers);
+  //
+  //
+  //
+  //     print('MySalesFragment view_vendor_order Response status2: ${response.statusCode}');
+  //     print('MySalesFragment view_vendor_order Response body2: ${response.body}');
+  //     final jsonResponse = json.decode(response.body);
+  //     orderListModel = new OrderListModel.fromJson(jsonResponse);
+  //
+  //     return orderListModel;
+  //   } on Exception catch (e) {
+  //
+  //     print('caught error $e');
+  //   }
+  // }
 
 
 
@@ -101,9 +108,9 @@ class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAli
       return format + this;
     }
 
-    OrderDate(int index) {
-      String order_status=orderListModel!.data![index]!.order_status!;
-      String hh = orderListModel!.data![index]!.postTitle!.substring(13);
+    OrderDate(int index,vendorOrderListModel) {
+      String order_status=vendorOrderListModel!.data![index]!.order_status!;
+      String hh = vendorOrderListModel!.data![index]!.postTitle!.substring(13);
       String dd = hh.substring(0, hh.length - 10);
       return text(
           dd +
@@ -115,8 +122,8 @@ class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAli
 
     }
 
-    CartPrice(int index){
-      var myprice2 =double.parse(orderListModel!.data![index]!.subTotal.toString());
+    CartPrice(int index,vendorOrderListModel){
+      var myprice2 =double.parse(vendorOrderListModel!.data![index]!.subTotal.toString());
       var myprice = myprice2.toStringAsFixed(2);
       var myprice3;
       if(price_decimal_sep==',') {
@@ -125,14 +132,14 @@ class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAli
         myprice3=myprice;
       }
       return                           text7("Total : \$" +
-          myprice3 +" "+orderListModel!.currency!,
+          myprice3 +" "+vendorOrderListModel!.currency!,
           textColor: sh_app_txt_color,
           fontFamily: fontBold,
           fontSize: textSizeMedium);
     }
 
-    listView() {
-      if(orderListModel!.data!.length == 0){
+    listView(vendorOrderListModel) {
+      if(vendorOrderListModel!.data!.length == 0){
         return Container(
           height: height-130,
           alignment: Alignment.center,
@@ -150,14 +157,14 @@ class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAli
         return ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          itemCount: orderListModel!.data!.length,
+          itemCount: vendorOrderListModel!.data!.length,
           scrollDirection: Axis.vertical,
           itemBuilder: (context, index) {
             return InkWell(
               onTap: () async {
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 prefs.setString('order_id',
-                    orderListModel!.data![index]!.ID!.toString());
+                    vendorOrderListModel!.data![index]!.ID!.toString());
                 prefs.commit();
                 Navigator.push(
                     context,
@@ -183,16 +190,28 @@ class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAli
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             text7("ID :#" +
-                                orderListModel!.data![index]!.ID.toString(),
+                                vendorOrderListModel!.data![index]!.ID.toString(),
                                 textColor: sh_textColorPrimary,
                                 fontFamily: fontSemibold,
                                 fontSize: textSizeMedium),
                             // SizedBox(height: 2),
-                            text7(orderListModel!.data![index]!.products![0]!.name!,
-                                textColor: sh_app_txt_color,
-                                fontFamily: fontSemibold,
-                                fontSize: textSizeMedium),
-                            CartPrice(index),
+                            Html(
+                              data: vendorOrderListModel!.data![index]!.products![0]!.name!,
+                              style: {
+                                "body": Style(
+                                  maxLines: 2,
+                                  margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                  fontSize: FontSize(16.0),
+                                  color: sh_app_txt_color,
+                                  fontFamily: fontSemibold,
+                                ),
+                              },
+                            ),
+                            // text7(vendorOrderListModel!.data![index]!.products![0]!.name!,
+                            //     textColor: sh_app_txt_color,
+                            //     fontFamily: fontSemibold,
+                            //     fontSize: textSizeMedium),
+                            CartPrice(index,vendorOrderListModel),
                             // text7("Total : $currency_symbol" +
                             //     orderListModel!.data![index]!.total.toString(),
                             //     textColor: sh_colorPrimary,
@@ -215,7 +234,7 @@ class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAli
                                         crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                         children: <Widget>[
-                                          OrderDate(index)
+                                          OrderDate(index,vendorOrderListModel)
 
 
                                         ],
@@ -314,62 +333,60 @@ class _MySalesFragmentState extends State<MySalesFragment> with AutomaticKeepAli
                   child: Column(
                     children: <Widget>[
                       // TopBar(t1_Listing),
-                      FutureBuilder<OrderListModel?>(
-                        future: fetchOrderMain,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return listView();
-                          }
-                          return Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
-                            enabled: true,
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              scrollDirection: Axis.vertical,
-                              itemBuilder: (_, __) => Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Container(
-                                      width: double.infinity,
-                                      height: 10.0,
-                                      color: Colors.white,
-                                    ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 5.0),
-                                    ),
-                                    Container(
-                                      width: double.infinity,
-                                      height: 10.0,
-                                      color: Colors.white,
-                                    ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 5.0),
-                                    ),
-                                    Container(
-                                      width: 40.0,
-                                      height: 8.0,
-                                      color: Colors.white,
-                                    ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 5.0),
-                                    ),
-                                    Container(
-                                      width: 40.0,
-                                      height: 8.0,
-                                      color: Colors.white,
-                                    ),
-                                  ],
+                      Consumer<OrderProvider>(
+                          builder: ((context, order_value, child) {
+                            return order_value.loader_vendor
+                                ? Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              enabled: true,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                scrollDirection: Axis.vertical,
+                                itemBuilder: (_, __) => Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Container(
+                                        width: double.infinity,
+                                        height: 10.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        height: 10.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 5.0),
+                                      ),
+                                      Container(
+                                        width: 40.0,
+                                        height: 8.0,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                itemCount: 6,
                               ),
-                              itemCount: 6,
-                            ),
-                          );
-                        },
-                      ),
+                            )
+                                : listView(order_value.vendorOrderListModel);
+                          })),
+
 
                       Container(
                         height: 16,

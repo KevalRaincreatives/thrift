@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:badges/badges.dart';
 import 'package:country_pickers/country.dart';
 import 'package:country_pickers/utils/utils.dart';
@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thrift/model/NumberCheckModel.dart';
 import 'package:thrift/screens/CartScreen.dart';
 import 'package:thrift/screens/OtpNewScreen.dart';
@@ -78,7 +78,7 @@ class _NewNumberScreenState extends State<NewNumberScreen> {
       jsonEncode({"phone_code": country,"phone":phoneNumber});
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/chk_phone_availability'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/chk_phone_availability'),
           headers: headers,
           body: msg);
 

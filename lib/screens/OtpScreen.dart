@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:thrift/api_service/Url.dart';
 import 'package:country_pickers/country.dart';
 import 'package:country_pickers/country_pickers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,9 +11,8 @@ import 'package:thrift/screens/VerificationScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShStrings.dart';
-import 'package:thrift/utils/T6Colors.dart';
-import 'package:thrift/utils/T6Widget.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:thrift/utils/ShExtension.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpScreen extends StatefulWidget {
   static String tag='/OtpScreen';
@@ -66,7 +65,7 @@ class _OtpScreenState extends State<OtpScreen> {
       jsonEncode({"phone_code": country,"phone":phoneNumber});
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/chk_phone_availability'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/chk_phone_availability'),
           headers: headers,
           body: msg);
 

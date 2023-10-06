@@ -3,16 +3,21 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:thrift/screens/OrderSuccessScreen.dart';
 import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
-
+import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
 import 'package:thrift/utils/NetworkAwareWidget.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+import '../database/database_hepler.dart';
+import '../provider/home_product_provider.dart';
+import 'OrderFailScreen.dart';
 
 class WebPaymentScreen extends StatefulWidget {
   static String tag='/WebPaymentScreen';
@@ -60,7 +65,70 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
   void navigationPage() async{
     EasyLoading.dismiss();
   }
+  Future<String?> emptyCart() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // String pro_id = prefs.getString('pro_id');
+      String? token = prefs.getString('token');
+      print(token);
+      if (token != null && token != '') {
+        Map<String, String> headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        };
 
+        Response response = await get(
+            Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/empty_cart'),
+            headers: headers);
+
+
+        print('SettingFragment empty_cart Response status2: ${response.statusCode}');
+        print('SettingFragment empty_cart Response body2: ${response.body}');
+      }
+
+      prefs.setInt("cart_count", 0);
+      final dbHelper = DatabaseHelper.instance;
+      final allRows = await dbHelper.queryAllRows();
+      dbHelper.cleanDatabase();
+      Provider.of<HomeProductListProvider>(context, listen: false).getLocalCart();
+
+      // first2=false;
+
+//      print(cat_model.data);
+      return "cat_model";
+    }on Exception catch (e) {
+      EasyLoading.dismiss();
+
+      print('caught error $e');
+    }
+  }
+
+  Future<bool> _onWillPop()  async{
+      return await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Cancel Transaction'),
+          content: Text('Are you sure you want to cancel this transaction?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () { Navigator.of(context).pop(context);
+                toast('Payment Failed');},
+              child: Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              /*Navigator.of(context).pop(true)*/
+              child: Text('No'),
+            ),
+          ],
+        ),
+      ) ?? false;
+
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,15 +184,27 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
                       },
                       onPageStarted: (String url) {
                         print('Page started loading: $url');
-                        if(url.contains("order-received")){
-                          launchScreen(context, OrderSuccessScreen.tag);
-                        }
+                        // if(url.contains("order-received")){
+                        //   emptyCart();
+                        //   launchScreen(context, OrderSuccessScreen.tag);
+                        // }else{
+                        //
+                        // }
                       },
                       onPageFinished: (String url) {
                         // fetchPayment(url);
 
 
                         print('Page finished loading: $url');
+                        if(url.contains("status=failed&transaction_id=")){
+                          emptyCart();
+                          launchScreen(context, OrderFailScreen.tag);
+                        }else if(url.contains("status=success&transaction_id=")){
+                          emptyCart();
+                          launchScreen(context, OrderSuccessScreen.tag);
+                        }else{
+
+                        }
                       },
                       navigationDelegate: (NavigationRequest request) {
                         // if (request.url == get.url) {
@@ -187,8 +267,30 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(1.0,2,6,2),
-                      child: IconButton(onPressed: () {
-                        Navigator.pop(context);
+                      child: IconButton(onPressed: () async{
+                        await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Cancel Transaction'),
+                            content: Text('Are you sure you want to cancel this transaction?'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {   Navigator.of(context).pop(true);
+                                Navigator.pop(context);
+                                toast('Payment Failed');},
+                                child: Text('Yes'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(false);
+                                },
+                                /*Navigator.of(context).pop(true)*/
+                                child: Text('No'),
+                              ),
+                            ],
+                          ),
+                        );
+                        // Navigator.pop(context);
                       }, icon: Icon(Icons.chevron_left_rounded,color: Colors.white,size: 32,)),
                     ),
 
@@ -214,7 +316,32 @@ class _WebPaymentScreenState extends State<WebPaymentScreen> {
         create: (context) =>
         NetworkStatusService().networkStatusController.stream,
         child: NetworkAwareWidget(
-          onlineChild: SafeArea(child: setUserForm()),
+          onlineChild: WillPopScope(
+              onWillPop: () async {
+                bool closeDialog =await showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('Cancel Transaction'),
+                    content: Text('Are you sure you want to cancel this transaction?'),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {   Navigator.of(context).pop(true);
+                        toast('Payment Failed');},
+                        child: Text('Yes'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                        },
+                        /*Navigator.of(context).pop(true)*/
+                        child: Text('No'),
+                      ),
+                    ],
+                  ),
+                );
+                return closeDialog ?? false; // Handle the dialog dismissal via back button
+              },
+              child: SafeArea(child: setUserForm())),
           offlineChild: Container(
             child: Center(
               child: Text(

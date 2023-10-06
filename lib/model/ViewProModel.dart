@@ -4,7 +4,7 @@
 class ViewProModel {
 /*
 {
-  "profile_picture": "https://thriftapp.rcstaging.co.in/wp-content/uploads/2022/08/1657633408_scaled_image_picker4449041638212571650-1.jpg",
+  "profile_picture": "${Url.BASE_URL}wp-content/uploads/2022/08/1657633408_scaled_image_picker4449041638212571650-1.jpg",
   "name_of_account": "dsdd",
   "account_number": "sdfsf",
   "name_of_bank": "sdfdsf",

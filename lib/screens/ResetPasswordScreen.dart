@@ -1,5 +1,6 @@
 import 'dart:convert';
-
+import 'package:flutter/services.dart';
+import 'package:thrift/api_service/Url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
@@ -43,7 +44,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       jsonEncode({"email": email, "otp": code, "new_password": password});
 
       Response response = await post(
-          Uri.parse('https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/set_new_password'),
+          Uri.parse('${Url.BASE_URL}wp-json/wooapp/v3/set_new_password'),
           headers: headers,
           body: msg);
 
@@ -142,157 +143,167 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           width: width,
           color: sh_white,
           margin: EdgeInsets.fromLTRB(0, 120, 0, 0),
-          child:   Container(
-            alignment: Alignment.center,
-            width: width*.75,
-            padding: EdgeInsets.all(26),
-            child: Column(
-              children: [
-                Container(
+          child:   Form(
+            key: _formKey,
+            child: Container(
+              alignment: Alignment.center,
+              width: width*.75,
+              padding: EdgeInsets.all(26),
+              child: Column(
+                children: [
+                  Container(
 
-                  child: Column(
-                    children: [
-                      Text(
-                        "We have sent a reset code to your email.Enter it below to continue.",
-                        style: TextStyle(
-                          fontFamily: 'Medium',
-                          color: sh_colorPrimary2,
-                          fontSize: 16,
+                    child: Column(
+                      children: [
+                        Text(
+                          "We have sent a reset code to your email.Enter it below to continue.",
+                          style: TextStyle(
+                            fontFamily: 'Medium',
+                            color: sh_colorPrimary2,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 21.67),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Expanded(
+                        flex: 5,
+                        child: TextFormField(
+                          keyboardType: TextInputType.number,
+                          autofocus: false,
+                          style: TextStyle(
+                            color: sh_app_txt_color,
+                            fontSize: textSizeMedium,
+                            fontFamily: "Medium",
+                          ),
+                          controller: emailCont,
+                          textCapitalization:
+                          TextCapitalization.words,
+                          validator: (text) {
+                            if (text == null || text.isEmpty) {
+                              return 'Please Enter Code';
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: sh_btn_color,
+                            focusColor:
+                            sh_editText_background_active,
+                            hintStyle: TextStyle(
+                                color: sh_app_txt_color,
+                                fontFamily: 'Medium',
+                                fontSize: textSizeMedium),
+                            hintText: sh_hint_main_code,
+                            contentPadding: EdgeInsets.fromLTRB(
+                                16, 8, 4, 8),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius:
+                                BorderRadius.circular(22.0),
+                                borderSide: BorderSide(
+                                    color: sh_app_txt_color,
+                                    width: 0.4)),
+                            enabledBorder: OutlineInputBorder(
+                                borderRadius:
+                                BorderRadius.circular(22.0),
+                                borderSide: BorderSide(
+                                    color: sh_app_txt_color,
+                                    width: 0.2)),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 5,
+                        child: Container(),
                       ),
                     ],
                   ),
-                ),
-                SizedBox(height: 21.67),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    Expanded(
-                      flex: 5,
-                      child: TextFormField(
-                        keyboardType: TextInputType.number,
-                        autofocus: false,
-                        style: TextStyle(
+                  SizedBox(height: 21.67),
+                  TextFormField(
+                    // inputFormatters: [
+                    //   FilteringTextInputFormatter.deny(RegExp('[&]')),
+                    // ],
+                    obscureText: !this._showPassword,
+                    keyboardType: TextInputType.text,
+                    autofocus: false,
+                    style: TextStyle(
+                      color: sh_app_txt_color,
+                      fontSize: textSizeMedium,
+                      fontFamily: "Medium"),
+                    controller: passwordCont,
+                    textCapitalization: TextCapitalization.words,
+                    validator: (text) {
+                      if (text == null || text.isEmpty) {
+                        return 'Please Enter New Password';
+                      }else if(!validateStructure(text)){
+                        return 'Your password should not contain following\ncharacters: (){}[]|`¬¦ "£%^&*"<>:;#~-+=,';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: sh_btn_color,
+                      focusColor: sh_editText_background_active,
+                      hintStyle: TextStyle(
                           color: sh_app_txt_color,
-                          fontSize: textSizeMedium,
-                          fontFamily: "Medium",
-                        ),
-                        controller: emailCont,
-                        textCapitalization:
-                        TextCapitalization.words,
-                        validator: (text) {
-                          if (text == null || text.isEmpty) {
-                            return 'Please Enter Code';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: sh_btn_color,
-                          focusColor:
-                          sh_editText_background_active,
-                          hintStyle: TextStyle(
+                          fontFamily: 'Medium',
+                          fontSize: textSizeMedium),
+                      hintText: sh_hint_new_password,
+                      contentPadding:
+                      EdgeInsets.fromLTRB(16, 8, 4, 8),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                          BorderRadius.circular(22.0),
+                          borderSide: BorderSide(
                               color: sh_app_txt_color,
-                              fontFamily: 'Medium',
-                              fontSize: textSizeMedium),
-                          hintText: sh_hint_main_code,
-                          contentPadding: EdgeInsets.fromLTRB(
-                              16, 8, 4, 8),
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius.circular(22.0),
-                              borderSide: BorderSide(
-                                  color: sh_app_txt_color,
-                                  width: 0.4)),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius.circular(22.0),
-                              borderSide: BorderSide(
-                                  color: sh_app_txt_color,
-                                  width: 0.2)),
+                              width: 0.4)),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                          BorderRadius.circular(22.0),
+                          borderSide: BorderSide(
+                              color: sh_app_txt_color,
+                              width: 0.2)),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          Icons.remove_red_eye,
+                          color: this._showPassword ? sh_app_txt_color : Colors.grey,
                         ),
+                        onPressed: () {
+                          setState(
+                                  () => this._showPassword = !this._showPassword);
+                        },
                       ),
                     ),
-                    Expanded(
-                      flex: 5,
-                      child: Container(),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 21.67),
-                TextFormField(
-                  obscureText: !this._showPassword,
-                  keyboardType: TextInputType.text,
-                  autofocus: false,
-                  style: TextStyle(
-                    color: sh_app_txt_color,
-                    fontSize: textSizeMedium,
-                    fontFamily: "Medium"),
-                  controller: passwordCont,
-                  textCapitalization: TextCapitalization.words,
-                  validator: (text) {
-                    if (text == null || text.isEmpty) {
-                      return 'Please Enter New Password';
-                    }
-                    return null;
-                  },
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: sh_btn_color,
-                    focusColor: sh_editText_background_active,
-                    hintStyle: TextStyle(
-                        color: sh_app_txt_color,
-                        fontFamily: 'Medium',
-                        fontSize: textSizeMedium),
-                    hintText: sh_hint_new_password,
-                    contentPadding:
-                    EdgeInsets.fromLTRB(16, 8, 4, 8),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius:
-                        BorderRadius.circular(22.0),
-                        borderSide: BorderSide(
-                            color: sh_app_txt_color,
-                            width: 0.4)),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius:
-                        BorderRadius.circular(22.0),
-                        borderSide: BorderSide(
-                            color: sh_app_txt_color,
-                            width: 0.2)),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        Icons.remove_red_eye,
-                        color: this._showPassword ? sh_app_txt_color : Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(
-                                () => this._showPassword = !this._showPassword);
-                      },
+                  ),
+                  SizedBox(height: 21.67),
+                  GestureDetector(
+                    onTap: () {
+      if (_formKey.currentState!.validate()) {
+        // launchScreen(context, HomeScreen.tag);
+        getUpdate();
+      }
+                    },
+                    child: Container(
+                      width: MediaQuery.of(context).size.width*.7,
+                      padding: EdgeInsets.only(
+                          top: 6, bottom: 10),
+                      decoration: boxDecoration(
+                          bgColor: sh_btn_color, radius: 10, showShadow: true),
+                      child: text("RESET",
+                          fontSize: 22.0,
+                          textColor: sh_app_txt_color,
+                          isCentered: true,
+                          fontFamily: 'Medium'),
                     ),
                   ),
-                ),
-                SizedBox(height: 21.67),
-                GestureDetector(
-                  onTap: () {
-                    // launchScreen(context, HomeScreen.tag);
-                    getUpdate();
-                  },
-                  child: Container(
-                    width: MediaQuery.of(context).size.width*.7,
-                    padding: EdgeInsets.only(
-                        top: 6, bottom: 10),
-                    decoration: boxDecoration(
-                        bgColor: sh_btn_color, radius: 10, showShadow: true),
-                    child: text("RESET",
-                        fontSize: 22.0,
-                        textColor: sh_app_txt_color,
-                        isCentered: true,
-                        fontFamily: 'Medium'),
-                  ),
-                ),
 
-              ],
+                ],
+              ),
             ),
           ),
         ),

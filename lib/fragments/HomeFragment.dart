@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:http/retry.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:thrift/model/AdvModel.dart';
 import 'package:thrift/model/StaticCategoryModel.dart';
 import 'package:thrift/model/CategoryModel.dart';
@@ -14,6 +18,7 @@ import 'package:http/http.dart' as http;
 import 'package:thrift/model/CheckUserModel.dart';
 import 'package:thrift/model/ProductListModel.dart';
 import 'package:thrift/model/ProfileModel.dart';
+import 'package:thrift/provider/home_product_provider.dart';
 import 'package:thrift/screens/AddressListScreen.dart';
 import 'package:thrift/screens/BecameSellerScreen.dart';
 import 'package:thrift/screens/CartScreen.dart';
@@ -30,14 +35,17 @@ import 'package:thrift/utils/ShColors.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:thrift/utils/ShStrings.dart';
-import 'package:thrift/utils/T3Dialog.dart';
 import 'package:badges/badges.dart';
 import 'package:thrift/utils/custom_pop_up_menu.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:provider/provider.dart';
 import 'package:thrift/utils/network_status_service.dart';
+import 'package:thrift/api_service/Url.dart';
 
+import '../provider/pro_det_provider.dart';
+import '../screens/SearchNewScreen.dart';
+import '../utils/data_manager.dart';
 class ItemModel {
   String title;
 
@@ -61,16 +69,17 @@ class _HomeFragmentState extends State<HomeFragment>
   final double runSpacing = 4;
   final double spacing = 4;
   final columns = 2;
-  List<ProductListModel> productListModel = [];
+  // List<ProductListModel> productListModel = [];
   ProfileModel? profileModel;
   String? profile_name;
   CheckUserModel? checkUserModel;
-  String? filter_str = 'Newest to Oldest';
+  // String? filter_str = 'Newest to Oldest';
   AdvModel? advModel;
   int? cart_count;
   Future<String?>? fetchDetailsMain;
   Future<List<ProductListModel>?>? fetchAlbumMain;
   int timer = 800, offset = 0;
+  bool isStart=false;
 
   @override
   void initState() {
@@ -80,9 +89,16 @@ class _HomeFragmentState extends State<HomeFragment>
       ItemModel('Price High to Low'),
       ItemModel('Price Low to High'),
     ];
+    // final postMdl = Provider.of<HomeProductListProvider>(context, listen: false);
+    // postMdl.getHomeProduct('Newest to Oldest',false);
     fetchDetailsMain = fetchDetails();
-    fetchAdv();
-    // fetchAlbumMain=fetchAlbum();
+    final postMdl = Provider.of<HomeProductListProvider>(context, listen: false);
+    postMdl.getLocalCart();
+    Provider.of<ProductDetailProvider>(context, listen: false).getUserLoggedInStatus();
+    // fetchAdv();
+    if(Provider.of<ProductDetailProvider>(context, listen: false).isLoggedIn){
+      fetchAdv();
+    }
     super.initState();
   }
 
@@ -95,93 +111,129 @@ class _HomeFragmentState extends State<HomeFragment>
       profile_name = prefs.getString("profile_name");
       return "profileModel";
     } catch (e) {
+
       print('caught error $e');
     }
   }
 
   Future<AdvModel?> fetchAdv() async {
+    Trace customTrace = FirebasePerformance.instance.newTrace('get_ads');
+    await customTrace.start();
 //    Dialogs.showLoadingDialog(context, _keyLoader);
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // String UserId = prefs.getString('UserId');
       String? token = prefs.getString('token');
       String? adv_image = prefs.getString('adv_image');
+      if (token != null && token != '') {
+        print('Token : ${token}');
 
-      print('Token : ${token}');
+        if (adv_image == '0') {
+          Map<String, String> headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          };
 
-      if (adv_image == '0') {
-        Map<String, String> headers = {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        };
+          var response = await http.get(
+              Uri.parse(
+                  "${Url.BASE_URL}wp-json/wooapp/v3/get_ads"),
+              headers: headers);
 
-        var response = await http.get(
-            Uri.parse(
-                "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/get_ads"),
-            headers: headers);
+          print(
+              'HomeFragment get_ads Response status2: ${response.statusCode}');
+          print('HomeFragment get_ads Response body2: ${response.body}');
+          final jsonResponse = json.decode(response.body);
 
-        print('HomeFragment get_ads Response status2: ${response.statusCode}');
-        print('HomeFragment get_ads Response body2: ${response.body}');
-        final jsonResponse = json.decode(response.body);
+          advModel = AdvModel.fromJson(jsonResponse);
 
-        advModel = new AdvModel.fromJson(jsonResponse);
-
-        prefs.setString("adv_image", "1");
-        if (advModel!.data != null) {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) => CustomDialog(advModel!.data!),
-          );
+          prefs.setString("adv_image", "1");
+          if (advModel!.data != null) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) => CustomDialog(advModel!.data!),
+            );
+          }
         }
+      }else{
+        prefs.setString('token', "");
+        Provider.of<ProductDetailProvider>(context, listen: false).setLoggedInStatus(false);
+        Route route = MaterialPageRoute(
+            builder: (context) => LoginScreen());
+        Navigator.pushReplacement(context, route);
       }
+        await customTrace.stop();
+
       return advModel;
-    } catch (e) {
+    }on Exception catch (e) {
+      await customTrace.stop();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchDetailsMain = fetchDetails();
+        // fetchAdv();
+      });} );
       print('caught error $e');
     }
   }
 
-  Future<List<ProductListModel>?> fetchAlbum() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? user_country = prefs.getString('user_selected_country');
-
-      // String? user_country = "Barbados";
-      // toast(cat_id);
-
-      var response;
-      if (filter_str == 'Newest to Oldest') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100"));
-      } else if (filter_str == 'Oldest to Newest') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=asc&per_page=100"));
-      } else if (filter_str == 'Price High to Low') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=desc&per_page=100"));
-      } else if (filter_str == 'Price Low to High') {
-        response = await http.get(Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=asc&per_page=100"));
-      }
-      print('HomeFragment products Response status2: ${response.statusCode}');
-      print('HomeFragment products Response body2: ${response.body}');
-
-      productListModel.clear();
-      final jsonResponse = json.decode(response.body);
-      for (Map i in jsonResponse) {
-        if (i["product_country"] == user_country) {
-          productListModel.add(ProductListModel.fromJson(i));
-        }
-      }
-      if (productListModel.length > 0) {
-        prefs.setString("fnl_currency", "USD");
-      }
-
-      return productListModel;
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
+  // Future<List<ProductListModel>?> fetchAlbum() async {
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     String? user_country = prefs.getString('user_selected_country');
+  //
+  //     // String? user_country = "Barbados";
+  //     // toast(cat_id);
+  //
+  //     var response;
+  //     if (filter_str == 'Newest to Oldest') {
+  //       response = await http.get(Uri.parse(
+  //           "${Url.BASE_URL}wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=desc&per_page=100"));
+  //     } else if (filter_str == 'Oldest to Newest') {
+  //       response = await http.get(Uri.parse(
+  //           "${Url.BASE_URL}wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=date&order=asc&per_page=100"));
+  //     } else if (filter_str == 'Price High to Low') {
+  //       response = await http.get(Uri.parse(
+  //           "${Url.BASE_URL}wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=desc&per_page=100"));
+  //     } else if (filter_str == 'Price Low to High') {
+  //       response = await http.get(Uri.parse(
+  //           "${Url.BASE_URL}wp-json/wc/v3/products?stock_status=instock&status=publish&orderby=price&order=asc&per_page=100"));
+  //     }
+  //     print('HomeFragment products Response status2: ${response.statusCode}');
+  //     print('HomeFragment products Response body2: ${response.body}');
+  //
+  //     productListModel.clear();
+  //     final jsonResponse = json.decode(response.body);
+  //     for (Map i in jsonResponse) {
+  //       if (i["product_country"] == user_country) {
+  //         productListModel.add(ProductListModel.fromJson(i));
+  //       }
+  //     }
+  //     if (productListModel.length > 0) {
+  //       prefs.setString("fnl_currency", "USD");
+  //     }
+  //
+  //     return productListModel;
+  //   } on Exception catch (e) {
+  //
+  //     print('caught error $e');
+  //   }
+  // }
 
   Future<CheckUserModel?> fetchUserStatus() async {
     EasyLoading.show(status: 'Please wait...');
@@ -189,153 +241,321 @@ class _HomeFragmentState extends State<HomeFragment>
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? UserId = prefs.getString('UserId');
       String? token = prefs.getString('token');
+      if (UserId != null && UserId != '') {
+        Map<String, String> headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        };
 
-      Map<String, String> headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
+        print(
+            "${Url.BASE_URL}wp-json/wooapp/v3/check_seller_status?user_id=$UserId");
+        var response = await http.get(
+            Uri.parse(
+              "${Url.BASE_URL}wp-json/wooapp/v3/check_seller_status?user_id=$UserId",
+            ),
+            headers: headers);
 
-      print(
-          "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId");
-      var response = await http.get(
-          Uri.parse(
-            "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",
-          ),
-          headers: headers);
 
-      print(
-          'HomeFragment check_seller_status Response status2: ${response.statusCode}');
-      print(
-          'HomeFragment check_seller_status Response body2: ${response.body}');
+        print(
+            'HomeFragment check_seller_status Response status2: ${response.statusCode}');
+        print(
+            'HomeFragment check_seller_status Response body2: ${response.body}');
 
-      final jsonResponse = json.decode(response.body);
-      checkUserModel = new CheckUserModel.fromJson(jsonResponse);
-      prefs.setString(
-          'is_store_owner', checkUserModel!.is_store_owner.toString());
-      EasyLoading.dismiss();
-      if (checkUserModel!.is_store_owner == 0) {
-        showGeneralDialog(
-            barrierColor: Colors.black.withOpacity(0.5),
-            transitionBuilder: (context, a1, a2, widget) {
-              return Transform.scale(
-                scale: a1.value,
-                child: Opacity(
-                  opacity: a1.value,
-                  child: AlertDialog(
-                    shape: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0)),
-                    title: Center(
-                        child: Text(
-                      'You are not a seller yet!',
-                      style: TextStyle(
-                          color: sh_colorPrimary2,
-                          fontSize: 18,
-                          fontFamily: 'Bold'),
-                      textAlign: TextAlign.center,
-                    )),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          height: 16,
+        final jsonResponse = json.decode(response.body);
+        checkUserModel = new CheckUserModel.fromJson(jsonResponse);
+        prefs.setString(
+            'is_store_owner', checkUserModel!.is_store_owner.toString());
+        EasyLoading.dismiss();
+        isStart=false;
+        if (checkUserModel!.is_store_owner == 0) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          String? selectedCountry=prefs.getString('user_selected_country');
+          String? registeredCountry=prefs.getString('vendor_country');
+          if(selectedCountry!=registeredCountry){
+            showGeneralDialog(
+                barrierColor: Colors.black.withOpacity(0.5),
+                transitionBuilder: (context, a1, a2, widget) {
+                  return Transform.scale(
+                    scale: a1.value,
+                    child: Opacity(
+                      opacity: a1.value,
+                      child: AlertDialog(
+                        shape: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0)),
+                        title: Center(
+                            child: Text(
+                              'You are currently not registered in the "$selectedCountry".\nKindly switch back to "$registeredCountry" in order to apply for seller registration.',
+                              style: TextStyle(
+                                  color: sh_colorPrimary2,
+                                  fontSize: 18,
+                                  fontFamily: 'Bold'),
+                              textAlign: TextAlign.center,
+                            )),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: 16,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                // BecameSeller();
+
+                                Navigator.of(context, rootNavigator: true).pop();
+                                // launchScreen(context, BecameSellerScreen.tag);
+                              },
+                              child: Container(
+                                width: MediaQuery.of(context).size.width * .7,
+                                padding: EdgeInsets.only(top: 6, bottom: 10),
+                                decoration: boxDecoration(
+                                    bgColor: sh_colorPrimary2,
+                                    radius: 10,
+                                    showShadow: true),
+                                child: text("Close",
+                                    fontSize: 16.0,
+                                    textColor: sh_white,
+                                    isCentered: true,
+                                    fontFamily: 'Bold'),
+                              ),
+                            ),
+
+
+                          ],
                         ),
-                        InkWell(
-                          onTap: () async {
-                            // BecameSeller();
-
-                            Navigator.of(context, rootNavigator: true).pop();
-                            launchScreen(context, BecameSellerScreen.tag);
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width * .7,
-                            padding: EdgeInsets.only(top: 6, bottom: 10),
-                            decoration: boxDecoration(
-                                bgColor: sh_colorPrimary2,
-                                radius: 10,
-                                showShadow: true),
-                            child: text("Become a Seller",
-                                fontSize: 16.0,
-                                textColor: sh_white,
-                                isCentered: true,
-                                fontFamily: 'Bold'),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        InkWell(
-                          onTap: () async {
-                            Navigator.of(context, rootNavigator: true).pop();
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width * .7,
-                            padding: EdgeInsets.only(top: 6, bottom: 10),
-                            decoration: boxDecoration(
-                                bgColor: sh_btn_color,
-                                radius: 10,
-                                showShadow: true),
-                            child: text("Cancel",
-                                fontSize: 16.0,
-                                textColor: sh_colorPrimary2,
-                                isCentered: true,
-                                fontFamily: 'Bold'),
-                          ),
-                        )
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              );
-            },
-            transitionDuration: Duration(milliseconds: 200),
-            barrierDismissible: true,
-            barrierLabel: '',
-            context: context,
-            pageBuilder: (context, animation1, animation2) {
-              return Container();
-            });
-      } else if (checkUserModel!.is_store_owner == 1) {
-        // launchScreen(context, BecameSellerScreen.tag);
+                  );
+                },
+                transitionDuration: Duration(milliseconds: 200),
+                barrierDismissible: true,
+                barrierLabel: '',
+                context: context,
+                pageBuilder: (context, animation1, animation2) {
+                  return Container();
+                });
+          }else {
+            showGeneralDialog(
+                barrierColor: Colors.black.withOpacity(0.5),
+                transitionBuilder: (context, a1, a2, widget) {
+                  return Transform.scale(
+                    scale: a1.value,
+                    child: Opacity(
+                      opacity: a1.value,
+                      child: AlertDialog(
+                        shape: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0)),
+                        title: Center(
+                            child: Text(
+                              'You are not a seller yet!',
+                              style: TextStyle(
+                                  color: sh_colorPrimary2,
+                                  fontSize: 18,
+                                  fontFamily: 'Bold'),
+                              textAlign: TextAlign.center,
+                            )),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: 16,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                // BecameSeller();
+
+                                Navigator.of(context, rootNavigator: true)
+                                    .pop();
+                                launchScreen(context, BecameSellerScreen.tag);
+                              },
+                              child: Container(
+                                width: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * .7,
+                                padding: EdgeInsets.only(top: 6, bottom: 10),
+                                decoration: boxDecoration(
+                                    bgColor: sh_colorPrimary2,
+                                    radius: 10,
+                                    showShadow: true),
+                                child: text("Become a Seller",
+                                    fontSize: 16.0,
+                                    textColor: sh_white,
+                                    isCentered: true,
+                                    fontFamily: 'Bold'),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                Navigator.of(context, rootNavigator: true)
+                                    .pop();
+                              },
+                              child: Container(
+                                width: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * .7,
+                                padding: EdgeInsets.only(top: 6, bottom: 10),
+                                decoration: boxDecoration(
+                                    bgColor: sh_btn_color,
+                                    radius: 10,
+                                    showShadow: true),
+                                child: text("Cancel",
+                                    fontSize: 16.0,
+                                    textColor: sh_colorPrimary2,
+                                    isCentered: true,
+                                    fontFamily: 'Bold'),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                transitionDuration: Duration(milliseconds: 200),
+                barrierDismissible: true,
+                barrierLabel: '',
+                context: context,
+                pageBuilder: (context, animation1, animation2) {
+                  return Container();
+                });
+          }
+        }
+        else if (checkUserModel!.is_store_owner == 1) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          String? selectedCountry=prefs.getString('user_selected_country');
+              String? registeredCountry=prefs.getString('vendor_country');
+          if(selectedCountry!=registeredCountry){
+            showGeneralDialog(
+                barrierColor: Colors.black.withOpacity(0.5),
+                transitionBuilder: (context, a1, a2, widget) {
+                  return Transform.scale(
+                    scale: a1.value,
+                    child: Opacity(
+                      opacity: a1.value,
+                      child: AlertDialog(
+                        shape: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0)),
+                        title: Center(
+                            child: Text(
+                              'You are currently not registered as a seller in "$selectedCountry".\nKindly switch back to "$registeredCountry" in order to upload a product.',
+                              style: TextStyle(
+                                  color: sh_colorPrimary2,
+                                  fontSize: 18,
+                                  fontFamily: 'Bold'),
+                              textAlign: TextAlign.center,
+                            )),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: 16,
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                // BecameSeller();
+
+                                Navigator.of(context, rootNavigator: true).pop();
+                                // launchScreen(context, BecameSellerScreen.tag);
+                              },
+                              child: Container(
+                                width: MediaQuery.of(context).size.width * .7,
+                                padding: EdgeInsets.only(top: 6, bottom: 10),
+                                decoration: boxDecoration(
+                                    bgColor: sh_colorPrimary2,
+                                    radius: 10,
+                                    showShadow: true),
+                                child: text("Close",
+                                    fontSize: 16.0,
+                                    textColor: sh_white,
+                                    isCentered: true,
+                                    fontFamily: 'Bold'),
+                              ),
+                            ),
+
+
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                transitionDuration: Duration(milliseconds: 200),
+                barrierDismissible: true,
+                barrierLabel: '',
+                context: context,
+                pageBuilder: (context, animation1, animation2) {
+                  return Container();
+                });
+          }else {
+            DataManager.getInstance().setIsSelected('False');
+            DataManager.getInstance().setIsShoesSelected('False');
+            DataManager.getInstance().setIsRequired('False');
+            // launchScreen(context, BecameSellerScreen.tag);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreateProductScreen(),
+              ),
+            ).then((_) => setState(() {}));
+          }
+        } else if (checkUserModel!.is_store_owner == 2) {
+          toast(
+              "Your Seller Registration is Pending. You will be notified once approved.");
+        }
+      } else {
+        EasyLoading.dismiss();
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CreateProductScreen(),
+            builder: (context) => LoginScreen(),
           ),
-        ).then((_) => setState(() {}));
-      } else if (checkUserModel!.is_store_owner == 2) {
-        toast(
-            "Your Seller Registration is Pending. You will be notified once approved.");
+        );
+
       }
+
+
 
       return checkUserModel;
-    } catch (e) {
+    } on Exception catch (e) {
       EasyLoading.dismiss();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value) {setState(() {
+        fetchDetailsMain = fetchDetails();
+        // fetchAdv();
+      });} );
       print('caught error $e');
     }
   }
 
-  Future<String?> fetchtotal() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      if (prefs.getInt('cart_count') != null) {
-        cart_count = prefs.getInt('cart_count');
-      } else {
-        cart_count = 0;
-      }
-
-      return '';
-    } catch (e) {
-      print('caught error $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    // final postMdl = Provider.of<HomeProductListProvider>(context);
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
-    Imagevw4(int index) {
+    Imagevw4(int index,productListModel) {
       if (productListModel[index].images!.length < 1) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
@@ -349,21 +569,42 @@ class _HomeFragmentState extends State<HomeFragment>
       } else {
         return ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
-          child: Image.network(
-            productListModel[index].images![0]!.src!,
+          child: CachedNetworkImage(
+            imageUrl: productListModel[index].images![0]!.src!,
             fit: BoxFit.cover,
             height: 130,
+            alignment: Alignment.topCenter,
             width: width,
-          ),
+            // memCacheWidth: width,
+            memCacheHeight: 350,
+            filterQuality: FilterQuality.low,
+            placeholder: (context, url) =>
+                Center(
+                  child: SizedBox(
+                      height: 30,
+                      width: 30,
+                      child:
+                      CircularProgressIndicator()),
+                ),
+            errorWidget:
+                (context, url, error) =>
+            new Icon(Icons.error),
+          )
+          // Image.network(
+          //   productListModel[index].images![0]!.src!,
+          //   fit: BoxFit.cover,
+          //   height: 130,
+          //   width: width,
+          // ),
         );
       }
     }
 
-    NewImagevw(int index) {
-      return Imagevw4(index);
+    NewImagevw(int index,productListModel) {
+      return Imagevw4(index,productListModel);
     }
 
-    MyPrice(int index) {
+    MyPrice(int index,productListModel) {
       var myprice2, myprice;
       if (productListModel[index].price == '') {
         myprice = '0.00';
@@ -411,22 +652,22 @@ class _HomeFragmentState extends State<HomeFragment>
       }
     }
 
-    MyBadge() {
-      return FutureBuilder<String?>(
-        future: fetchtotal(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return BadgeCount();
-          } else if (snapshot.hasError) {
-            return Text("${snapshot.error}");
-          }
-          // By default, show a loading spinner.
-          return CircularProgressIndicator();
-        },
-      );
-    }
+    // MyBadge() {
+    //   return FutureBuilder<String?>(
+    //     future: fetchtotal(),
+    //     builder: (context, snapshot) {
+    //       if (snapshot.hasData) {
+    //         return BadgeCount();
+    //       } else if (snapshot.hasError) {
+    //         return Text("${snapshot.error}");
+    //       }
+    //       // By default, show a loading spinner.
+    //       return CircularProgressIndicator();
+    //     },
+    //   );
+    // }
 
-    listView() {
+    listView(productListModel) {
       if (productListModel.length == 0) {
         return Container(
           height: height - 350,
@@ -466,7 +707,7 @@ class _HomeFragmentState extends State<HomeFragment>
                                 productListModel[index].id.toString());
                             List<String> myimages = [];
                             for (var i = 0;
-                                productListModel[index].images!.length > i;
+                            productListModel[index].images!.length > i;
                                 i++) {
                               myimages.add(
                                   productListModel[index].images![i]!.src!);
@@ -495,7 +736,7 @@ class _HomeFragmentState extends State<HomeFragment>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: <Widget>[
-                                NewImagevw(index),
+                                NewImagevw(index,productListModel),
                                 SizedBox(
                                   height: 6,
                                 ),
@@ -506,18 +747,32 @@ class _HomeFragmentState extends State<HomeFragment>
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: <Widget>[
-                                      Text(
-                                        productListModel[index].name!,
-                                        maxLines: 1,
-                                        style: TextStyle(
+
+                                      Html(
+                                          data: productListModel[index].name!,
+                                        style: {
+                                          "body": Style(
+                                            maxLines: 1,
+                                            margin: EdgeInsets.zero, padding: EdgeInsets.zero,
+                                            fontSize: FontSize(16.0),
+                                            fontWeight: FontWeight.bold,
                                             color: sh_app_black,
-                                            fontFamily: fontBold,
-                                            fontSize: textSizeMedium),
+                                              fontFamily: fontBold,
+                                          ),
+                                        },
                                       ),
+                                      // Text(
+                                      //   productListModel[index].name!,
+                                      //   maxLines: 1,
+                                      //   style: TextStyle(
+                                      //       color: sh_app_black,
+                                      //       fontFamily: fontBold,
+                                      //       fontSize: textSizeMedium),
+                                      // ),
                                       SizedBox(
                                         height: 4,
                                       ),
-                                      MyPrice(index),
+                                      MyPrice(index,productListModel),
                                       SizedBox(
                                         height: 4,
                                       ),
@@ -571,33 +826,7 @@ class _HomeFragmentState extends State<HomeFragment>
           },
         ),
         iconTheme: IconThemeData(color: sh_white),
-        actions: <Widget>[
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () async {
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  prefs.setInt("shiping_index", -2);
-                  prefs.setInt("payment_index", -2);
-                  // launchScreen(context, CartScreen.tag);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CartScreen()),
-                  ).then((value) {
-                    setState(() {
-                      // refresh state
-                    });
-                  });
-                },
-                child: MyBadge(),
-              ),
-              SizedBox(
-                width: 16,
-              )
-            ],
-          ),
-        ],
+
       );
       double app_height = appBar.preferredSize.height;
       return Stack(children: <Widget>[
@@ -673,24 +902,104 @@ class _HomeFragmentState extends State<HomeFragment>
                     )
                   ],
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    SharedPreferences prefs =
-                        await SharedPreferences.getInstance();
-                    prefs.setInt("shiping_index", -2);
-                    prefs.setInt("payment_index", -2);
-                    // launchScreen(context, CartScreen.tag);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CartScreen()),
-                    ).then((value) {
-                      setState(() {
-                        // refresh state
-                      });
-                    });
-                  },
-                  child: MyBadge(),
-                ),
+                Consumer<HomeProductListProvider>(builder: ((context, value, child) {
+                  return GestureDetector(
+                    onTap: () async {
+                      SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                      String? UserId = prefs.getString('UserId');
+                      String? token = prefs.getString('token');
+                      if (UserId != null && UserId != '') {
+                        prefs.setInt("shiping_index", -2);
+                        prefs.setInt("payment_index", -2);
+                        // launchScreen(context, CartScreen.tag);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        );
+                      }else{
+                        prefs.setInt("shiping_index", -2);
+                        prefs.setInt("payment_index", -2);
+                        // launchScreen(context, CartScreen.tag);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => CartScreen()),
+                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => LoginScreen(),
+                        //   ),
+                        // );
+                      }
+
+
+                    },
+                    child: value.localCart ==0 ? Image.asset(
+                      sh_new_cart,
+                      height: 44,
+                      width: 44,
+                      fit: BoxFit.fill,
+                      color: sh_white,
+                    ):
+                    Badge(
+                      position: BadgePosition.topEnd(top: 4, end: 6),
+                      badgeContent: Text(
+                        value.localCart.toString(),
+                        style: TextStyle(color: sh_white, fontSize: 8),
+                      ),
+                      child: Image.asset(
+                        sh_new_cart,
+                        height: 44,
+                        width: 44,
+                        fit: BoxFit.fill,
+                        color: sh_white,
+                      ),
+                    ),
+                  );
+                }))
+      //           GestureDetector(
+      //             onTap: () async {
+      //               SharedPreferences prefs =
+      //                   await SharedPreferences.getInstance();
+      // String? UserId = prefs.getString('UserId');
+      // String? token = prefs.getString('token');
+      // if (UserId != null && UserId != '') {
+      //   prefs.setInt("shiping_index", -2);
+      //   prefs.setInt("payment_index", -2);
+      //   // launchScreen(context, CartScreen.tag);
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => CartScreen()),
+      //   ).then((value) {
+      //     setState(() {
+      //       // refresh state
+      //     });
+      //   });
+      // }else{
+      //   prefs.setInt("shiping_index", -2);
+      //   prefs.setInt("payment_index", -2);
+      //   // launchScreen(context, CartScreen.tag);
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => CartScreen()),
+      //   ).then((value) {
+      //     setState(() {
+      //       // refresh state
+      //     });
+      //   });
+      //   // Navigator.push(
+      //   //   context,
+      //   //   MaterialPageRoute(
+      //   //     builder: (context) => LoginScreen(),
+      //   //   ),
+      //   // );
+      // }
+      //
+      //
+      //             },
+      //             child: MyBadge(),
+      //           ),
               ],
             ),
           ),
@@ -706,64 +1015,31 @@ class _HomeFragmentState extends State<HomeFragment>
             child: Column(
               mainAxisSize: MainAxisSize.max,
               children: [
-                Container(
-                  width: width,
-                  color: Colors.transparent,
-                  margin: EdgeInsets.fromLTRB(26, 0, 26, 0),
-                  child: TextFormField(
-                    controller: SearchCont,
-                    textInputAction: TextInputAction.search,
-                    onFieldSubmitted: (value) async {
-                      if (value.length > 1) {
-                        Navigator.push(
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
-                                  SearchScreen(serchdata: value)),
+                                  SearchNewScreen()),
                         );
-                      } else {
-                        toast("Please enter more character");
-                      }
-                    },
-                    style: TextStyle(
-                        color: sh_colorPrimary2,
-                        fontSize: textSizeSMedium,
-                        fontFamily: "Bold"),
-                    decoration: InputDecoration(
-                      filled: true,
-                      suffixIcon: InkWell(
-                        onTap: () {
-                          if (SearchCont.text.length > 1) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      SearchScreen(serchdata: SearchCont.text)),
-                            );
-                          } else {
-                            toast("Please enter more character");
-                          }
-                        },
-                        child: Icon(
-                          Icons.search,
-                          color: sh_colorPrimary2,
-                        ),
-                      ),
-                      fillColor: sh_text_back,
-                      contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                      hintText: "Search",
-                      hintStyle: TextStyle(color: sh_colorPrimary2),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: sh_transparent, width: 0.7),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: sh_transparent, width: 0.7),
-                      ),
+                  },
+                  child: Container(
+                    width: width,
+                    // color: Colors.transparent,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: sh_text_back,
+
                     ),
+                    margin: EdgeInsets.fromLTRB(26, 0, 26, 0),
+                    padding: EdgeInsets.fromLTRB(16, 12, 16,12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                      Text('Search',style: TextStyle(color: sh_colorPrimary2,fontSize: 16,fontFamily: 'Medium'),),
+                      Icon(Icons.search,size: 22,color: sh_colorPrimary2,)
+                    ],),
                   ),
                 ),
                 Container(
@@ -774,125 +1050,166 @@ class _HomeFragmentState extends State<HomeFragment>
                   color: sh_white,
                   child: Column(
                     children: [
-                      CustomPopupMenu(
-                        child: Wrap(
-                          children: [
-                            Row(
-                              children: [
-                                Image.asset(
-                                  sh_menu_filter,
-                                  color: sh_colorPrimary2,
-                                  height: 22,
-                                  width: 16,
-                                  fit: BoxFit.fill,
-                                ),
-                                SizedBox(
-                                  width: 12,
-                                ),
-                                Text(
-                                  filter_str!,
-                                  style: TextStyle(
-                                      color: sh_colorPrimary2, fontSize: 13),
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                        menuBuilder: () => ClipRRect(
-                          borderRadius: BorderRadius.circular(5),
-                          child: Container(
-                            color: sh_btn_color,
-                            child: IntrinsicWidth(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: menuItems
-                                    .map(
-                                      (item) => GestureDetector(
-                                        behavior: HitTestBehavior.translucent,
-                                        onTap: () {
-                                          // print("onTap");
-                                          // toast(item.title);
-                                          _controller.hideMenu();
-                                          setState(() {
-                                            toast("Please wait..");
-                                            filter_str = item.title;
-                                          });
-                                        },
-                                        child: Container(
-                                          height: 40,
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 20),
-                                          child: Row(
-                                            children: <Widget>[
-                                              Expanded(
-                                                child: Container(
-                                                  margin:
-                                                      EdgeInsets.only(left: 10),
-                                                  padding: EdgeInsets.symmetric(
-                                                      vertical: 10),
-                                                  child: Text(
-                                                    item.title,
-                                                    style: TextStyle(
-                                                      color: sh_colorPrimary2,
-                                                      fontSize: 12,
-                                                    ),
+                      Consumer<HomeProductListProvider>(builder: ((context, value, child) {
+                        return CustomPopupMenu(
+                          child: Wrap(
+                            children: [
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    sh_menu_filter,
+                                    color: sh_colorPrimary2,
+                                    height: 22,
+                                    width: 16,
+                                    fit: BoxFit.fill,
+                                  ),
+                                  SizedBox(
+                                    width: 12,
+                                  ),
+                                  Text(
+                                    value.filter_str!,
+                                    style: TextStyle(
+                                        color: sh_colorPrimary2, fontSize: 13),
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
+                          menuBuilder: () => ClipRRect(
+                            borderRadius: BorderRadius.circular(5),
+                            child: Container(
+                              color: sh_btn_color,
+                              child: IntrinsicWidth(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: menuItems
+                                      .map(
+                                        (item) => GestureDetector(
+                                      behavior: HitTestBehavior.translucent,
+                                      onTap: () {
+                                        // print("onTap");
+                                        // toast(item.title);
+                                        _controller.hideMenu();
+                                        toast("Please wait..");
+                                        value.getHomeProduct(item.title,false);
+
+                                        // setState(() {
+                                        //   toast("Please wait..");
+                                        //   postMdl.filter_str = item.title;
+                                        // });
+                                      },
+                                      child: Container(
+                                        height: 40,
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 20),
+                                        child: Row(
+                                          children: <Widget>[
+                                            Expanded(
+                                              child: Container(
+                                                margin:
+                                                EdgeInsets.only(left: 10),
+                                                padding: EdgeInsets.symmetric(
+                                                    vertical: 10),
+                                                child: Text(
+                                                  item.title,
+                                                  style: TextStyle(
+                                                    color: sh_colorPrimary2,
+                                                    fontSize: 12,
                                                   ),
                                                 ),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    )
-                                    .toList(),
+                                    ),
+                                  )
+                                      .toList(),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        position: PreferredPosition.bottom,
-                        pressType: PressType.singleClick,
-                        verticalMargin: -10,
-                        controller: _controller,
-                      ),
+                          position: PreferredPosition.bottom,
+                          pressType: PressType.singleClick,
+                          verticalMargin: -10,
+                          controller: _controller,
+                        );
+                      })),
+
                       SizedBox(
                         height: 2,
                       ),
-                      FutureBuilder<List<ProductListModel>?>(
-                        future: fetchAlbum(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return listView();
-                          }
-                          // return Center(child: CircularProgressIndicator(color: sh_colorPrimary2));
-                          return Expanded(
-                            child: Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              direction: ShimmerDirection.ltr,
-                              child: GridView.builder(
-                                  gridDelegate:
-                                      SliverGridDelegateWithMaxCrossAxisExtent(
-                                          maxCrossAxisExtent: 200,
-                                          crossAxisSpacing: 20,
-                                          mainAxisSpacing: 20),
-                                  itemCount: 8,
-                                  itemBuilder: (BuildContext ctx, index) {
-                                    offset += 50;
-                                    timer = 800 + offset;
-                                    // print(timer);
-                                    return Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Container(
-                                        height: 100,
-                                        width: 100,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  }),
-                            ),
-                          );
-                        },
-                      ),
+                      Consumer<HomeProductListProvider>(builder: ((context, value, child) {
+                        return  value.loader? Expanded(
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            direction: ShimmerDirection.ltr,
+                            child: GridView.builder(
+                                gridDelegate:
+                                SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 200,
+                                    crossAxisSpacing: 20,
+                                    mainAxisSpacing: 20),
+                                itemCount: 8,
+                                itemBuilder: (BuildContext ctx, index) {
+                                  offset += 50;
+                                  timer = 800 + offset;
+                                  // print(timer);
+                                  return Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Container(
+                                      height: 100,
+                                      width: 100,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                }),
+                          ),
+                        ):
+                        listView(value.productListModel);
+                      })),
+
+                      // Consumer<HomeProductListProvider>(builder: (context,productListModel,child)
+                      // {
+                      //   return listView(productListModel);
+                      // }),
+                      // FutureBuilder<List<ProductListModel>?>(
+                      //   future: fetchAlbum(),
+                      //   builder: (context, snapshot) {
+                      //     if (snapshot.hasData) {
+                      //       return listView();
+                      //     }
+                      //     // return Center(child: CircularProgressIndicator(color: sh_colorPrimary2));
+                      //     return Expanded(
+                      //       child: Shimmer.fromColors(
+                      //         baseColor: Colors.grey[300]!,
+                      //         highlightColor: Colors.grey[100]!,
+                      //         direction: ShimmerDirection.ltr,
+                      //         child: GridView.builder(
+                      //             gridDelegate:
+                      //                 SliverGridDelegateWithMaxCrossAxisExtent(
+                      //                     maxCrossAxisExtent: 200,
+                      //                     crossAxisSpacing: 20,
+                      //                     mainAxisSpacing: 20),
+                      //             itemCount: 8,
+                      //             itemBuilder: (BuildContext ctx, index) {
+                      //               offset += 50;
+                      //               timer = 800 + offset;
+                      //               // print(timer);
+                      //               return Padding(
+                      //                 padding: const EdgeInsets.all(8.0),
+                      //                 child: Container(
+                      //                   height: 100,
+                      //                   width: 100,
+                      //                   color: Colors.grey,
+                      //                 ),
+                      //               );
+                      //             }),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
                       SizedBox(
                         height: 46,
                       ),
@@ -922,7 +1239,20 @@ class _HomeFragmentState extends State<HomeFragment>
             fit: BoxFit.cover,
           ),
           onPressed: () async {
-            fetchUserStatus();
+            // fetchUserStatus();
+            if(isStart){
+
+            }else {
+              isStart=true;
+              Provider
+                  .of<ProductDetailProvider>(context, listen: false)
+                  .isLoggedIn ? fetchUserStatus() : Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(),
+                ),
+              );
+            }
           },
         ),
 
@@ -1053,139 +1383,268 @@ class T2DrawerState extends State<T2Drawer> {
                             fontFamily: 'Bold')),
                   ),
                 ),
-                FutureBuilder<List<StaticCategoryModel>?>(
-                  future: fetchAlbumMain,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      var unescape = HtmlUnescape();
-                      return Expanded(
-                        child: ListView.builder(
-                          // physics:
-                          // NeverScrollableScrollPhysics(),
-
-                          scrollDirection: Axis.vertical,
-                          itemCount: staticcategoryListModel.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                                onTap: () async {
-                                  SharedPreferences prefs =
-                                      await SharedPreferences.getInstance();
-                                  prefs.setString(
-                                      'cat_id',
-                                      staticcategoryListModel[index]
-                                          .id
-                                          .toString());
-                                  prefs.setString(
-                                      'cat_names',
-                                      staticcategoryListModel[index]
-                                          .name
-                                          .toString());
-                                  launchScreen(context, ProductlistScreen.tag);
-                                },
+                Consumer<HomeProductListProvider>(builder: ((context, value_cat, child) {
+                  var unescape = HtmlUnescape();
+                  return value_cat.isLoadingCategory ?Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    direction: ShimmerDirection.ltr,
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(12, 12, 50, 12),
+                      child: Column(
+                        children: [
+                          Container(
+                              child: InkWell(
                                 child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      18.0, 12, 12, 12),
-                                  child: Text(
-                                      unescape.convert(
-                                          staticcategoryListModel[index].name!),
-                                      style: TextStyle(
-                                          color: sh_colorPrimary2,
-                                          fontSize: 15.sp,
-                                          fontFamily: 'Bold')),
-                                )
-                                // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
-                                );
-                          },
-                        ),
-                      );
-                    }
-                    return Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      direction: ShimmerDirection.ltr,
-                      child: Container(
-                        padding: EdgeInsets.fromLTRB(12, 12, 50, 12),
-                        child: Column(
-                          children: [
-                            Container(
-                                child: InkWell(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 12.0,
-                                  color: Colors.white,
+                                  padding:
+                                  const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            )),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                                child: InkWell(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 12.0,
-                                  color: Colors.white,
+                              )),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding:
+                                  const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            )),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                                child: InkWell(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 12.0,
-                                  color: Colors.white,
+                              )),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding:
+                                  const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            )),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                                child: InkWell(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 12.0,
-                                  color: Colors.white,
+                              )),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding:
+                                  const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            )),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                                child: InkWell(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 12.0,
-                                  color: Colors.white,
+                              )),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                              child: InkWell(
+                                child: Padding(
+                                  padding:
+                                  const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            )),
-                          ],
-                        ),
+                              )),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ) :
+                    Expanded(
+                    child: ListView.builder(
+                      // physics:
+                      // NeverScrollableScrollPhysics(),
+
+                      scrollDirection: Axis.vertical,
+                      itemCount: value_cat.categoryModel!.categories!.length,
+                      shrinkWrap: true,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                            onTap: () async {
+                              SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                              prefs.setString(
+                                  'cat_id',
+                                  value_cat.categoryModel!.categories![index]!
+                                      .id
+                                      .toString());
+                              prefs.setString(
+                                  'cat_names',
+                                  value_cat.categoryModel!.categories![index]!
+                                      .name
+                                      .toString());
+                              Navigator.pop(context);
+                              launchScreen(context, ProductlistScreen.tag);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  18.0, 12, 12, 12),
+                              child: Text(
+                                  unescape.convert(
+                                      value_cat.categoryModel!.categories![index]!.name!),
+                                  style: TextStyle(
+                                      color: sh_colorPrimary2,
+                                      fontSize: 15.sp,
+                                      fontFamily: 'Bold')),
+                            )
+                          // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
+                        );
+                      },
+                    ),
+                  );
+                })),
+                // FutureBuilder<List<StaticCategoryModel>?>(
+                //   future: fetchAlbumMain,
+                //   builder: (context, snapshot) {
+                //     if (snapshot.hasData) {
+                //       var unescape = HtmlUnescape();
+                //       return Expanded(
+                //         child: ListView.builder(
+                //           // physics:
+                //           // NeverScrollableScrollPhysics(),
+                //
+                //           scrollDirection: Axis.vertical,
+                //           itemCount: staticcategoryListModel.length,
+                //           shrinkWrap: true,
+                //           itemBuilder: (context, index) {
+                //             return GestureDetector(
+                //                 onTap: () async {
+                //                   SharedPreferences prefs =
+                //                       await SharedPreferences.getInstance();
+                //                   prefs.setString(
+                //                       'cat_id',
+                //                       staticcategoryListModel[index]
+                //                           .id
+                //                           .toString());
+                //                   prefs.setString(
+                //                       'cat_names',
+                //                       staticcategoryListModel[index]
+                //                           .name
+                //                           .toString());
+                //                   launchScreen(context, ProductlistScreen.tag);
+                //                 },
+                //                 child: Padding(
+                //                   padding: const EdgeInsets.fromLTRB(
+                //                       18.0, 12, 12, 12),
+                //                   child: Text(
+                //                       unescape.convert(
+                //                           staticcategoryListModel[index].name!),
+                //                       style: TextStyle(
+                //                           color: sh_colorPrimary2,
+                //                           fontSize: 15.sp,
+                //                           fontFamily: 'Bold')),
+                //                 )
+                //                 // text(categoryListModel[index].name, textColor: t1TextColorPrimary, fontFamily: fontBold, fontSize: textSizeLargeMedium, maxLine: 2),
+                //                 );
+                //           },
+                //         ),
+                //       );
+                //     }
+                //     return Shimmer.fromColors(
+                //       baseColor: Colors.grey[300]!,
+                //       highlightColor: Colors.grey[100]!,
+                //       direction: ShimmerDirection.ltr,
+                //       child: Container(
+                //         padding: EdgeInsets.fromLTRB(12, 12, 50, 12),
+                //         child: Column(
+                //           children: [
+                //             Container(
+                //                 child: InkWell(
+                //               child: Padding(
+                //                 padding:
+                //                     const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                //                 child: Container(
+                //                   width: double.infinity,
+                //                   height: 12.0,
+                //                   color: Colors.white,
+                //                 ),
+                //               ),
+                //             )),
+                //             SizedBox(
+                //               height: 10,
+                //             ),
+                //             Container(
+                //                 child: InkWell(
+                //               child: Padding(
+                //                 padding:
+                //                     const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                //                 child: Container(
+                //                   width: double.infinity,
+                //                   height: 12.0,
+                //                   color: Colors.white,
+                //                 ),
+                //               ),
+                //             )),
+                //             SizedBox(
+                //               height: 10,
+                //             ),
+                //             Container(
+                //                 child: InkWell(
+                //               child: Padding(
+                //                 padding:
+                //                     const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                //                 child: Container(
+                //                   width: double.infinity,
+                //                   height: 12.0,
+                //                   color: Colors.white,
+                //                 ),
+                //               ),
+                //             )),
+                //             SizedBox(
+                //               height: 10,
+                //             ),
+                //             Container(
+                //                 child: InkWell(
+                //               child: Padding(
+                //                 padding:
+                //                     const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                //                 child: Container(
+                //                   width: double.infinity,
+                //                   height: 12.0,
+                //                   color: Colors.white,
+                //                 ),
+                //               ),
+                //             )),
+                //             SizedBox(
+                //               height: 10,
+                //             ),
+                //             Container(
+                //                 child: InkWell(
+                //               child: Padding(
+                //                 padding:
+                //                     const EdgeInsets.fromLTRB(18.0, 12, 12, 12),
+                //                 child: Container(
+                //                   width: double.infinity,
+                //                   height: 12.0,
+                //                   color: Colors.white,
+                //                 ),
+                //               ),
+                //             )),
+                //           ],
+                //         ),
+                //       ),
+                //     );
+                //   },
+                // ),
                 SizedBox(height: 30),
               ],
             ),
@@ -1210,6 +1669,7 @@ class T2DrawerState extends State<T2Drawer> {
           // String UserId = prefs.getString('UserId');
           prefs.setString('final_token', '');
           prefs.setString('token', '');
+          Provider.of<ProductDetailProvider>(context, listen: false).setLoggedInStatus(false);
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (BuildContext context) => LoginScreen()),

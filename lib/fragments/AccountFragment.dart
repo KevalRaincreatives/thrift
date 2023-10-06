@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/CheckUserModel.dart';
 import 'package:thrift/model/ProfileModel.dart';
@@ -23,6 +25,8 @@ import 'package:http/http.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:badges/badges.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:thrift/api_service/Url.dart';
 
 class AccountFragment extends StatefulWidget {
   const AccountFragment({Key? key}) : super(key: key);
@@ -59,7 +63,7 @@ class _AccountFragmentState extends State<AccountFragment> with AutomaticKeepAli
       };
 
       var response = await http.get(Uri.parse(
-        "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
+        "${Url.BASE_URL}wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
           ,headers: headers);
 
 
@@ -80,8 +84,33 @@ class _AccountFragmentState extends State<AccountFragment> with AutomaticKeepAli
 
 
       return checkUserModel;
-    } catch (e) {
+    }on Exception catch (e) {
       EasyLoading.dismiss();
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+
+              });
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value)  {
+        setState(() {
+
+        });
+      });;
       print('caught error $e');
     }
   }
@@ -97,7 +126,30 @@ class _AccountFragmentState extends State<AccountFragment> with AutomaticKeepAli
       }
 
       return '';
-    } catch (e) {
+    } on Exception catch (e) {
+      Alert(
+        context: context,
+        type: AlertType.warning,
+        title: "Reload",
+        desc: e.toString(),
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "Reload",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+
+            },
+            color: sh_colorPrimary2,
+          ),
+        ],
+      ).show().then((value)  {
+        setState(() {
+
+        });
+      });
       print('caught error $e');
     }
   }
@@ -255,11 +307,15 @@ class _AccountFragmentState extends State<AccountFragment> with AutomaticKeepAli
                         ),
                         InkWell(
                           onTap: () async {
+                            await FirebaseAuth.instance.signOut();
                             SharedPreferences prefs = await SharedPreferences
                                 .getInstance();
                             String? final_token = prefs.getString(
                                 'token');
                             prefs.setString("token", "");
+                            prefs.setString("UserId", "");
+                            prefs.setString("EmailVerified", "No");
+                            prefs.setString('user_selected_country', "");
                             // Navigator.push(
                             //   context,
                             //   MaterialPageRoute(

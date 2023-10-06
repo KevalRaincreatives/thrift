@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:thrift/model/CheckUserModel.dart';
 import 'package:thrift/model/ProfileModel.dart';
@@ -23,7 +23,7 @@ import 'package:http/http.dart';
 import 'package:thrift/utils/ShConstant.dart';
 import 'package:thrift/utils/ShExtension.dart';
 import 'package:badges/badges.dart';
-
+import 'package:thrift/api_service/Url.dart';
 class AccountFragment extends StatefulWidget {
   const AccountFragment({Key? key}) : super(key: key);
 
@@ -58,7 +58,7 @@ class _AccountFragmentState extends State<AccountFragment> {
       };
 
       var response = await http.get(Uri.parse(
-        "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
+        "${Url.BASE_URL}wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
           ,headers: headers);
 
       final jsonResponse = json.decode(response.body);
@@ -97,7 +97,7 @@ class _AccountFragmentState extends State<AccountFragment> {
       };
 
       var response = await http.get(Uri.parse(
-        "https://thriftapp.rcstaging.co.in/wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
+        "${Url.BASE_URL}wp-json/wooapp/v3/check_seller_status?user_id=$UserId",)
           ,headers: headers);
 
       final jsonResponse = json.decode(response.body);

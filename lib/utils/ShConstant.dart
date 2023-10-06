@@ -1,5 +1,4 @@
 /*fonts*/
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:thrift/utils/ShColors.dart';
 
@@ -52,6 +51,10 @@ const sh_menu_filter="images/menu_filter2.png";
 const sh_newmenu='images/newmenu.png';
 const sh_add_image="images/add_image.png";
 const sh_report_pro="images/problem_report.png";
+const imgWarning="images/imgWarning.png";
+const imgWarning2="images/imgWarning2.png";
+
+
 
 /* margin */
 
@@ -65,6 +68,9 @@ const spacing_standard_new = 16.0;
 const spacing_large = 24.0;
 const spacing_xlarge = 32.0;
 const spacing_xxLarge = 40.0;
+
+
+const tmrTimeOut = 7;
 
 enum ConfirmAction { CANCEL, ACCEPT }
 
@@ -85,10 +91,6 @@ OutlineInputBorder outlineInputBorder() {
   );
 }
 
-final kApiUrl = defaultTargetPlatform == TargetPlatform.android
-    ? 'http://192.168.1.189:4242'
-    : 'http://192.168.1.1:4242';
-
 
 const _shimmerGradient = LinearGradient(
   colors: [
@@ -105,3 +107,9 @@ const _shimmerGradient = LinearGradient(
   end: Alignment(1.0, 0.3),
   tileMode: TileMode.clamp,
 );
+
+bool validateStructure(String value){
+  String  pattern = r'^[a-zA-Z0-9_\!_@]+$';
+  RegExp regExp = new RegExp(pattern);
+  return regExp.hasMatch(value);
+}
